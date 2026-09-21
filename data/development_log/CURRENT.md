@@ -1,5 +1,16 @@
 # AeroDT 현재 개발 상태
 
+## 2026-09-21 사용자 SRTM 사전 보정본 생성 (운용 미적용)
+
+- 입력 SRTM 1 arc-second GeoTIFF 11장을 읽기 전용으로 조합하고 korea.mbtiles의 상세 벡터 20,212타일에서 보정 영역을 추출했다. 원본 EGM96 높이 기준과 Point 표본 위치를 유지한다. 원본 중첩 높이 차이는 0 m였다.
+- `project_support/tools/condition_dem.py`를 추가했다. 완만한 육지 최대 2 m, 주요 지상 도로 중심선 1 m, 수면 8 m, 공항 12 m로 보정량을 제한한다. 강둑과 섬, NoData를 보존하고 교량/터널을 도로 보정에서 제외한다. 공항 연결 면은 타일 경계를 넘어 경사 평면으로 적합한다. 수면 처리는 국소 완화이며 하류 방향을 강제하는 수리학적 평탄화가 아니다.
+- 생성물은 `data/workspace/terrain/conditioned_srtm_20260921` 아래 단일 merged GeoTIFF, 원본 구획별 높이/수정량/분류 GeoTIFF, 기존 LocalDem용 패키지와 EGM96 지오이드다. 제공 범위 126–130 E, 36–39 N 중 n38_e129 원본은 없으며 전국 자료라고 간주하지 않는다. runtime 물리, 운용 설정, 실행 서버는 변경하지 않았다.
+- `project_support/tools/review_conditioned_dem.py`의 검증: 유효 표본 142,585,201개, 10 cm 초과 수정 18,397,531개, 최대 절대 수정 12 m, 공유 경계 15개 완전 일치, NoData/패키지 해시/GeoTIFF 대응 확인. EGM96 + 지오이드 = 타원체 높이 변환과 level 12/14 타일 33,800 byte 생성 확인. cold 타일 생성은 이번 장비에서 약 0.1초로, 첫 렌더 성능 향상까지 입증한 것은 아니다.
+- 지정 평가 마스크에서 sigma 1.2 고주파 RMS: 김포공항 1.9784→0.7960 m(약 60% 감소), 한강 0.3202→0.1417 m(약 56% 감소). 북한산 전체 검사 영역은 3.4700→3.4644 m, 높이 범위 38–813 m 유지. 이는 측량 정확도 개선률이 아니다. 김포 원본의 큰 이상치는 상한 때문에 일부 남아 있다.
+- 검증 명령: 격리 terrain_build Python으로 `pytest project_support/tests/web_live/test_condition_dem.py project_support/tests/web_live/test_local_terrain.py -q` 실행, 18 PASS. 두 도구 py_compile PASS. 합성 입력의 전체 builder/manifest/reader/경계/기존 출력 보호 회귀를 포함한다.
+- 첫 생성 시 NGA 지오이드의 EPSG:4979를 거부하는 CRS 판정을 발견했다. 4326/4979 및 목표 EPSG:5773, 밴드 의미를 검증하도록 고치고 새 출력 폴더에 전체 빌드를 성공적으로 다시 실행했다. 카테고리 overview는 nearest로 생성한다.
+- 남은 확인: 실제 Cesium/Web 적용, UAM 임무 validation, 지형과 버티포트/물리 지표면의 정합은 미실시. 따라서 데이터 제작 단계만 완료되었으며 운용 적용 완료로 간주하지 않는다. 실시간 필터 부하는 없지만 기존 local terrain adapter의 첫 타일 생성 비용은 별도 최적화 대상이다. 입력 벡터 이용 조건과 측량 정확도도 별도 확인이 필요하다.
+
 기준일: 2026-09-21
 
 ## 현재 제품 기준선
