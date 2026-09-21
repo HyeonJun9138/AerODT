@@ -1,0 +1,99 @@
+{
+  "title": "Fermi (GLAST)",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Fermi Gamma-ray Large Area Space Telescope/Fermi Gamma-ray Large Area Space Telescope.glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "fermi.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "fermi",
+      "label": "Fermi (GLAST)",
+      "exact": {
+        "norad": [
+          33053
+        ],
+        "names": [
+          "^FERMI",
+          "^FGST",
+          "GLAST"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 15,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 62.307728
+    }
+  ],
+  "display": {
+    "native_extent": 62.307728,
+    "reference_extent_m": 15,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 62.3077278137207
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "fermi",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 1379016,
+    "sha256": "d345f3b0595f7792f699acf33b28d7401cb53cc2a20b735bca00e95644e3813c"
+  },
+  "geometry": {
+    "meshes": 3,
+    "materials": 27,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 172788
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "d345f3b0595f7792f699acf33b28d7401cb53cc2a20b735bca00e95644e3813c"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 5478,
+    "sha256": "6e0eb20cde806f529b99a10118a567df8f39e4c6100dea968f651975948840f2"
+  }
+}

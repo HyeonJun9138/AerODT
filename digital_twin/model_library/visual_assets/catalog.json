@@ -1,0 +1,445 @@
+{
+  "schema_version": 1,
+  "assets": [
+    {
+      "asset_id": "ace",
+      "metadata": "spacecraft/satellites/ace/asset.json"
+    },
+    {
+      "asset_id": "acrimsat",
+      "metadata": "spacecraft/satellites/acrimsat/asset.json"
+    },
+    {
+      "asset_id": "aim",
+      "metadata": "spacecraft/satellites/aim/asset.json"
+    },
+    {
+      "asset_id": "amvlab_a320",
+      "metadata": "aircraft/civilian/amvlab_a320/asset.json"
+    },
+    {
+      "asset_id": "amvlab_a350",
+      "metadata": "aircraft/civilian/amvlab_a350/asset.json"
+    },
+    {
+      "asset_id": "amvlab_a380",
+      "metadata": "aircraft/civilian/amvlab_a380/asset.json"
+    },
+    {
+      "asset_id": "amvlab_b737",
+      "metadata": "aircraft/civilian/amvlab_b737/asset.json"
+    },
+    {
+      "asset_id": "amvlab_b787",
+      "metadata": "aircraft/civilian/amvlab_b787/asset.json"
+    },
+    {
+      "asset_id": "amvlab_drone",
+      "metadata": "aircraft/civilian/amvlab_drone/asset.json"
+    },
+    {
+      "asset_id": "amvlab_evtol",
+      "metadata": "aircraft/civilian/amvlab_evtol/asset.json"
+    },
+    {
+      "asset_id": "aqua",
+      "metadata": "spacecraft/satellites/aqua/asset.json"
+    },
+    {
+      "asset_id": "aquarius",
+      "metadata": "spacecraft/satellites/aquarius/asset.json"
+    },
+    {
+      "asset_id": "aura",
+      "metadata": "spacecraft/satellites/aura/asset.json"
+    },
+    {
+      "asset_id": "calipso",
+      "metadata": "spacecraft/satellites/calipso/asset.json"
+    },
+    {
+      "asset_id": "chandra",
+      "metadata": "spacecraft/satellites/chandra/asset.json"
+    },
+    {
+      "asset_id": "cloudsat",
+      "metadata": "spacecraft/satellites/cloudsat/asset.json"
+    },
+    {
+      "asset_id": "cluster_ii",
+      "metadata": "spacecraft/satellites/cluster_ii/asset.json"
+    },
+    {
+      "asset_id": "cnofs",
+      "metadata": "spacecraft/satellites/cnofs/asset.json"
+    },
+    {
+      "asset_id": "cubesat_1u",
+      "metadata": "spacecraft/satellites/cubesat_1u/asset.json"
+    },
+    {
+      "asset_id": "cubesat_2u",
+      "metadata": "spacecraft/satellites/cubesat_2u/asset.json"
+    },
+    {
+      "asset_id": "cubesat_3u",
+      "metadata": "spacecraft/satellites/cubesat_3u/asset.json"
+    },
+    {
+      "asset_id": "cygnss",
+      "metadata": "spacecraft/satellites/cygnss/asset.json"
+    },
+    {
+      "asset_id": "dscovr",
+      "metadata": "spacecraft/satellites/dscovr/asset.json"
+    },
+    {
+      "asset_id": "eo_1",
+      "metadata": "spacecraft/satellites/eo_1/asset.json"
+    },
+    {
+      "asset_id": "fermi",
+      "metadata": "spacecraft/satellites/fermi/asset.json"
+    },
+    {
+      "asset_id": "fuse",
+      "metadata": "spacecraft/satellites/fuse/asset.json"
+    },
+    {
+      "asset_id": "geotail",
+      "metadata": "spacecraft/satellites/geotail/asset.json"
+    },
+    {
+      "asset_id": "global_hawk",
+      "metadata": "aircraft/military/global_hawk/asset.json"
+    },
+    {
+      "asset_id": "gnss_bus",
+      "metadata": "spacecraft/satellites/gnss_bus/asset.json"
+    },
+    {
+      "asset_id": "goes",
+      "metadata": "spacecraft/satellites/goes/asset.json"
+    },
+    {
+      "asset_id": "goes_r",
+      "metadata": "spacecraft/satellites/goes_r/asset.json"
+    },
+    {
+      "asset_id": "gpm",
+      "metadata": "spacecraft/satellites/gpm/asset.json"
+    },
+    {
+      "asset_id": "grace",
+      "metadata": "spacecraft/satellites/grace/asset.json"
+    },
+    {
+      "asset_id": "hete_2",
+      "metadata": "spacecraft/satellites/hete_2/asset.json"
+    },
+    {
+      "asset_id": "hinode",
+      "metadata": "spacecraft/satellites/hinode/asset.json"
+    },
+    {
+      "asset_id": "hubble",
+      "metadata": "spacecraft/satellites/hubble/asset.json"
+    },
+    {
+      "asset_id": "ibex",
+      "metadata": "spacecraft/satellites/ibex/asset.json"
+    },
+    {
+      "asset_id": "icecube",
+      "metadata": "spacecraft/satellites/icecube/asset.json"
+    },
+    {
+      "asset_id": "icesat",
+      "metadata": "spacecraft/satellites/icesat/asset.json"
+    },
+    {
+      "asset_id": "icesat_2",
+      "metadata": "spacecraft/satellites/icesat_2/asset.json"
+    },
+    {
+      "asset_id": "iss",
+      "metadata": "spacecraft/satellites/iss/asset.json"
+    },
+    {
+      "asset_id": "jason",
+      "metadata": "spacecraft/satellites/jason/asset.json"
+    },
+    {
+      "asset_id": "jason_2",
+      "metadata": "spacecraft/satellites/jason_2/asset.json"
+    },
+    {
+      "asset_id": "joby_s4",
+      "metadata": "aircraft/civilian/joby_s4/asset.json"
+    },
+    {
+      "asset_id": "kenney_blocky_person_a",
+      "metadata": "people/civilian/kenney_blocky_person_a/asset.json"
+    },
+    {
+      "asset_id": "kenney_blocky_person_b",
+      "metadata": "people/civilian/kenney_blocky_person_b/asset.json"
+    },
+    {
+      "asset_id": "kenney_blocky_person_c",
+      "metadata": "people/civilian/kenney_blocky_person_c/asset.json"
+    },
+    {
+      "asset_id": "kenney_blocky_person_e",
+      "metadata": "people/civilian/kenney_blocky_person_e/asset.json"
+    },
+    {
+      "asset_id": "kenney_blocky_person_f",
+      "metadata": "people/civilian/kenney_blocky_person_f/asset.json"
+    },
+    {
+      "asset_id": "kenney_blocky_person_i",
+      "metadata": "people/civilian/kenney_blocky_person_i/asset.json"
+    },
+    {
+      "asset_id": "kenney_blocky_person_j",
+      "metadata": "people/civilian/kenney_blocky_person_j/asset.json"
+    },
+    {
+      "asset_id": "kenney_blocky_person_k",
+      "metadata": "people/civilian/kenney_blocky_person_k/asset.json"
+    },
+    {
+      "asset_id": "kenney_blocky_person_m",
+      "metadata": "people/civilian/kenney_blocky_person_m/asset.json"
+    },
+    {
+      "asset_id": "kenney_blocky_person_p",
+      "metadata": "people/civilian/kenney_blocky_person_p/asset.json"
+    },
+    {
+      "asset_id": "kenney_blocky_person_q",
+      "metadata": "people/civilian/kenney_blocky_person_q/asset.json"
+    },
+    {
+      "asset_id": "kepler",
+      "metadata": "spacecraft/satellites/kepler/asset.json"
+    },
+    {
+      "asset_id": "kp2a",
+      "metadata": "aircraft/civilian/kp2a/asset.json"
+    },
+    {
+      "asset_id": "landsat_1_3",
+      "metadata": "spacecraft/satellites/landsat_1_3/asset.json"
+    },
+    {
+      "asset_id": "landsat_4_5",
+      "metadata": "spacecraft/satellites/landsat_4_5/asset.json"
+    },
+    {
+      "asset_id": "landsat_7",
+      "metadata": "spacecraft/satellites/landsat_7/asset.json"
+    },
+    {
+      "asset_id": "landsat_8",
+      "metadata": "spacecraft/satellites/landsat_8/asset.json"
+    },
+    {
+      "asset_id": "leo_comms_bus",
+      "metadata": "spacecraft/satellites/leo_comms_bus/asset.json"
+    },
+    {
+      "asset_id": "mir",
+      "metadata": "spacecraft/satellites/mir/asset.json"
+    },
+    {
+      "asset_id": "mirata",
+      "metadata": "spacecraft/satellites/mirata/asset.json"
+    },
+    {
+      "asset_id": "mms",
+      "metadata": "spacecraft/satellites/mms/asset.json"
+    },
+    {
+      "asset_id": "nasa_lift_cruise",
+      "metadata": "aircraft/civilian/nasa_lift_cruise/asset.json"
+    },
+    {
+      "asset_id": "nasa_multi_tiltrotor",
+      "metadata": "aircraft/civilian/nasa_multi_tiltrotor/asset.json"
+    },
+    {
+      "asset_id": "nasa_qsmr",
+      "metadata": "aircraft/civilian/nasa_qsmr/asset.json"
+    },
+    {
+      "asset_id": "nasa_quadrotor_collflap",
+      "metadata": "aircraft/civilian/nasa_quadrotor_collflap/asset.json"
+    },
+    {
+      "asset_id": "nasa_quadrotor_rpm",
+      "metadata": "aircraft/civilian/nasa_quadrotor_rpm/asset.json"
+    },
+    {
+      "asset_id": "nasa_side_by_side",
+      "metadata": "aircraft/civilian/nasa_side_by_side/asset.json"
+    },
+    {
+      "asset_id": "nasa_tiltduct_cross",
+      "metadata": "aircraft/civilian/nasa_tiltduct_cross/asset.json"
+    },
+    {
+      "asset_id": "nasa_tiltduct_direct",
+      "metadata": "aircraft/civilian/nasa_tiltduct_direct/asset.json"
+    },
+    {
+      "asset_id": "nasa_tiltwing",
+      "metadata": "aircraft/civilian/nasa_tiltwing/asset.json"
+    },
+    {
+      "asset_id": "oco_2",
+      "metadata": "spacecraft/satellites/oco_2/asset.json"
+    },
+    {
+      "asset_id": "poes",
+      "metadata": "spacecraft/satellites/poes/asset.json"
+    },
+    {
+      "asset_id": "polar",
+      "metadata": "spacecraft/satellites/polar/asset.json"
+    },
+    {
+      "asset_id": "projectairsim_airtaxi",
+      "metadata": "aircraft/civilian/projectairsim_airtaxi/asset.json"
+    },
+    {
+      "asset_id": "quikscat",
+      "metadata": "spacecraft/satellites/quikscat/asset.json"
+    },
+    {
+      "asset_id": "radarsat_1",
+      "metadata": "spacecraft/satellites/radarsat_1/asset.json"
+    },
+    {
+      "asset_id": "rhessi",
+      "metadata": "spacecraft/satellites/rhessi/asset.json"
+    },
+    {
+      "asset_id": "roman",
+      "metadata": "spacecraft/satellites/roman/asset.json"
+    },
+    {
+      "asset_id": "sac_c",
+      "metadata": "spacecraft/satellites/sac_c/asset.json"
+    },
+    {
+      "asset_id": "sdo",
+      "metadata": "spacecraft/satellites/sdo/asset.json"
+    },
+    {
+      "asset_id": "seastar",
+      "metadata": "spacecraft/satellites/seastar/asset.json"
+    },
+    {
+      "asset_id": "sentinel_6",
+      "metadata": "spacecraft/satellites/sentinel_6/asset.json"
+    },
+    {
+      "asset_id": "skylab",
+      "metadata": "spacecraft/satellites/skylab/asset.json"
+    },
+    {
+      "asset_id": "soho",
+      "metadata": "spacecraft/satellites/soho/asset.json"
+    },
+    {
+      "asset_id": "sorce",
+      "metadata": "spacecraft/satellites/sorce/asset.json"
+    },
+    {
+      "asset_id": "spitzer",
+      "metadata": "spacecraft/satellites/spitzer/asset.json"
+    },
+    {
+      "asset_id": "ssl_1300",
+      "metadata": "spacecraft/satellites/ssl_1300/asset.json"
+    },
+    {
+      "asset_id": "starlink_flat",
+      "metadata": "spacecraft/satellites/starlink_flat/asset.json"
+    },
+    {
+      "asset_id": "stereo",
+      "metadata": "spacecraft/satellites/stereo/asset.json"
+    },
+    {
+      "asset_id": "suomi_npp",
+      "metadata": "spacecraft/satellites/suomi_npp/asset.json"
+    },
+    {
+      "asset_id": "suzaku",
+      "metadata": "spacecraft/satellites/suzaku/asset.json"
+    },
+    {
+      "asset_id": "swas",
+      "metadata": "spacecraft/satellites/swas/asset.json"
+    },
+    {
+      "asset_id": "swift",
+      "metadata": "spacecraft/satellites/swift/asset.json"
+    },
+    {
+      "asset_id": "tdrs",
+      "metadata": "spacecraft/satellites/tdrs/asset.json"
+    },
+    {
+      "asset_id": "terra",
+      "metadata": "spacecraft/satellites/terra/asset.json"
+    },
+    {
+      "asset_id": "tess",
+      "metadata": "spacecraft/satellites/tess/asset.json"
+    },
+    {
+      "asset_id": "themis",
+      "metadata": "spacecraft/satellites/themis/asset.json"
+    },
+    {
+      "asset_id": "toms",
+      "metadata": "spacecraft/satellites/toms/asset.json"
+    },
+    {
+      "asset_id": "topex",
+      "metadata": "spacecraft/satellites/topex/asset.json"
+    },
+    {
+      "asset_id": "trmm",
+      "metadata": "spacecraft/satellites/trmm/asset.json"
+    },
+    {
+      "asset_id": "van_allen",
+      "metadata": "spacecraft/satellites/van_allen/asset.json"
+    },
+    {
+      "asset_id": "wind",
+      "metadata": "spacecraft/satellites/wind/asset.json"
+    },
+    {
+      "asset_id": "wire",
+      "metadata": "spacecraft/satellites/wire/asset.json"
+    },
+    {
+      "asset_id": "wmap",
+      "metadata": "spacecraft/satellites/wmap/asset.json"
+    },
+    {
+      "asset_id": "x_57",
+      "metadata": "aircraft/civilian/x_57/asset.json"
+    },
+    {
+      "asset_id": "poly_flying_gull",
+      "metadata": "aircraft/civilian/poly_flying_gull/asset.json"
+    }
+  ]
+}

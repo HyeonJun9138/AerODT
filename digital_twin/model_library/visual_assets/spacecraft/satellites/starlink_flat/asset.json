@@ -1,0 +1,93 @@
+{
+  "title": "Starlink형 평판 위성",
+  "source": {
+    "provider": "spacetwin",
+    "url": "",
+    "revision": null,
+    "imported_from": "icdcdt",
+    "original_file": "starlink_flat.glb"
+  },
+  "rights": {
+    "label": "Project owner/provider review",
+    "credit": "SpaceTwin 자체 제작",
+    "url": "",
+    "public_export": false,
+    "note": "Local project use only pending owner/provider permission review; not cleared for public redistribution."
+  },
+  "representation": "generic",
+  "aliases": [
+    {
+      "key": "starlink_flat",
+      "label": "Starlink형 평판 위성",
+      "exact": {
+        "norad": [],
+        "names": []
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": [
+          "^STARLINK"
+        ]
+      },
+      "size_m": 29,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 28.9
+    }
+  ],
+  "display": {
+    "native_extent": 28.9,
+    "reference_extent_m": 29,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 28.900000000000002
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "starlink_flat",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 14096,
+    "sha256": "1f2bd994bca491b82ddaafaae70805b9cab8e8ac42bb1444463e566e44bf29ec"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 6,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 132
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "1f2bd994bca491b82ddaafaae70805b9cab8e8ac42bb1444463e566e44bf29ec"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 4436,
+    "sha256": "2fe325c1d62d0158053af12974ae8630da80f4f4e7435e69fca0cc6435196229"
+  }
+}

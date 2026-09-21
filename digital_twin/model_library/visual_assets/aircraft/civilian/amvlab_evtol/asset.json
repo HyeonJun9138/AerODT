@@ -1,0 +1,445 @@
+{
+  "title": "EVTOL (logo-free)",
+  "source": {
+    "provider": "amvlab",
+    "url": "https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/EVTOL_nologo.glb",
+    "revision": "91d835e8e851b2317fe79af291c9fed6153fd525",
+    "original_file": "models/EVTOL_nologo.glb"
+  },
+  "rights": {
+    "label": "CC-BY-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "credit": "amvlab / aircraft-models",
+    "public_export": true,
+    "note": "Retain attribution, license link and modification notice. No manufacturer endorsement or accuracy certification."
+  },
+  "representation": "generic",
+  "aliases": [],
+  "display": {
+    "native_extent": null,
+    "reference_extent_m": null,
+    "scale_basis": "unverified; preview auto-fit only",
+    "forward_axis": "unverified",
+    "browser_measured_extent": 1.416464251077084
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Recoloured atlas and EVTOL-only satin reflectance; original geometry preserved.",
+    "livery": "recolour_evtol_livery.py: canopy, blades and wing blue set against the AirTaxi, paint roughness 0.345 -> 0.75",
+    "finish": "repair_evtol_finish.py: source/flight roughness 0.55, nonmetal, specular factor 0.25; atlas unchanged"
+  },
+  "schema_version": 1,
+  "asset_id": "amvlab_evtol",
+  "category": "aircraft/civilian",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 212288,
+    "sha256": "fb6e73357e2b5c68d49c42f2726f7a8b985b91e5fe1680cd438d2ccab77191ba"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 1,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 4084
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 1,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "5709e70ca87e41798c9b4e3ef7e23ccd1f3e6bf06a1636ede1a9fb8bc0500d99"
+  },
+  "thumbnail": {
+    "path": "thumbnail_flight_4e2ffe70f369.jpg",
+    "bytes": 38009,
+    "sha256": "4e2ffe70f3696d179346db87e128a9e0f9cb7c07e685efaa43e892200ca41674",
+    "source_model_sha256": "753ce6964282886df9a9c55ffff5b64f65b10c545b8f9f69becd95dedba75989",
+    "variant": "flight",
+    "width": 960,
+    "height": 640,
+    "view": "neutral VTOL front three-quarter, model-specific framing, grey studio background"
+  },
+  "flight_visual": {
+    "path": "cabin_section_fitted_model.glb",
+    "sha256": "dda54d228c1e9888914db30b4610ca19e20b45c8a077624b9898ceb25d92131e",
+    "source_sha256": "fb6e73357e2b5c68d49c42f2726f7a8b985b91e5fe1680cd438d2ccab77191ba",
+    "rotors": {
+      "axis": "y",
+      "nodes": [
+        {
+          "name": "EVTOL_rotor_1",
+          "turn": 1,
+          "axis": "y"
+        },
+        {
+          "name": "EVTOL_rotor_2",
+          "turn": -1,
+          "axis": "y"
+        },
+        {
+          "name": "EVTOL_rotor_3",
+          "turn": 1,
+          "axis": "y"
+        },
+        {
+          "name": "EVTOL_rotor_4",
+          "turn": -1,
+          "axis": "y"
+        },
+        {
+          "name": "EVTOL_rotor_5",
+          "turn": 1,
+          "axis": "y"
+        },
+        {
+          "name": "EVTOL_rotor_6",
+          "turn": -1,
+          "axis": "y"
+        },
+        {
+          "name": "EVTOL_rotor_7",
+          "turn": 1,
+          "axis": "y"
+        },
+        {
+          "name": "EVTOL_rotor_8",
+          "turn": -1,
+          "axis": "y"
+        }
+      ],
+      "tilt": {
+        "axis": "z",
+        "sign": -1,
+        "frame": "parent",
+        "nodes": [
+          {
+            "name": "EVTOL_hinge_1",
+            "axis": "x",
+            "sign": -1,
+            "offset_deg": 90
+          },
+          {
+            "name": "EVTOL_hinge_2",
+            "axis": "x",
+            "sign": -1,
+            "offset_deg": 90
+          },
+          {
+            "name": "EVTOL_hinge_3",
+            "axis": "x",
+            "sign": -1,
+            "offset_deg": 90
+          },
+          {
+            "name": "EVTOL_hinge_4",
+            "axis": "x",
+            "sign": -1,
+            "offset_deg": 90
+          },
+          {
+            "name": "EVTOL_hinge_5",
+            "axis": "x",
+            "sign": -1,
+            "offset_deg": 90
+          },
+          {
+            "name": "EVTOL_hinge_6",
+            "axis": "x",
+            "sign": -1,
+            "offset_deg": 90
+          },
+          {
+            "name": "EVTOL_hinge_7",
+            "axis": "x",
+            "sign": -1,
+            "offset_deg": 90
+          },
+          {
+            "name": "EVTOL_hinge_8",
+            "axis": "x",
+            "sign": -1,
+            "offset_deg": 90
+          }
+        ]
+      },
+      "control_surfaces": {
+        "source": "native_actuator_with_visual_yaw",
+        "nodes": [
+          {
+            "name": "EVTOL_aileron_-1",
+            "axis": [
+              0.9957494448791875,
+              0,
+              0.09210343654169448
+            ],
+            "mix": {
+              "roll": -1
+            },
+            "limit_deg": 20,
+            "geometry_basis": "Inspected livery/panel edges and trailing-edge geometry; fitted visual hinge, not manufacturer data"
+          },
+          {
+            "name": "EVTOL_ruddervator_-1",
+            "axis": [
+              0.48746853424381503,
+              -0.09299630044375351,
+              0.8681740126414528
+            ],
+            "mix": {
+              "pitch": -1,
+              "yaw": 0.7
+            },
+            "limit_deg": 20,
+            "geometry_basis": "Inspected livery/panel edges and trailing-edge geometry; fitted visual hinge, not manufacturer data"
+          },
+          {
+            "name": "EVTOL_aileron_1",
+            "axis": [
+              0.9957494465421322,
+              0,
+              -0.09210341856325059
+            ],
+            "mix": {
+              "roll": 1
+            },
+            "limit_deg": 20,
+            "geometry_basis": "Inspected livery/panel edges and trailing-edge geometry; fitted visual hinge, not manufacturer data"
+          },
+          {
+            "name": "EVTOL_ruddervator_1",
+            "axis": [
+              0.487468439397462,
+              0.09299601759595477,
+              -0.8681740961942462
+            ],
+            "mix": {
+              "pitch": -1,
+              "yaw": -0.7
+            },
+            "limit_deg": 20,
+            "geometry_basis": "Inspected livery/panel edges and trailing-edge geometry; fitted visual hinge, not manufacturer data"
+          }
+        ],
+        "telemetry": "control_surface_deg: left/right aileron and elevator runtime angles; yaw is visual demand, not a measured rudder actuator. Older samples use attitude proxy.",
+        "coordinate_note": "20260917 audited in exported airframe +X forward/+Y up/+Z right; AMV native span is mirrored, so roll and yaw mixing signs are reversed relative to source side names."
+      }
+    },
+    "note": "Eight original propellers split from welded mesh; authored cruise -> +90 X for VTOL. AirTaxi-matched display extent; synthetic visual hinges only. Cabin and KP2-reference glazing: build_uam_cabins.py; exterior vertex positions and rig nodes retained. Clear cockpit glazing: clear_uam_glazing.py; pale cool tint, alpha 0.12, nonmetal. Rounded cabin supports; optional seated illustration and passenger viewpoints. Exterior and rig retained.",
+    "purpose": "AirTaxi dynamics visual substitute; not manufacturer simulation",
+    "validation": "gltf-passed",
+    "display_extent_m": 15.8,
+    "bytes": 3014060,
+    "measured_extent_m": 7.351877724,
+    "seats": 8,
+    "size_basis": "8인승 운항용 대표 크기: 길이 11.42 m, 높이 4.373 m, 스팬 15.8 m. GLB 실측 최대 변 7.351877724 m에 균일 배율 2.149111 적용. 단일/수동/다중/Physical 화면 공통. 제조사 확정 제원이나 실기체 좌석 배치를 뜻하지 않는다. 탑승객 키 1.65~1.85 m를 기준으로 비교; 카메라 거리에 따라 기체를 확대하지 않는다.",
+    "control_surface_geometry": "20260917 recut: fixed supports, narrow hinge rails, swept/dihedral axes; existing cabin retained",
+    "cabin_envelope_fit": "20260917-v2: inset local transverse sections from indexed shell triangles; static interior only"
+  },
+  "cockpit": {
+    "schema_version": 1,
+    "viewpoints": [
+      {
+        "id": "seat_01",
+        "label": "승객석 1",
+        "eye": [
+          1.3914,
+          0.6173,
+          -0.1431
+        ],
+        "occupant_node": "Cabin_occupant_01"
+      },
+      {
+        "id": "seat_02",
+        "label": "승객석 2",
+        "eye": [
+          1.3914,
+          0.6173,
+          0.1431
+        ],
+        "occupant_node": "Cabin_occupant_02"
+      },
+      {
+        "id": "seat_03",
+        "label": "승객석 3",
+        "eye": [
+          1.0314,
+          0.6173,
+          -0.1431
+        ],
+        "occupant_node": "Cabin_occupant_03"
+      },
+      {
+        "id": "seat_04",
+        "label": "승객석 4",
+        "eye": [
+          1.0314,
+          0.6173,
+          0.1431
+        ],
+        "occupant_node": "Cabin_occupant_04"
+      },
+      {
+        "id": "seat_05",
+        "label": "승객석 5",
+        "eye": [
+          0.6714,
+          0.6173,
+          -0.1431
+        ],
+        "occupant_node": "Cabin_occupant_05"
+      },
+      {
+        "id": "seat_06",
+        "label": "승객석 6",
+        "eye": [
+          0.6714,
+          0.6173,
+          0.1431
+        ],
+        "occupant_node": "Cabin_occupant_06"
+      },
+      {
+        "id": "seat_07",
+        "label": "승객석 7",
+        "eye": [
+          0.3114,
+          0.6173,
+          -0.1431
+        ],
+        "occupant_node": "Cabin_occupant_07"
+      },
+      {
+        "id": "seat_08",
+        "label": "승객석 8",
+        "eye": [
+          0.3114,
+          0.6173,
+          0.1431
+        ],
+        "occupant_node": "Cabin_occupant_08"
+      }
+    ],
+    "occupant_nodes": [
+      "Cabin_occupant_01",
+      "Cabin_occupant_02",
+      "Cabin_occupant_03",
+      "Cabin_occupant_04",
+      "Cabin_occupant_05",
+      "Cabin_occupant_06",
+      "Cabin_occupant_07",
+      "Cabin_occupant_08"
+    ],
+    "occupant_default_scale": 0.0001,
+    "eye": [
+      1.79,
+      0.77,
+      0
+    ],
+    "forward": [
+      1,
+      0,
+      0
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ],
+    "passenger_seats": 8,
+    "screens": [
+      {
+        "id": "pfd",
+        "center": [
+          2.08515,
+          0.6465,
+          -0.11925000000000001
+        ],
+        "width": 0.10600000000000001,
+        "height": 0.0855,
+        "right": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "id": "nav",
+        "center": [
+          2.08515,
+          0.6465,
+          0
+        ],
+        "width": 0.10600000000000001,
+        "height": 0.0855,
+        "right": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "id": "system",
+        "center": [
+          2.08515,
+          0.6465,
+          0.11925000000000001
+        ],
+        "width": 0.10600000000000001,
+        "height": 0.0855,
+        "right": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ]
+      }
+    ],
+    "interior": "flight_model.glb: AeroDT_Cabin; illustrative geometry fitted to glazing envelope, not certified dimensions",
+    "coordinate_frame": "flight_glb_scene_before_display_scale",
+    "seat_nodes": [
+      "Cabin_passenger_01",
+      "Cabin_passenger_02",
+      "Cabin_passenger_03",
+      "Cabin_passenger_04",
+      "Cabin_passenger_05",
+      "Cabin_passenger_06",
+      "Cabin_passenger_07",
+      "Cabin_passenger_08"
+    ],
+    "interior_refinement": "premium_cabin_20260917; contoured seats, matte trim, shallow bins, emissive light strips; display-only",
+    "ground_door": {
+      "nodes": {
+        "right": "Ground_door_left",
+        "left": "Ground_door_right"
+      },
+      "nodes_note": "The glTF node names are inverted against the airframe: every node the original author named L sits at negative z and every R at positive z (the position lights settle it), while build_ground_doors.py named the negative-z hatch \"right\". These keys are the side of the aircraft, so they are mapped across the names rather than to them. Rebuilding with the corrected tool names the nodes properly and this mapping becomes name-for-name.",
+      "forward_m": 1.43990425268395,
+      "right_m": 0.8629322315971429,
+      "height_m": 0.6662243557194396,
+      "open_deg": 78,
+      "purpose": "illustrative side hatch; not certified geometry"
+    }
+  }
+}

@@ -1,0 +1,146 @@
+/* The decision window. A drawing on the left, the numbers it turns on on the
+   right, and one line at the bottom saying what is saved and what is not. */
+.dc-window {
+  position: fixed;
+  inset: 6vh auto auto 50%;
+  transform: translateX(-50%);
+  width: min(1080px, 94vw);
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  z-index: 60;
+  background: rgba(16, 24, 33, .96);
+  border: 1px solid rgba(126, 176, 204, .28);
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, .5);
+  color: #dbe8f2;
+  font-size: 12px;
+  backdrop-filter: blur(8px);
+}
+.dc-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(126, 176, 204, .18);
+}
+.dc-head h2 { margin: 2px 0 0; font-size: 15px; font-weight: 600; letter-spacing: .01em; }
+.dc-head small { font-size: 9.5px; letter-spacing: .16em; color: #7fa8c4; }
+.dc-head > div:first-child { flex: 1; }
+.dc-tag {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(127, 233, 245, .12);
+  color: #9fe4ef;
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+.dc-icon {
+  width: 26px; height: 26px;
+  border: 0; border-radius: 7px;
+  background: rgba(255, 255, 255, .07);
+  color: #cfe0ec; font-size: 15px; cursor: pointer;
+}
+.dc-icon:hover { background: rgba(255, 255, 255, .14); }
+
+.dc-tabs { display: flex; gap: 6px; padding: 10px 14px 0; }
+.dc-tab {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 13px;
+  border: 1px solid rgba(126, 176, 204, .2);
+  border-bottom: 0;
+  border-radius: 9px 9px 0 0;
+  background: rgba(255, 255, 255, .04);
+  color: #a8c2d4; cursor: pointer; font-size: 12px;
+}
+.dc-tab[aria-selected="true"] { background: rgba(127, 233, 245, .13); color: #e6f6fa; border-color: rgba(127, 233, 245, .4); }
+.dc-moved {
+  min-width: 16px; padding: 1px 5px;
+  border-radius: 999px;
+  background: #ffb35c; color: #1a1206;
+  font-size: 10px; font-weight: 700; font-style: normal;
+}
+
+.dc-body { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 0; min-height: 0; flex: 1; }
+.dc-flow {
+  overflow: auto;
+  padding: 14px;
+  border-right: 1px solid rgba(126, 176, 204, .16);
+  border-top: 1px solid rgba(126, 176, 204, .2);
+}
+.dc-svg { display: block; margin: 0 auto; max-width: none; height: auto; }
+
+.dc-edge { fill: none; stroke: rgba(150, 190, 214, .5); stroke-width: 1.3; }
+/* A line that goes back up means something different from one that carries on
+   down, and a reader must not have to trace it to find out which it is. */
+.dc-edge-back { stroke: rgba(255, 179, 92, .62); stroke-dasharray: 5 4; }
+.dc-edge-long { stroke: rgba(150, 190, 214, .62); }
+.dc-arrowhead { fill: rgba(150, 190, 214, .7); }
+.dc-edge-label { fill: #8fb2c8; font-size: 9.5px; }
+
+.dc-node { cursor: pointer; outline: none; }
+.dc-shape { fill: rgba(255, 255, 255, .06); stroke: rgba(150, 190, 214, .45); stroke-width: 1.2; }
+.dc-node[data-kind="decision"] .dc-shape { fill: rgba(255, 200, 120, .1); stroke: rgba(255, 200, 120, .5); }
+.dc-node[data-kind="start"] .dc-shape,
+.dc-node[data-kind="end"] .dc-shape { fill: rgba(127, 233, 245, .1); stroke: rgba(127, 233, 245, .5); }
+.dc-node:hover .dc-shape { fill: rgba(255, 255, 255, .13); }
+.dc-node[data-selected="true"] .dc-shape { stroke: #7fe9f5; stroke-width: 2.2; fill: rgba(127, 233, 245, .18); }
+.dc-node:focus-visible .dc-shape { stroke: #ffd9a0; stroke-width: 2.2; }
+.dc-text { fill: #dceaf3; font-size: 11px; pointer-events: none; }
+.dc-pin { fill: rgba(127, 233, 245, .32); stroke: rgba(127, 233, 245, .7); stroke-width: 1; }
+.dc-pin[data-moved="true"] { fill: #ffb35c; stroke: #ffd9a0; }
+.dc-pin-count { fill: #08131a; font-size: 8.5px; font-weight: 700; pointer-events: none; }
+
+.dc-detail { overflow: auto; padding: 14px; border-top: 1px solid rgba(126, 176, 204, .2); }
+.dc-detail h3 { margin: 4px 0 6px; font-size: 13.5px; font-weight: 600; }
+.dc-kind {
+  display: inline-block; padding: 2px 7px;
+  border-radius: 999px; background: rgba(255, 255, 255, .08);
+  font-size: 10px; color: #a8c2d4;
+}
+.dc-note { margin: 4px 0 10px; color: #8fa9bd; font-size: 11px; line-height: 1.55; }
+.dc-link { border: 0; background: none; color: #7fe9f5; cursor: pointer; padding: 0 0 8px; font-size: 11px; }
+
+.dc-row {
+  padding: 9px 10px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(126, 176, 204, .16);
+  border-left: 3px solid rgba(126, 176, 204, .3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .03);
+}
+.dc-row[data-moved="true"] { border-left-color: #ffb35c; background: rgba(255, 179, 92, .07); }
+.dc-row[data-scope="native"] { border-left-style: dashed; }
+.dc-label { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; cursor: pointer; }
+.dc-label strong { font-size: 12px; font-weight: 600; }
+.dc-value { margin-left: auto; color: #9fe4ef; font-variant-numeric: tabular-nums; }
+.dc-was { color: #c79a5e; font-size: 10.5px; font-style: normal; }
+.dc-controls { display: flex; align-items: center; gap: 9px; margin-top: 7px; }
+.dc-slider { flex: 1; accent-color: #7fe9f5; }
+.dc-number {
+  width: 74px; padding: 4px 6px;
+  border: 1px solid rgba(126, 176, 204, .3); border-radius: 6px;
+  background: rgba(0, 0, 0, .3); color: #dbe8f2;
+  font-size: 11.5px; font-variant-numeric: tabular-nums;
+}
+.dc-toggle { margin-top: 7px; accent-color: #7fe9f5; width: 16px; height: 16px; }
+.dc-scope { margin: 6px 0 0; color: #71889b; font-size: 10px; line-height: 1.45; }
+
+.dc-foot {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 14px;
+  border-top: 1px solid rgba(126, 176, 204, .18);
+}
+.dc-status { flex: 1; margin: 0; color: #93aec1; font-size: 11px; }
+.dc-primary, .dc-secondary {
+  padding: 7px 15px; border-radius: 8px; cursor: pointer; font-size: 12px;
+  border: 1px solid transparent;
+}
+.dc-primary { background: #7fe9f5; color: #06222a; font-weight: 600; }
+.dc-secondary { background: rgba(255, 255, 255, .06); border-color: rgba(126, 176, 204, .28); color: #cfe0ec; }
+.dc-primary:disabled, .dc-secondary:disabled { opacity: .4; cursor: default; }
+
+@media (max-width: 900px) {
+  .dc-body { grid-template-columns: minmax(0, 1fr); }
+  .dc-flow { border-right: 0; }
+}

@@ -1,0 +1,97 @@
+{
+  "title": "허블 우주망원경",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Hubble Space Telescope (A)/Hubble Space Telescope (A).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "hubble.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "hubble",
+      "label": "허블 우주망원경",
+      "exact": {
+        "norad": [
+          20580
+        ],
+        "names": [
+          "^HST$"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 13.2,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 525.488629
+    }
+  ],
+  "display": {
+    "native_extent": 525.488629,
+    "reference_extent_m": 13.2,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 525.4886287550491
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "hubble",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 1694988,
+    "sha256": "e5ba4de15c7d359ac8fa1ab7e286aff42dec09c0fadae3db99252587f39fa384"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 5,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 7672
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "e5ba4de15c7d359ac8fa1ab7e286aff42dec09c0fadae3db99252587f39fa384"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 14029,
+    "sha256": "a1074e73561221af60444115d79da6f92e3843ef89df217befc30acdb46a5dac"
+  }
+}

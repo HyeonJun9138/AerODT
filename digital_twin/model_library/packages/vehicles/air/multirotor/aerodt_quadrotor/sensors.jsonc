@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../../../schemas/sensor_config_schema.jsonc",
+  "version": 1,
+  "mode": "ideal",
+  "sensors": [
+    {
+      "id": "IMU1",
+      "type": "imu",
+      "enabled": true,
+      "sample-interval-ns": 3000000,
+      "parent-link": "Frame",
+      "origin": { "xyz": "0 0 0", "rpy-deg": "0 0 0" }
+    },
+    {
+      "id": "GPS",
+      "type": "gps",
+      "enabled": true,
+      "sample-interval-ns": 100000000,
+      "parent-link": "Frame",
+      "origin": { "xyz": "0 0 0", "rpy-deg": "0 0 0" }
+    }
+  ]
+}

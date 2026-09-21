@@ -1,0 +1,6 @@
+{
+  "_comment": "Rename to normalization.json and fill in the values from the training run this checkpoint came from. Until then the model is listed but never asked to predict, because a guessed scale cannot be read back in metres.",
+  "scale_m": null,
+  "time_scale_s": 3.0,
+  "head_activation": null
+}

@@ -1,0 +1,98 @@
+{
+  "title": "찬드라 X선 관측위성",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Chandra X-ray Observatory/Chandra X-ray Observatory.glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "chandra.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "chandra",
+      "label": "찬드라 X선 관측위성",
+      "exact": {
+        "norad": [
+          25867
+        ],
+        "names": [
+          "^CHANDRA$",
+          "^CXO$"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 19.5,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 19.506997
+    }
+  ],
+  "display": {
+    "native_extent": 19.506997,
+    "reference_extent_m": 19.5,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 19.506996675875257
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "chandra",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 998500,
+    "sha256": "9383f44fc4c6eba73c40b0c2cfe33c08c90f1fb5230274bfdaa98e0c9f116a34"
+  },
+  "geometry": {
+    "meshes": 6,
+    "materials": 5,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 30132
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 2,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "9383f44fc4c6eba73c40b0c2cfe33c08c90f1fb5230274bfdaa98e0c9f116a34"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 7551,
+    "sha256": "f8bcb8ffe313ba9c57b89f160d9d0e1d5a2baec1c6325c739c57f22c484dda74"
+  }
+}

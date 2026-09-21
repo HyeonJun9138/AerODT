@@ -1,0 +1,5 @@
+Poly by Google - Flying gull (via Poly Pizza)
+https://poly.pizza/m/eMNhHDZakYp
+https://creativecommons.org/licenses/by/3.0/
+Retain attribution and license link.
+Changes: uniform scale baked into the root node (wingspan 1.1 m); mesh bytes preserved.

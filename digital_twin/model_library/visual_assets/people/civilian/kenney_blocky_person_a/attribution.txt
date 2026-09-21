@@ -1,0 +1,5 @@
+Kenney
+https://kenney.nl/assets/blocky-characters
+https://creativecommons.org/publicdomain/zero/1.0/
+CC0 per included License.txt. Personal, educational and commercial use permitted.
+Changes: Embedded the original PNG; positions, node transforms and animation channels unchanged.

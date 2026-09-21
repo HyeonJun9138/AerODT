@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "assets": [
+    {
+      "asset_id": "generic_aircraft",
+      "kind": "aircraft",
+      "uri": "/visual-assets/procedural/aircraft/civilian/generic_aircraft/model.glb",
+      "size_m": 32,
+      "attribution": "AeroDT contributors; original procedural placeholder geometry; CC0-1.0.",
+      "temporary": true,
+      "metadata_uri": "/visual-assets/procedural/aircraft/civilian/generic_aircraft/asset.json"
+    },
+    {
+      "asset_id": "generic_satellite",
+      "kind": "satellite",
+      "uri": "/visual-assets/procedural/spacecraft/satellites/generic_satellite/model.glb",
+      "size_m": 16,
+      "attribution": "AeroDT contributors; original procedural placeholder geometry; CC0-1.0.",
+      "temporary": true,
+      "metadata_uri": "/visual-assets/procedural/spacecraft/satellites/generic_satellite/asset.json"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>시각화 메뉴 검증</title>
+<link rel="stylesheet" href="/static/styles.css">
+<style>body{background:#415c66}#layers{left:80px;top:30px}#result{position:absolute;left:80px;top:380px;color:white;white-space:pre-wrap}</style>
+<div id="layers" class="glass"><button id="aircraft" class="chip">항공기</button><button id="satellite" class="chip">위성</button><button id="uam" class="chip">UAM</button></div>
+<pre id="result">TEST — 실제 메뉴 컴포넌트, 개수는 시험 입력입니다. 지도 상태를 변경하지 않습니다.</pre>
+<script type="module">
+import {UamDisplayMenu} from '/static/uam_display_menu.js';
+const menus=[],mount=document.getElementById('layers'),result=document.getElementById('result');
+for(const [id,title,count] of [['aircraft','항공기','수신 항공기 12대'],['satellite','위성','수신 위성 1,234개'],['uam','UAM','버티포트 18곳']]){
+  const options=id==='uam'?{}:{defaults:{all:true,labels:true,models:true},items:[['labels','이름표'],['models','3D 모델']],
+    note:'3D 모델을 끄면 점·아이콘으로 표시합니다. 개수는 현재 수신 범위 기준이며, 숨겨도 데이터 수신은 계속됩니다.'};
+  const menu=new UamDisplayMenu({button:document.getElementById(id),mount,id,title,...options,
+    onOpen:current=>menus.forEach(m=>{if(m!==current)m.open(false);}),
+    onChange:state=>result.textContent='TEST '+title+' '+JSON.stringify(state)});
+  menu.setCount(count);menus.push(menu);
+}
+window.addEventListener('pagehide',()=>menus.forEach(m=>m.destroy()),{once:true});
+</script></html>

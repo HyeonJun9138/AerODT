@@ -1,0 +1,220 @@
+.cockpit-console{position:absolute;left:0;top:0;width:1727px;height:374px;box-sizing:border-box;display:grid;grid-template-columns:550px 1fr 1fr;gap:24px;padding:16px 10px 14px;transform-origin:0 0;pointer-events:none;color:#edf6fc;font:14px/1.3 Arial,'Noto Sans KR',sans-serif;font-variant-numeric:tabular-nums}
+.cockpit-console[hidden]{display:none!important}
+.cockpit-console .cockpit-ground-mfd{width:auto;height:100%;min-width:0;padding:10px 14px;display:flex;flex-direction:column;pointer-events:auto}
+.cockpit-console .cockpit-screen-title{flex:none;height:26px;margin-bottom:10px}
+.cockpit-console .cockpit-screen-title span{font-size:15px}
+.cockpit-console .cockpit-screen-title small{font-size:11px;max-width:none}
+.cockpit-ground-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:38px;flex:none}
+.cockpit-ground-heading>strong{font-size:23px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cockpit-ground-heading>span{font:13px Consolas,monospace;color:#bdd2df;white-space:nowrap}
+.cockpit-ground-source{height:30px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #334753;border-bottom:1px solid #334753;color:#f4cd7d;font-size:13px}
+.cockpit-ground-source>span:last-child{font:11px Consolas,monospace;color:#9cb9ca;letter-spacing:1.2px}
+.cockpit-ground-mfd[data-live=true] .cockpit-ground-source{color:#79e5c7}
+.cockpit-ground-mfd[data-stale=true] .cockpit-ground-source{color:#ffb16b}
+.cockpit-ground-assignment{display:grid;grid-template-columns:1fr 36px 1fr;align-items:center;flex:1;min-height:100px;text-align:center}
+.cockpit-ground-metric{display:flex;flex-direction:column;gap:8px;min-width:0}
+.cockpit-ground-metric>span{font:12px Consolas,monospace;letter-spacing:1px;color:#b9d0dd}
+.cockpit-ground-metric>strong{font:700 22px Consolas,monospace;color:#80e6d0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cockpit-ground-assignment .cockpit-ground-metric>strong{font-size:44px;color:#f4d481}
+.cockpit-ground-mfd[data-live=true] .cockpit-ground-assignment strong{color:#80e6d0}
+.cockpit-ground-arrow{color:#94b7c7;font-size:28px}
+.cockpit-ground-plan{display:flex;justify-content:space-between;gap:12px;align-items:center;height:30px;flex:none;border-top:1px solid #2d404c;color:#cfdeea;font:14px Consolas,monospace}
+.cockpit-ground-plan>span:first-child{font-size:11px;color:#9bb6c7;letter-spacing:.7px}
+.cockpit-ground-footer{border-top:1px solid #334753;padding-top:9px;margin-top:auto;min-height:32px;font-size:13px;color:#b8ccd8;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cockpit-ground-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0 15px;flex:none}
+.cockpit-ground-steps>span{font:12px Consolas,monospace;color:#8ba3b2;border-bottom:4px solid #293e4b;padding-bottom:9px}
+.cockpit-ground-steps>span[data-done=true]{color:#83ddc5;border-color:#83ddc5}
+.cockpit-ground-steps>span[data-active=true]{color:#f9d283;border-color:#f9d283}
+.cockpit-ground-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;margin:3px 0 16px}
+.cockpit-ground-grid .cockpit-ground-metric{gap:5px}
+.cockpit-ground-grid .cockpit-ground-metric>strong{font-size:19px}
+.cockpit-console[data-focused=true]{width:740px;height:460px;grid-template-columns:1fr;gap:0;padding:10px;filter:drop-shadow(0 16px 28px #0008)}
+.cockpit-console[data-focused=true] .cockpit-hardware-clearance{display:none}
+.cockpit-console[data-focus-screen=surface] .cockpit-turnaround-mfd,.cockpit-console[data-focus-screen=turnaround] .cockpit-surface-mfd{display:none}
+.cockpit-operation-controls{padding:12px 0 8px}
+.cockpit-operation-controls[hidden]{display:none}
+.cockpit-simulation-row{display:grid;grid-template-columns:1fr 1.15fr auto;gap:6px;align-items:center}
+.cockpit-simulation-row button{width:100%;justify-content:center}
+.cockpit-operation-controls>.cockpit-dock-setting{margin-top:10px}
+.cockpit-console .cockpit-screen-title{height:30px;margin-bottom:6px;gap:8px}
+.cockpit-console .cockpit-screen-title small{display:none}
+.cockpit-ground-heading{min-height:30px}
+.cockpit-ground-heading>strong{font-size:20px}
+.cockpit-ground-source{height:24px;font-size:12px;flex:none}
+.cockpit-ground-assignment{min-height:64px}
+.cockpit-ground-assignment .cockpit-ground-metric>strong{font-size:38px}
+.cockpit-ground-plan{height:24px;font-size:12px}
+.cockpit-ground-footer{display:block;box-sizing:border-box;flex:none;height:30px;min-height:30px;padding-top:5px;font-size:11px;line-height:12px}
+.cockpit-ground-steps{gap:8px;margin:6px 0 8px}
+.cockpit-ground-steps>span{font-size:10px;border-bottom-width:3px;padding-bottom:5px}
+.cockpit-ground-grid{gap:8px 20px;margin:4px 0 8px}
+.cockpit-ground-grid .cockpit-ground-metric{gap:2px}
+.cockpit-ground-grid .cockpit-ground-metric>span{font-size:10px}
+.cockpit-ground-grid .cockpit-ground-metric>strong{font-size:17px}
+.cockpit-next-flight{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;align-items:baseline;
+  border-top:1px solid #334753;padding:5px 0;color:#bdd2df;flex:none;min-height:30px}
+.cockpit-next-flight[hidden]{display:none}
+.cockpit-next-flight>span{grid-row:1 / span 2;font:10px Consolas,monospace;color:#f4cd7d;letter-spacing:.7px}
+.cockpit-next-flight>strong{font:700 13px Consolas,monospace;color:#80e6d0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cockpit-next-flight>span:last-child{grid-row:auto;font:10px Consolas,monospace;color:#a9bfcb;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cockpit-mfd-actions{display:flex;gap:8px;margin-top:6px;flex:none;height:34px}
+.cockpit-mfd-actions button{flex:1;font-size:13px;min-width:0;white-space:nowrap;padding:5px 8px}
+.cockpit-console[data-focused=true] .cockpit-ground-heading{min-height:44px}
+.cockpit-console[data-focused=true] .cockpit-ground-grid{flex:1;align-items:center}
+.cockpit-console[data-focused=true] .cockpit-ground-grid strong{font-size:25px}
+.cockpit-console[data-focused=true] .cockpit-ground-footer{font-size:13px;line-height:15px;height:38px}
+.cockpit-active .manual-flight-panel{display:none!important}
+.cockpit-active .cockpit-toolbar{left:auto;right:16px;bottom:16px;transform:none}
+.cockpit-active .cockpit-dock-body{left:auto;right:0;transform:translate(0,7px)}
+.cockpit-active .cockpit-toolbar[data-expanded=true] .cockpit-dock-body{transform:none}
+
+/* PSU. Present only while flying one airframe of a running day: a flight of
+   its own has no service to talk to, and an empty third screen would be a
+   worse answer than no screen. */
+.cockpit-console[data-psu=true]{grid-template-columns:550px 1fr 1fr 1fr}
+.cockpit-psu-mfd[hidden]{display:none!important}
+.cockpit-psu-lines{display:flex;flex-direction:column;gap:4px;margin-top:8px;color:#a6bdc8;font-size:12px;line-height:1.4}
+.cockpit-psu-mfd .cockpit-ground-heading strong{color:#8fe3c6}
+.cockpit-psu-mfd[data-alert=true] .cockpit-ground-heading strong{color:#ffb4a6}
+.cockpit-psu-mfd[data-alert=true] .cockpit-ground-footer{color:#ffd2ca}
+.cockpit-psu-mfd .cockpit-mfd-actions button{flex:1;min-width:0;font-size:11px;padding:0 6px}
+
+/* A single flight-control dock for standalone and assigned fleet aircraft. */
+.cockpit-control-context{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 12px;color:#dcebf3}
+.cockpit-control-owner{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cockpit-control-state{font-size:11px;color:#91d9c9;white-space:nowrap}
+.cockpit-control-help{margin-top:12px;border-top:1px solid #95b6c12b;padding-top:10px;font-size:12px;color:#c1d1da}
+.cockpit-control-help summary{cursor:pointer;min-height:24px}
+.cockpit-input-guide{line-height:1.9;padding:8px 0 2px;color:#aebfca;max-width:100%;overflow-wrap:anywhere}
+.cockpit-toolbar .cockpit-simulation-row{gap:8px}
+.cockpit-toolbar .cockpit-simulation-row button{min-height:42px}
+@media(max-width:480px){.cockpit-control-context{align-items:flex-start;flex-direction:column;gap:4px}}
+
+/* Received PSU command and pilot decision share the destination MFD. */
+.cockpit-surface-decisions{flex:none;border-top:1px solid #334753;padding:5px 0;font-size:12px;line-height:1.35}
+.cockpit-surface-command,.cockpit-surface-pilot{display:grid;grid-template-columns:46px minmax(0,1fr);gap:8px;align-items:start}
+.cockpit-surface-pilot{margin-top:4px}
+.cockpit-surface-decisions b{font:11px Consolas,monospace;color:#8baebe;padding-top:2px}
+.cockpit-surface-decisions strong{font-size:13px;color:#81e5cf;margin-right:7px}
+.cockpit-surface-decisions span{overflow-wrap:anywhere}
+.cockpit-surface-command>span,.cockpit-surface-pilot>div{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.cockpit-surface-pilot span{color:#b9cbd7}
+.cockpit-surface-decisions[data-level=waiting] strong,.cockpit-surface-decisions[data-level=caution] strong{color:#f4cd7d}
+.cockpit-surface-decisions[data-level=error] strong{color:#ff9e92}
+.cockpit-surface-mfd .cockpit-ground-assignment{min-height:54px}
+.cockpit-surface-mfd .cockpit-ground-assignment .cockpit-ground-metric>strong{font-size:32px}
+.cockpit-console[data-focus-screen=surface] .cockpit-surface-decisions{font-size:15px;line-height:1.45;max-height:155px;overflow:auto}
+.cockpit-console[data-focus-screen=surface] .cockpit-surface-decisions strong{font-size:16px}
+.cockpit-console[data-focus-screen=surface] .cockpit-surface-command>span,.cockpit-console[data-focus-screen=surface] .cockpit-surface-pilot>div{display:block;-webkit-line-clamp:unset}
+
+/* A readable instruction first; reservations and reports have separate labels. */
+.cockpit-psu-mfd{overflow:auto;scrollbar-width:thin;scrollbar-color:#49636e #091820}
+.cockpit-psu-mfd .cockpit-ground-heading>strong{font-size:19px}
+.cockpit-psu-mfd[data-tone=hold] .cockpit-ground-heading>strong{color:#f4cd7d}
+.cockpit-psu-mfd[data-tone=go] .cockpit-ground-heading>strong{color:#8ff0cb}
+/* The panel is 344 px of usable height and its content now fills it, so every
+   reserved-but-empty box is a line of the procedure nobody can read. These
+   min-heights are here to stop the panel twitching as text changes length, so
+   they are set to one line rather than to the longest case: a second line
+   still grows the box, it is simply no longer held open for one that is not
+   there. Between them this is about 30 px, which is what the help row at the
+   bottom -- 조종 절차 · 최근 교신 -- was being pushed out by. */
+.cockpit-psu-directive{flex:none;font-size:14px;line-height:1.4;min-height:20px;color:#e4f4f8;margin:2px 0 4px}
+/* Korean breaks between any two syllables by default, which is how
+   'GATE 대기 유지' came out as '...유' and a lone '지' on the next line. Every
+   line of this panel is a sentence a pilot reads under load, so none of them
+   may break inside a word; they break at the spaces and the separators. */
+.cockpit-psu-mfd{word-break:keep-all}
+/* Scoped to this screen: the other two MFDs have room to spare and their
+   spacing is not this one's problem to solve. */
+/* The procedure in one row: seven steps, the one being flown lit, the ones
+   behind it struck through and dimmed. Small enough to sit above the directive
+   without costing a line of it, which is the only way it earns its place in a
+   panel this full. */
+.cockpit-psu-steps{display:flex;gap:3px;list-style:none;margin:0 0 4px;padding:0;flex:none}
+.cockpit-psu-steps li{flex:1;min-width:0;text-align:center;padding:2px 0;border-radius:2px;
+  font:600 10px/1.3 Arial,'Noto Sans KR',sans-serif;letter-spacing:.02em;
+  background:#111f27;color:#536874;border:1px solid transparent;white-space:nowrap;overflow:hidden}
+.cockpit-psu-steps li[data-state=done]{background:#122a2b;color:#63ab98}
+.cockpit-psu-steps li[data-state=now]{background:#1d4a56;color:#d8fbf2;border-color:#4fa3ac}
+/* Asked for by distance, so it appears on its own rather than replacing
+   anything: the directive still says what the service is doing. */
+.cockpit-psu-prompt{flex:none;margin:0 0 3px;padding:3px 6px;border-radius:2px;
+  font:600 11px/1.35 Arial,'Noto Sans KR',sans-serif;background:#16323b;color:#9fe6d5;
+  border-left:3px solid #4fa3ac}
+.cockpit-psu-prompt[hidden]{display:none}
+.cockpit-psu-prompt[data-urgent=true]{background:#3a2a17;color:#ffcf8f;border-left-color:#d8a049}
+/* One action is the procedure and the other two are not. They used to be three
+   identical buttons in a row, which is how 진행 문의 -- rarely needed, and the
+   one nobody should reach for by default -- read as part of the sequence. */
+.cockpit-psu-aside{display:grid;grid-template-columns:1fr 1fr;gap:4px;grid-column:1 / -1}
+.cockpit-psu-mfd .cockpit-psu-aside button{min-height:22px;font-size:11px;opacity:.82;
+  background:#101e25;border-color:#33505a;color:#a8c2cd;font-weight:400}
+.cockpit-psu-mfd .cockpit-psu-aside button:hover:not(:disabled){opacity:1}
+.cockpit-psu-mfd .cockpit-screen-title{margin-bottom:6px}
+/* Label beside its value rather than above it. Stacked, these four readings
+   cost 72 px of a panel that has none to spare; side by side they cost half
+   that and read as the four facts they are. */
+.cockpit-psu-times{flex:none!important;gap:3px 12px;margin:2px 0 3px}
+.cockpit-psu-times .cockpit-ground-metric{flex-direction:row;align-items:baseline;gap:6px}
+.cockpit-psu-times .cockpit-ground-metric>span{flex:none;font-size:10px}
+.cockpit-psu-times .cockpit-ground-metric>strong{font-size:15px!important;margin-left:auto}
+/* These labels are two clauses and a separator in a narrow column. The
+   letter-spacing is there for the Latin headings elsewhere and buys nothing
+   on a monospace face that is already spacing them, while costing enough
+   width to push the second clause onto a line of its own. */
+.cockpit-psu-times .cockpit-ground-metric>span{letter-spacing:0;line-height:1.3}
+.cockpit-psu-times .cockpit-ground-metric>strong{font-size:16px!important}
+.cockpit-psu-clock{display:flex;align-items:center;gap:6px;flex:none;min-height:17px;color:#f4cd7d;font-size:11px}
+.cockpit-psu-clock button{margin-left:auto;font-size:11px;padding:3px 5px;white-space:nowrap}
+.cockpit-psu-route{flex:none;font-size:11px;color:#a4c6d4;line-height:1.35;min-height:15px;overflow-wrap:anywhere}
+.cockpit-psu-mfd .cockpit-ground-footer{height:auto;min-height:17px;line-height:1.4;overflow:visible;margin-top:2px}
+.cockpit-psu-mfd .cockpit-mfd-actions{display:grid;grid-template-columns:1fr 1fr;height:auto;gap:4px;margin-top:3px}
+.cockpit-psu-mfd .cockpit-mfd-actions button{min-height:27px;white-space:normal;font-size:12px;padding:4px}
+/* Direct children only. As a descendant rule this also caught the first
+   button of the quiet row, which then spanned both columns and pushed the
+   second onto a line of its own -- 58 px for two 22 px buttons. */
+.cockpit-psu-mfd .cockpit-mfd-actions > button:first-child{grid-column:1 / -1;background:#163e49;border-color:#568e99;color:#cffbf2;font-weight:700}
+.cockpit-psu-mfd .cockpit-mfd-actions button:disabled{opacity:.45}
+.cockpit-psu-help{flex:none;margin-top:3px;border-top:1px solid #334753;padding-top:3px;font-size:12px;line-height:1.5}
+.cockpit-psu-help summary{cursor:pointer;color:#bad5df}
+.cockpit-psu-help p{white-space:pre-line;line-height:1.7;color:#d6e7ee}
+.cockpit-psu-history{white-space:pre-wrap;color:#8bdcca;font:11px/1.6 Consolas,monospace;overflow-wrap:anywhere}
+.cockpit-console[data-psu=true][data-focused=true]{grid-template-columns:1fr}
+.cockpit-console[data-focus-screen=psu] .cockpit-psu-directive{font-size:20px;min-height:30px}
+.cockpit-console[data-focus-screen=psu] .cockpit-psu-times .cockpit-ground-metric>strong{font-size:22px!important}
+.cockpit-console[data-focus-screen=psu] .cockpit-psu-route,.cockpit-console[data-focus-screen=psu] .cockpit-psu-clock{font-size:14px}
+.cockpit-console .cockpit-ground-mfd[hidden],.cockpit-psu-clock[hidden]{display:none!important}
+.cockpit-console:not([data-focused=true]) .cockpit-psu-route{display:none}
+.cockpit-psu-directive{min-height:32px}
+
+/* Same two physical displays for standalone, observed and assigned flight. */
+.cockpit-console,.cockpit-console[data-psu=true]{grid-template-columns:550px minmax(0,1fr) minmax(0,1fr)}
+.cockpit-console[data-focused=true],.cockpit-console[data-psu=true][data-focused=true]{grid-template-columns:1fr}
+.cockpit-console .cockpit-psu-mfd{overflow:hidden;min-height:0;word-break:normal;overflow-wrap:anywhere}
+.cockpit-psu-mfd .cockpit-ground-heading{min-height:25px;gap:8px}
+.cockpit-psu-mfd .cockpit-ground-heading strong{font-size:17px}
+.cockpit-psu-mfd .cockpit-ground-heading>span{overflow:hidden;text-overflow:ellipsis;max-width:42%;font-size:11px}
+.cockpit-psu-tab-row{display:flex;align-items:center;gap:5px;margin:3px 0 5px;flex:none}
+.cockpit-psu-tab-row button{font-size:11px;padding:3px 7px}
+.cockpit-psu-tab-row button[aria-pressed=true]{background:#204752;color:#bdffeb}
+.cockpit-psu-connection{margin-right:auto;font-size:11px;color:#f3cd86}
+.cockpit-psu-live,.cockpit-psu-comms{flex:1;min-height:0;overflow:auto;scrollbar-width:thin}
+.cockpit-psu-live[hidden],.cockpit-psu-comms[hidden]{display:none!important}
+.cockpit-psu-section-label,.cockpit-psu-next>span{font-size:10px;color:#9ab9c8;display:block}
+.cockpit-psu-mfd .cockpit-psu-directive{font-size:14px;line-height:1.4;min-height:0;margin:2px 0 5px}
+.cockpit-psu-next{padding:5px 7px;background:#132b32;border-left:3px solid #73d9bf}
+.cockpit-psu-next strong{font-size:14px;display:block;line-height:1.4}
+.cockpit-psu-reason{font-size:11px;color:#ebc28b;line-height:1.4;margin-top:4px}
+.cockpit-psu-mfd .cockpit-psu-clock{font-size:11px;line-height:1.4;margin-top:3px}
+.cockpit-psu-mfd .cockpit-mfd-actions{margin-top:6px}
+.cockpit-console .cockpit-psu-comms .cockpit-psu-route{display:block}
+.cockpit-psu-comms .cockpit-psu-help p{font-size:11px;line-height:1.5}
+.cockpit-console .cockpit-psu-comms .cockpit-ground-grid{flex:none}
+
+.cockpit-console[data-psu=true] .cockpit-psu-next{display:none}
+.cockpit-psu-mfd .cockpit-mfd-actions:before{content:'내 다음 행동';grid-column:1 / -1;color:#9ab9c8;font-size:10px}
+
+.cockpit-console:not([data-focused=true]) .cockpit-hardware-clearance{grid-column:1;grid-row:1}
+.cockpit-console:not([data-focused=true]) .cockpit-turnaround-mfd{grid-column:2;grid-row:1}
+.cockpit-console:not([data-focused=true]) .cockpit-psu-mfd{grid-column:3;grid-row:1}

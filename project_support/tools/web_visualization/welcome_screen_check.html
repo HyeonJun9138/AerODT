@@ -1,0 +1,46 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>시작 안내 QA</title>
+<style>body{margin:0;background:#26363f;color:#eaf5f8;font:13px 'Segoe UI','Malgun Gothic',sans-serif}header{padding:10px;display:flex;gap:10px;align-items:center}button,select{padding:7px;background:#546a75;color:white;border:1px solid #93abb5;border-radius:5px}iframe{border:1px solid #aac1cb;margin:0 10px;display:block}pre{font-size:11px;white-space:pre-wrap;margin:10px}a{color:#bce5eb}</style>
+<header><strong>시작 안내 / 실제 UI · 시험 진입 신호</strong><select id="size" aria-label="시험 화면 크기"><option value="1366,768">1366 × 768</option><option value="1920,1080">1920 × 1080</option><option value="1024,600">1024 × 600</option><option value="390,700">390 × 700</option></select><button id="again">다시 접속</button><button id="reduce">모션 감소</button><button id="enter">START 검증</button><a href="about:blank">검증 종료</a></header>
+<iframe id="frame" title="실제 시작 안내"></iframe><pre id="metrics">준비 중</pre>
+<script type="module">
+if(!new URLSearchParams(location.search).has('frame')){
+  const frame=document.querySelector('#frame'),size=document.querySelector('#size');
+  const resize=()=>{const [w,h]=size.value.split(',');frame.style.width=w+'px';frame.style.height=h+'px';};resize();size.onchange=resize;
+  const open=reduced=>frame.src=location.pathname+'?frame=1'+(reduced?'&reduced=1':'');open(false);
+  document.querySelector('#again').onclick=()=>open(false);document.querySelector('#reduce').onclick=()=>open(true);
+  document.querySelector('#enter').onclick=()=>frame.contentWindow.postMessage({start:true},location.origin);
+  window.addEventListener('message',e=>{if(e.origin===location.origin&&e.source===frame.contentWindow&&e.data.metrics)document.querySelector('#metrics').textContent=JSON.stringify(e.data.metrics,null,2);});
+}else{
+  document.body.replaceChildren();
+  for(const path of ['styles.css','welcome_screen.css']){
+    const link=document.createElement('link');link.rel='stylesheet';link.href='/static/'+path;document.head.append(link);await new Promise(r=>link.onload=r);
+  }
+  const index=new DOMParser().parseFromString(await(await fetch('/static/index.html')).text(),'text/html');
+  for(const id of ['globe','rail','layers','camera','welcome'])document.body.append(index.getElementById(id));
+  for(const id of ['sunlight','buildings','terrain','place-names','airspace','clouds'])document.getElementById(id).hidden=true;
+  const style=document.createElement('style');style.textContent='#globe{background:radial-gradient(ellipse at 52% 48%,#415a59,#233e49 45%,#182831)}#globe::after{content:"QA / 시험 배경 · 실제 운항 미접속";position:absolute;bottom:25px;left:38%;color:#acc4c6;font-size:12px}';document.head.append(style);
+  const {WelcomeScreen}=await import('/static/welcome_screen.js');
+  const root=document.getElementById('welcome'),button=document.getElementById('welcome-start');
+  const phases=[],errors=[];let backgroundClicks=0;
+  window.addEventListener('error',e=>errors.push(e.message));window.addEventListener('unhandledrejection',e=>errors.push(String(e.reason)));
+  document.getElementById('mode-live').onclick=()=>{backgroundClicks++;report();};
+  const report=()=>{
+    const box=el=>{const r=el.getBoundingClientRect();return {left:r.left,top:r.top,right:r.right,bottom:r.bottom};};
+    const card=box(document.querySelector('.welcome-center'));
+    const hints=[...document.querySelectorAll('.welcome-hint-copy')].map(el=>({text:el.querySelector('strong').textContent,...box(el)}));
+    const overlaps=hints.some(r=>r.left<card.right&&r.right>card.left&&r.top<card.bottom&&r.bottom>card.top);
+    const metrics={phase:root.dataset.phase??'entry',modal:root.matches(':modal'),focus:document.activeElement?.id,backgroundClicks,
+      width:innerWidth,height:innerHeight,scrollWidth:root.scrollWidth,scrollHeight:root.scrollHeight,overlaps,card,hints,phases,errors};
+    window.parent.postMessage({metrics},location.origin);
+  };
+  const observer=new MutationObserver(()=>{phases.push(root.dataset.phase);requestAnimationFrame(report);});observer.observe(root,{attributes:true,attributeFilter:['data-phase']});
+  document.addEventListener('focusin',()=>requestAnimationFrame(report));
+  document.addEventListener('keydown',()=>requestAnimationFrame(report),true);
+  document.addEventListener('pointerdown',()=>requestAnimationFrame(report),true);
+  window.addEventListener('resize',()=>requestAnimationFrame(report));
+  window.addEventListener('message',e=>{if(e.origin===location.origin&&e.data.start)button.click();});
+  const controller=new WelcomeScreen({root,button});
+  report();await controller.afterEntry(new Promise(r=>setTimeout(r,1000)),{reducedMotion:new URLSearchParams(location.search).has('reduced')});
+  window.addEventListener('pagehide',()=>{observer.disconnect();controller.destroy();},{once:true});
+}
+</script>

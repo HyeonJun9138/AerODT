@@ -1,0 +1,97 @@
+{
+  "title": "Hinode (Solar-B)",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Hinode (Solar-B)/Hinode (Solar-B).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "hinode.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "hinode",
+      "label": "Hinode (Solar-B)",
+      "exact": {
+        "norad": [
+          29479
+        ],
+        "names": [
+          "^HINODE"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 10,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 229.619946
+    }
+  ],
+  "display": {
+    "native_extent": 229.619946,
+    "reference_extent_m": 10,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 229.61994597315788
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "hinode",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 276248,
+    "sha256": "104f23212d379541990c28b26999db3bcfb2ef0731285f2366219e5438e125e6"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 23,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 125548
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "104f23212d379541990c28b26999db3bcfb2ef0731285f2366219e5438e125e6"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 5492,
+    "sha256": "bc2cd7af0da8eb599e6cf01e20cd784f79341db587149160596d9b85c201c2ca"
+  }
+}

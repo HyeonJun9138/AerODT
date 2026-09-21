@@ -1,0 +1,97 @@
+{
+  "title": "Earth Observing-1",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Earth Observing-1 (EO-1)/Earth Observing-1 (EO-1).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "eo_1.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "eo_1",
+      "label": "Earth Observing-1",
+      "exact": {
+        "norad": [
+          26619
+        ],
+        "names": [
+          "^EO-1$"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 7,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 128.949556
+    }
+  ],
+  "display": {
+    "native_extent": 128.949556,
+    "reference_extent_m": 7,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 128.94955617783222
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "eo_1",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 224580,
+    "sha256": "2d26422a45147e86c93c535979b1d9ae16d34fc0171f661dec051bca61c14a74"
+  },
+  "geometry": {
+    "meshes": 10,
+    "materials": 75,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 37775
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "2d26422a45147e86c93c535979b1d9ae16d34fc0171f661dec051bca61c14a74"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 11001,
+    "sha256": "83e9b194d034a458578d4ebfd8582a4b653d5153aa24290da8520a8b3063b011"
+  }
+}

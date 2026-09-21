@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "host": "",
+  "ssh_port": 22,
+  "web_port": 8766,
+  "forward_port": 18770,
+  "username": "",
+  "identity_file": "",
+  "auto_connect": false
+}

@@ -1,0 +1,5 @@
+purchased on Fab by the AeroDT operator; original author as named on the Fab listing
+https://www.fab.com/
+https://www.fab.com/eula
+The operator holds a purchased Fab licence, which covers using the model in their own products. It does not generally cover handing the model file itself to third parties, so serving it from an AeroDT deployment is within that licence while exposing the visual-asset directory on a public site is not. Depicts a real manufacturer's aircraft; no endorsement is implied.
+Changes: Unreal glTF exporter output, unmodified. Textures written as JPEG quality 85 by the exporter. Imported from FBX as a combined static mesh and scaled to metres on export; materials were baked to 512 px texture sets by the exporter.

@@ -1,0 +1,89 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>버티포트 접지 검증</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>body{margin:0;background:#203541;color:#e6f3f8;font:13px sans-serif}#view{height:72vh}aside{padding:12px}pre{white-space:pre-wrap}button{padding:8px;margin:4px}a{color:#a9effa}</style>
+<a href="about:blank">검증 종료</a><div id="view"></div><aside><button id="sample">지형 높이 비교</button><button id="before">보정 전 5종</button><button id="after">보정 후 5종</button><button id="flat">평면 지형 검증</button><button id="high">높은 데크 검증</button><button id="all">18곳 높이 검사</button><pre id="result">고정된 사용자 스냅샷. 실제 시뮬레이션은 조작하지 않습니다.</pre></aside>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+const {VertiportLayer,geographicPoints,deckSurfaceOffset}=await import('/nav8/visualization/vertiport_layer.js');
+const {EntityScene}=await import('/nav7/visualization/entity_scene.js');
+const {loadWorldTerrain}=await import('/nav6/visualization/terrain_layer.js');
+const C=Cesium,result=document.querySelector('#result');
+const viewer=new C.Viewer('view',{baseLayer:false,baseLayerPicker:false,timeline:false,animation:false,geocoder:false,homeButton:false,sceneModePicker:false,navigationHelpButton:false,requestRenderMode:true,maximumRenderTimeChange:Infinity});
+viewer.scene.globe.baseColor=C.Color.fromCssColorString('#294956');
+const ports=(await fetch('/deck-fixtures/vertiports.json').then(r=>r.json())).vertiports;
+const snapshot=await fetch('/deck-fixtures/snapshot.json').then(r=>r.json());
+const assets=await fetch('/deck-fixtures/assets.json').then(r=>r.json());
+const physicalDecks=await fetch('/deck-fixtures/physical_decks.json').then(r=>r.json());
+const port=ports.find(p=>p.id==='VP012');
+let terrain=null,layer=null,entities=null,comparison=null,removeFrame=null;
+viewer.camera.setView({destination:C.Cartesian3.fromDegrees(port.longitude,port.latitude,330),orientation:{heading:0,pitch:-Math.PI/2,roll:0}});
+document.querySelector('#sample').onclick=async()=>{
+ result.textContent='실제 World Terrain과 시뮬레이션 DEM 비교 중';
+ try{
+  const provider=terrain??=await loadWorldTerrain(C);viewer.terrainProvider=provider;
+  const probe=new VertiportLayer(C,viewer,{groundHeights:async points=>(await C.sampleTerrainMostDetailed(provider,points.map(p=>C.Cartographic.fromDegrees(p.longitude,p.latitude)))).map(p=>p.height)});
+  const ground=await probe.resolveGround(port.layout);
+  const parked=snapshot.entities.filter(e=>e.source==='scenario'&&['parked','gate_out','gate_in'].includes(e.flight_phase)&&Math.abs(e.latitude_deg-port.latitude)<.002&&Math.abs(e.longitude_deg-port.longitude)<.002);
+  result.textContent=JSON.stringify({port:port.name,renderedGround:ground,deckTop:ground.top+port.layout.platform.height_m,physicalDeck:physicalDecks[port.id],difference:ground.top+port.layout.platform.height_m-physicalDecks[port.id],aircraft:parked.map(e=>({id:e.entity_id,model:e.visual_asset_id,altitude:e.altitude_m}))},null,2);
+  probe.destroy();
+ }catch{result.textContent='지형 비교 실패 (키나 공급자 응답은 출력하지 않음)';}
+};
+async function draw(mode){
+ for(const button of document.querySelectorAll('button'))button.disabled=true;
+ result.textContent='5종 실제 비행 GLB 준비 중';removeFrame?.();entities?.destroy();layer?.destroy();comparison=null;
+ let stage='terrain';
+ try{
+  terrain??=await loadWorldTerrain(C);
+  viewer.terrainProvider=mode==='flat'?new C.EllipsoidTerrainProvider():terrain;
+  layer=new VertiportLayer(C,viewer,{groundHeights:async points=>mode==='flat'?points.map(()=>0):mode==='high'?points.map(()=>250):
+    (await C.sampleTerrainMostDetailed(terrain,points.map(p=>C.Cartographic.fromDegrees(p.longitude,p.latitude)))).map(p=>p.height)});
+  stage='deck';await layer.show([port]);
+  const top=layer.deckTop(port.id),height=physicalDecks[port.id];
+  stage='entities';entities=new EntityScene(C,viewer,()=>{result.textContent='모델 준비 실패';},
+    {surfaceOffset:(ref,p)=>mode==='before'?0:layer.surfaceOffset(ref,p)});
+  entities.setAssets(assets);
+  const ids=['projectairsim_airtaxi','joby_s4','kp2a','amvlab_evtol','x_57'];
+  const resources=[...port.layout.gates,...port.layout.fatos];
+  stage='states';const states=ids.map((id,i)=>{
+   const p=geographicPoints(port.layout.frame,[resources[i].center_m])[0],position=C.Cartesian3.fromDegrees(p.longitude,p.latitude,height);
+   return {entity_id:id,kind:'uam',source:'scenario',name:id,visual_asset_id:id,flight_phase:'parked',
+    altitude_m:height,latitude_deg:p.latitude,longitude_deg:p.longitude,position_ecef_m:[position.x,position.y,position.z],
+    heading_deg:port.heading_deg,orientation_source:'ground_track',surface_reference:{vertiport_id:port.id,altitude_m:height}};
+  });
+  stage='replace';entities.replace({sequence:1,state_time:1,entities:states});
+  entities.frameItems=[...entities.items.values()];
+  stage='models';for(const item of entities.frameItems){item.lod='model';entities.refreshPosition(item,performance.now());await entities.loadModel(item);}
+  viewer.camera.lookAt(C.Cartesian3.fromDegrees(port.longitude,port.latitude,top),new C.HeadingPitchRange(.3,-.75,170));
+  comparison={mode,port:port.name,physicalDeck:height,renderedDeck:top,rows:[]};
+  removeFrame=viewer.scene.preRender.addEventListener(()=>{
+   entities.updatePositions(performance.now());
+   comparison.rows=entities.frameItems.map(item=>{
+    const c=C.Cartographic.fromCartesian(item.position);
+    return {model:item.assetId,ready:item.model?.ready===true,gap_m:c.height-top,
+     horizontalError_deg:Math.max(Math.abs(c.longitude*180/Math.PI-item.entity.longitude_deg),Math.abs(c.latitude*180/Math.PI-item.entity.latitude_deg)),
+     authoritativeAltitude:item.entity.altitude_m};
+   });
+   result.textContent=JSON.stringify(comparison,null,2);
+  });
+  viewer.scene.requestRender();
+ }catch(error){result.textContent='검증 준비 실패: '+stage+' / '+error.name+(stage==='terrain'?'':(' / '+String(error.message).replace(/https?:\/\/\S+/g,'[URL]')));}
+ for(const button of document.querySelectorAll('button'))button.disabled=false;
+}
+for(const mode of ['before','after','flat','high'])document.getElementById(mode).onclick=()=>draw(mode);
+document.getElementById('all').onclick=async()=>{
+ removeFrame?.();removeFrame=null;result.textContent='18곳의 실제 지형 표본 비교 중';
+ try{
+  terrain??=await loadWorldTerrain(C);
+  const probe=new VertiportLayer(C,viewer,{groundHeights:async points=>(await C.sampleTerrainMostDetailed(terrain,points.map(p=>C.Cartographic.fromDegrees(p.longitude,p.latitude)))).map(p=>p.height)});
+  const rows=[];
+  for(const p of ports){
+   const ground=await probe.resolveGround(p.layout),top=ground.top+p.layout.platform.height_m,height=physicalDecks[p.id];
+   const c=C.Cartographic.fromDegrees(p.longitude,p.latitude,height);
+   const corrected=height+deckSurfaceOffset(p.layout,top,height,c);
+   rows.push({id:p.id,name:p.name,physical:height,rendered:top,before_m:height-top,after_m:corrected-top});
+  }
+  probe.destroy();result.textContent=JSON.stringify({kind:'18 real World Terrain decks / registration math',rows},null,2);
+ }catch{result.textContent='18곳 지형 검사 실패 (공급자 응답/키 출력 없음)';}
+};
+window.addEventListener('pagehide',()=>{removeFrame?.();entities?.destroy();layer?.destroy();viewer.destroy();},{once:true});
+</script></html>

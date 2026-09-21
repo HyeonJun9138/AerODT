@@ -1,5 +1,0 @@
-string tag
-int32 tex_id
----
-bool success
-string status

@@ -1,0 +1,97 @@
+{
+  "title": "SAC-D / Aquarius",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Aquarius (A)/Aquarius (A).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "aquarius.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "aquarius",
+      "label": "SAC-D / Aquarius",
+      "exact": {
+        "norad": [
+          37673
+        ],
+        "names": [
+          "^SAC-D"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 7,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 10.663592
+    }
+  ],
+  "display": {
+    "native_extent": 10.663592,
+    "reference_extent_m": 7,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 10.663592440956563
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "aquarius",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 1137428,
+    "sha256": "dc81055c83e5da56d3ae57f4c967010be64ad5d01cee4cdb0a88c85c2b628116"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 69,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 121163
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "dc81055c83e5da56d3ae57f4c967010be64ad5d01cee4cdb0a88c85c2b628116"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 11498,
+    "sha256": "4eb19e524cb048377954e523dc92597e31fc2f0ccd0996bae9ed5e88e040a339"
+  }
+}

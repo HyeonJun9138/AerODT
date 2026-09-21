@@ -1,0 +1,159 @@
+{
+  "source": {
+    "commit": "097429f56fee32b0edfe508820bf2323ee7f2cb2",
+    "implementation": "project_support/reference/projectairsim/physics/src/fast_physics.cpp",
+    "test": "project_support/reference/projectairsim/physics/test/gtest_fast_physics.cpp"
+  },
+  "conventions": {
+    "world_frame": "NED",
+    "linear_wrench_frame": "NED",
+    "angular_wrench_frame": "body",
+    "integration": "velocity Verlet using previous acceleration",
+    "discrete_input": "previous actuator step wrench"
+  },
+  "gravity_case": {
+    "mass_kg": 2.0,
+    "gravity_ned_mps2": [0.0, 0.0, 9.80665],
+    "initial_position_ned_m": [0.0, 0.0, -10.0],
+    "step_seconds": 1.0,
+    "first": {
+      "position_z_m": -10.0,
+      "velocity_z_mps": 4.903325,
+      "acceleration_z_mps2": 9.80665
+    },
+    "second": {
+      "position_z_m": -0.19335,
+      "velocity_z_mps": 14.709975,
+      "acceleration_z_mps2": 9.80665
+    }
+  },
+  "uam_rotor": {
+    "coefficient_of_thrust": 0.109919,
+    "coefficient_of_torque": 0.040164,
+    "max_rpm": 6396.667,
+    "propeller_diameter_m": 0.6,
+    "smoothing_time_constant_s": 0.005,
+    "maximum_thrust_n": 198.34389772549753,
+    "maximum_torque_nm": 6.920769980073825
+  },
+  "uam_tilt": {
+    "angle_min_rad": 0.0,
+    "angle_max_rad": 1.57,
+    "axis": [0.0, -1.0, 0.0],
+    "smoothing_time_constant_s": 0.5
+  },
+  "drag_face_case": {
+    "air_density_kgpm3": 1.0,
+    "velocity_ned_mps": [0.0, 0.0, 2.0],
+    "positive_z_face": {
+      "area_m2": 2.0,
+      "drag_factor": 0.5,
+      "force_ned_n": [0.0, 0.0, -4.0]
+    }
+  },
+  "airtaxi_left_wing_case": {
+    "air_density_kgpm3": 1.0,
+    "velocity_ned_mps": [10.0, 0.0, 0.0],
+    "alpha_zero_rad": 0.06,
+    "area_m2": 5.0,
+    "force_ned_n": [-9.0, 0.0, -7.5],
+    "torque_body_nm": [7.5, 0.0, -9.0]
+  },
+  "vertical_collision_case": {
+    "mass_kg": 2.0,
+    "restitution": 0.5,
+    "initial_velocity_ned_mps": [0.0, 0.0, 2.0],
+    "normal_ned": [0.0, 0.0, -1.0],
+    "result_velocity_ned_mps": [0.0, 0.0, -1.0],
+    "result_position_ned_m": [0.0, 0.0, -11.0]
+  },
+  "simple_flight_tiltrotor_fixed_wing_mix": {
+    "control_axes": {
+      "roll": 0.2,
+      "pitch": 0.3,
+      "yaw": 0.4,
+      "throttle": 0.5,
+      "tilt": 1.0
+    },
+    "actuator_order": [
+      "Prop_FR_actuator",
+      "Prop_RL_actuator",
+      "Prop_FL_actuator",
+      "Prop_RR_actuator",
+      "Prop_FR_tilt_actuator",
+      "Prop_RL_tilt_actuator",
+      "Prop_FL_tilt_actuator",
+      "Prop_RR_tilt_actuator",
+      "Wing_L_Aileron_actuator",
+      "Wing_R_Aileron_actuator",
+      "Elevator_actuator"
+    ],
+    "outputs": [0.3, 0.7, 0.7, 0.3, 1.0, 1.0, 1.0, 1.0, -0.2, 0.2, 0.3]
+  },
+  "simple_flight_tiltrotor_transition": {
+    "stall_speed_mps": 2.0,
+    "transition_speed_margin_mps": 2.5,
+    "confirmation_count_max": 10,
+    "fixed_wing_entry_count": 9,
+    "multirotor_return_count": 1,
+    "blend_duration_seconds": 5.0,
+    "blend_on_mode_switch_tick": 0.0
+  },
+  "simple_flight_multirotor_position_cascade": {
+    "source": [
+      "project_support/reference/projectairsim/vehicle_apis/multirotor_api/include/simple_flight/firmware/multirotor/PositionController.hpp",
+      "project_support/reference/projectairsim/vehicle_apis/multirotor_api/include/simple_flight/firmware/multirotor/VelocityController.hpp",
+      "project_support/reference/projectairsim/vehicle_apis/multirotor_api/include/simple_flight/firmware/multirotor/AngleLevelController.hpp",
+      "project_support/reference/projectairsim/vehicle_apis/multirotor_api/include/simple_flight/firmware/multirotor/AngleRateController.hpp"
+    ],
+    "step_seconds": 0.1,
+    "initial_position_ned_m": [0.0, 0.0, 0.0],
+    "goal_position_ned_m": [1.0, 1.0, -1.0],
+    "goal_yaw_rate_body_radps": 0.1,
+    "desired_velocity_ned_mps": [1.5, 1.5, -1.5],
+    "control_axes": {
+      "roll": 0.267749373885494,
+      "pitch": -0.267749373885494,
+      "yaw": 0.025,
+      "throttle": 1.0,
+      "tilt": 0.0
+    }
+  },
+  "simple_flight_multirotor_velocity_cascade": {
+    "source": "project_support/reference/projectairsim/vehicle_apis/multirotor_api/include/simple_flight/firmware/multirotor/VelocityController.hpp",
+    "step_seconds": 0.1,
+    "goal_velocity_ned_mps": [1.0, 1.0, -1.0],
+    "goal_yaw_angle_ned_rad": 0.1,
+    "control_axes": {
+      "roll": 0.17849958259032933,
+      "pitch": -0.17849958259032933,
+      "yaw": 0.15625,
+      "throttle": 1.0,
+      "tilt": 0.0
+    }
+  },
+  "simple_flight_tiltrotor_fixed_wing_velocity": {
+    "source": [
+      "project_support/reference/projectairsim/vehicle_apis/multirotor_api/include/simple_flight/firmware/vtoltiltrotor/TRController.hpp",
+      "project_support/reference/projectairsim/vehicle_apis/multirotor_api/include/simple_flight/firmware/vtoltiltrotor/VelocityControllerTRZH.hpp",
+      "project_support/reference/projectairsim/vehicle_apis/multirotor_api/include/simple_flight/firmware/vtoltiltrotor/TRThrottleController.hpp"
+    ],
+    "step_seconds": 0.1,
+    "goal_velocity_ned_mps": [10.0, 0.0, -1.0],
+    "goal_yaw_angle_ned_rad": 0.0,
+    "desired_pitch_rad": 0.149864,
+    "control_axes": {
+      "roll": 0.0,
+      "pitch": 0.2341625,
+      "yaw": 0.0,
+      "throttle": 1.0,
+      "tilt_branch_diagnostic": 1.0
+    }
+  },
+  "fast_physics_landing_branch": {
+    "source": "project_support/reference/projectairsim/physics/src/fast_physics.cpp",
+    "landing_axis_tolerance": 0.01,
+    "collision_offset_m": 0.001,
+    "ground_latch_release_condition": "external force magnitude squared >= weight magnitude squared"
+  }
+}

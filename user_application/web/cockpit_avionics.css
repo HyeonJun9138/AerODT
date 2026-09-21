@@ -1,0 +1,200 @@
+.cockpit-instruments{position:absolute;left:0;top:0;width:1908px;height:554px;display:grid;grid-template-columns:repeat(3,628px);gap:12px;transform-origin:0 0;color:#e1edf4;font:14px/1.2 Consolas,'SFMono-Regular',monospace;font-variant-numeric:tabular-nums;pointer-events:auto;--cockpit-brightness:1}
+.cockpit-instruments[hidden],.cockpit-toolbar[hidden]{display:none!important}
+.cockpit-screen{position:relative;box-sizing:border-box;width:628px;height:520px;min-width:0;overflow:hidden;padding:15px 17px 13px;background:linear-gradient(120deg,#111b22,#060c12 22%,#091018 86%,#131f26);border:5px solid #242d34;border-radius:11px;box-shadow:inset 0 0 0 2px #020507,inset 0 0 18px #000b,0 2px 2px #63737c,0 0 0 2px #0b0e12;filter:brightness(var(--cockpit-brightness,1))}
+.cockpit-screen:after{content:'';position:absolute;inset:3px;border-radius:5px;pointer-events:none;box-shadow:inset 0 1px #ffffff10;background:linear-gradient(115deg,#ffffff03,transparent 30%)}
+.cockpit-screen[data-selected=true]{border-color:#45545e}.cockpit-screen-title{display:flex;justify-content:space-between;align-items:center;height:25px;letter-spacing:2px;border-bottom:1px solid #34444d;margin-bottom:8px;color:#adbfca}.cockpit-screen-title span{font-size:14px;font-weight:bold;color:#e3edf4}.cockpit-screen-title small{font-size:10px;letter-spacing:1.5px;max-width:310px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.cockpit-metric{display:flex;align-items:baseline;gap:5px;min-width:0}.cockpit-metric-label{font-size:11px;color:#96aebb;letter-spacing:.8px}.cockpit-metric strong{font-size:22px;font-weight:600;white-space:nowrap;color:#f5faff}.cockpit-metric small{font-size:10px;color:#abc2cf}
+.cockpit-fma{display:grid;grid-template-columns:repeat(3,1fr);height:27px;align-items:center;text-align:center;font-size:12px;letter-spacing:1px;color:#6defc3;background:#101d20;border-bottom:1px solid #486568;margin-bottom:5px}.cockpit-fma>*+*{border-left:1px solid #486568}.cockpit-fma>span:first-child{color:#aec8d1}
+.cockpit-pfd-stage{position:relative;height:278px}.cockpit-horizon{width:100%;height:278px;overflow:hidden;background:#1c2934}.cockpit-horizon text{font:12px Consolas,monospace;fill:#edf6fc}.cockpit-horizon .cockpit-attitude-missing{font-size:17px;fill:#ffc46b}
+.cockpit-speed-window,.cockpit-alt-window{position:absolute;top:96px;width:64px;text-align:center;pointer-events:none}.cockpit-speed-window{left:1px}.cockpit-alt-window{right:24px;width:51px}.cockpit-speed-window .cockpit-metric,.cockpit-alt-window .cockpit-metric{display:flex;flex-direction:column;align-items:center;gap:5px}.cockpit-speed-window strong,.cockpit-alt-window strong{font-size:24px;line-height:32px;letter-spacing:-1px}.cockpit-speed-window .cockpit-metric-label,.cockpit-alt-window .cockpit-metric-label{font-size:10px;color:#fff;text-shadow:0 1px #000}
+.cockpit-heading{position:relative;height:63px;background:#111c25;border-top:1px solid #51626f;overflow:hidden}.cockpit-heading-strip{width:100%;height:48px}.cockpit-heading-strip text{font:13px Consolas,monospace;fill:#d6e4ed}.cockpit-heading>.cockpit-metric{position:absolute;left:50%;top:9px;transform:translateX(-50%);height:28px;padding:0 9px;background:#07101a;border:1px solid #dae5ed}.cockpit-heading>.cockpit-metric strong{font-size:22px;color:#fff}.cockpit-heading-basis{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-size:10px;color:#8da8b9}
+.cockpit-flight-bottom{height:30px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #32434d}.cockpit-flight-bottom strong{font-size:18px}.cockpit-datums{display:flex;justify-content:space-between;border-top:1px solid #253945;padding-top:5px;gap:8px}.cockpit-basis{font-size:9px;color:#839fab;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:49%}
+.cockpit-nav-body{position:relative;height:259px}.cockpit-nav-map{display:block;width:266px;height:266px;margin:-4px auto 0;background:radial-gradient(circle,#132632,#070e16 73%);overflow:hidden}.cockpit-nav-map text{font:8px Consolas,monospace}.cockpit-nav-controls{position:absolute;left:0;top:6px;display:flex;flex-direction:column;gap:7px}.cockpit-nav-waypoint{position:absolute;right:0;top:8px;width:126px;display:flex;flex-direction:column;gap:13px}.cockpit-nav-waypoint .cockpit-metric{flex-direction:column;gap:3px;align-items:flex-end}.cockpit-nav-waypoint strong{font-size:19px;max-width:126px;overflow:hidden;text-overflow:ellipsis}.cockpit-nav-waypoint .cockpit-metric-destination strong{color:#eca4ff}.cockpit-nav-status{display:block;font-size:10px;color:#8cabbc;height:20px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cockpit-engine-title{height:22px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #425462;border-bottom:1px solid #243743;font-size:10px;letter-spacing:1px;color:#95b3c4}.cockpit-system-note{max-width:265px;font-size:9px;letter-spacing:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cockpit-system-grid{display:grid;grid-template-columns:repeat(3,1fr);height:67px;align-items:center}.cockpit-system-grid .cockpit-metric{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:0 15px;border-right:1px solid #263c49}.cockpit-system-grid .cockpit-metric:last-child{border:0}.cockpit-system-grid .cockpit-metric-label{grid-column:1/-1;font-size:10px}.cockpit-system-grid strong{font-size:28px;color:#73ebc5}.cockpit-system-grid small{align-self:end;padding-bottom:4px}.cockpit-mode-line{display:flex;justify-content:space-between;gap:12px;height:29px;align-items:center;border-top:1px solid #293c48}.cockpit-mode-line strong{font-size:13px;color:#dfeaf1;max-width:165px;overflow:hidden;text-overflow:ellipsis}.cockpit-mode-line .cockpit-metric-label{font-size:10px}.cockpit-clock-line{border-top:1px solid #283b45;display:flex;align-items:center;justify-content:space-between;height:26px;gap:7px}.cockpit-clock-line .cockpit-metric strong{font-size:13px}.cockpit-data-status{font-size:10px;color:#82b6b1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.cockpit-data-status[data-stale=true]{color:#ffc56f}
+.cockpit-instruments button{box-sizing:border-box;border:1px solid #40505a;border-radius:3px;background:linear-gradient(#26333e,#111c26);color:#d3e3ee;padding:7px 10px;font:12px Consolas,monospace;cursor:pointer;box-shadow:inset 0 1px #ffffff0b,0 2px 2px #0007}.cockpit-instruments button:hover{background:#304351;color:#fff}.cockpit-instruments button:focus-visible{outline:2px solid #b4eeff;outline-offset:1px}.cockpit-instruments button[aria-pressed=true]{color:#81f4d3;border-color:#64c6b2;background:#152f32;box-shadow:inset 0 -2px #6ae4c4}
+.cockpit-camera-top{display:flex;justify-content:space-between;align-items:center;height:31px;color:#a8c5d7;font-size:12px;letter-spacing:1px}.cockpit-camera-age{font-size:10px;color:#8ed4c6}.cockpit-camera-viewport{height:284px;position:relative;overflow:hidden;background:radial-gradient(ellipse,#152735,#070e16 75%);border:1px solid #3b505d}.cockpit-camera-canvas{width:100%;height:100%;display:block}.cockpit-camera-cover{position:absolute;inset:0!important;width:100%;border:0!important;font-size:16px!important;letter-spacing:2px;background:radial-gradient(ellipse,#203845,#09131c 75%)!important;color:#aec9d9!important}.cockpit-camera-cover:before{content:'◉';display:block;font-size:38px;color:#79cfc3;margin-bottom:18px}.cockpit-camera-cover[hidden]{display:none}.cockpit-camera-modes{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:11px}.cockpit-camera-modes button{height:48px;padding:5px;font-size:12px}.cockpit-camera-modes button:before{content:attr(data-label);display:block;font-size:10px;letter-spacing:1.5px;color:#86a1b4;margin-bottom:4px}
+.cockpit-softkeys{grid-column:1/-1;display:flex;justify-content:center;gap:7px;height:25px}.cockpit-softkeys button{min-width:65px}.cockpit-toolbar{position:absolute;left:50%;top:14px;transform:translateX(-50%);display:flex;align-items:center;flex-wrap:wrap;gap:6px;max-width:calc(100vw - 32px);justify-content:center;pointer-events:auto;z-index:25}.cockpit-toolbar button{background:#101b24e8;color:#cee1e8;border:1px solid #617783;border-radius:4px;padding:7px 12px;font-size:11px;cursor:pointer}.cockpit-toolbar .cockpit-softkeys{margin:0;height:auto}.cockpit-toolbar .cockpit-softkeys button{min-width:40px}
+.cockpit-instruments.cockpit-projected{position:fixed;inset:0;width:100%;height:100%;display:block;pointer-events:none;z-index:2}.cockpit-projected .cockpit-screen[hidden]{display:none!important}
+.cockpit-speed-window strong,.cockpit-alt-window strong{font-size:30px;letter-spacing:-1.5px}.cockpit-heading>.cockpit-metric strong{font-size:27px}.cockpit-system-grid strong{font-size:36px}.cockpit-flight-bottom strong{font-size:20px}.cockpit-mode-line strong{font-size:17px}.cockpit-system-grid .cockpit-metric-label,.cockpit-mode-line .cockpit-metric-label{font-size:12px}.cockpit-nav-map{width:254px;height:254px}.cockpit-camera-modes button{font-size:14px}.cockpit-data-status,.cockpit-clock-line .cockpit-metric strong{font-size:12px}
+.cockpit-fma[data-valid=false]{color:#e6ba71}
+
+/* Compact cockpit control trigger, with a separate anchored control panel. */
+.cockpit-toolbar{position:fixed;top:auto;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 32px);display:block;z-index:35;overflow:visible;border:0;border-radius:0;background:none;box-shadow:none;color:#dce5e9;font:12px/1.4 system-ui,sans-serif;pointer-events:auto}
+.cockpit-toolbar button{box-sizing:border-box;height:34px;min-width:0;padding:0 12px;border:1px solid #ffffff12;border-radius:6px;background:#ffffff04;color:#b8c7cf;font:500 12px system-ui,sans-serif;white-space:nowrap;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.cockpit-toolbar button:hover{background:#ffffff0c;border-color:#ffffff2b;color:#fff}
+.cockpit-toolbar button:focus-visible{outline:2px solid #91d5d0;outline-offset:3px}
+.cockpit-toolbar button:disabled{opacity:.35;cursor:default}
+.cockpit-toolbar button[aria-pressed=true]{background:#7acfc711;border-color:#7acfc74d;color:#a3e2d9}
+.cockpit-toolbar .cockpit-dock-handle{display:flex;align-items:center;justify-content:center;gap:11px;width:104px;height:40px;padding:0 15px;border:1px solid #9fb5bf35;border-radius:9px;background:var(--chrome-surface);box-shadow:0 4px 14px #0004,inset 0 1px #ffffff08;color:#dae6eb;font-size:12px;letter-spacing:.1px}
+.cockpit-dock-handle:before{content:'';width:15px;height:15px;flex:none;background:#9bc2ca;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M3 5h14M3 15h14M7 2v6M13 12v6' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat}
+.cockpit-toolbar[data-expanded=true] .cockpit-dock-handle{border-color:#a9c9d051;background:#24333e;color:#eef7fa}
+.cockpit-dock-body{position:absolute;bottom:50px;left:50%;width:min(420px,calc(100vw - 32px));box-sizing:border-box;padding:8px 16px;max-height:calc(100vh - 110px);overflow:auto;border:1px solid #9fb5bf2d;border-radius:12px;background:var(--chrome-surface);box-shadow:0 12px 35px #0006,inset 0 1px #ffffff06;backdrop-filter:blur(18px);opacity:0;visibility:hidden;transform:translate(-50%,7px);transition:opacity .15s,transform .18s,visibility .18s;pointer-events:none}
+.cockpit-toolbar[data-expanded=true] .cockpit-dock-body{opacity:1;visibility:visible;transform:translate(-50%,0);pointer-events:auto}
+.cockpit-dock-group{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:11px 0}
+.cockpit-dock-group+.cockpit-dock-group{border-top:1px solid #ffffff0b}
+.cockpit-dock-group[hidden]{display:none}
+.cockpit-dock-label{color:#b4cbd6;font-size:10px;font-weight:600;letter-spacing:.4px}
+.cockpit-dock-actions{display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap}
+.cockpit-playback-time{font-size:13px;font-variant-numeric:tabular-nums;color:#dceaf1;margin-right:auto}
+.cockpit-toolbar .cockpit-softkeys{display:flex;gap:6px;height:auto;margin:0;flex-wrap:wrap}
+.cockpit-toolbar .cockpit-softkeys button{min-width:62px}
+/* Simulation transport remains available inside and outside the cockpit. */
+.cockpit-active .scenario-console,.cockpit-active .flight-console{visibility:visible;pointer-events:auto}
+@media(prefers-reduced-motion:reduce){.cockpit-toolbar *{transition:none!important}}
+
+/* Plan guidance has an explicit source; the cue never represents an autopilot. */
+.cockpit-route-guidance{height:17px;line-height:17px;font-size:11px;color:#f0aaff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-top:1px solid #4d365d}
+.cockpit-pfd .cockpit-pfd-stage,.cockpit-pfd .cockpit-horizon{height:264px}
+.cockpit-pfd .cockpit-speed-window,.cockpit-pfd .cockpit-alt-window{top:89px}
+.cockpit-route-info{display:block;max-width:130px;white-space:normal;color:#bb94c9;font-size:10px;line-height:1.5}
+
+/* Readable research MFDs: vector content, larger labels, matte anti-glare surround. */
+.cockpit-screen{background:#071119;color:#eef6fc;font-family:Arial,'Noto Sans KR',sans-serif;text-shadow:none}
+.cockpit-screen-title{letter-spacing:.5px;color:#d5e4ed}
+.cockpit-screen-title small{font-size:12px;letter-spacing:.3px;max-width:270px}
+.cockpit-screen-title button{min-width:60px;min-height:28px;font-size:14px;font-weight:600;background:#213543;color:#f5fbff;border:1px solid #658091;border-radius:4px;cursor:pointer}
+.cockpit-screen button:focus-visible{outline:3px solid #67d9ff;outline-offset:2px}
+.cockpit-metric-label,.cockpit-metric small{font-size:13px;color:#d0e0e9;letter-spacing:.2px}
+.cockpit-metric strong{font-size:25px;font-weight:700}
+.cockpit-datums,.cockpit-basis,.cockpit-system-note,.cockpit-nav-status{color:#c8dbe6}
+.cockpit-screen[data-focused=true]{box-shadow:0 0 0 3px #70cce1,0 18px 65px #000b;filter:brightness(var(--cockpit-brightness,1))}
+
+/* Tape readouts live in the same SVG coordinate system as their pointer boxes. */
+.cockpit-tape-value{height:100%;width:100%;display:grid;place-items:center;overflow:hidden}
+.cockpit-tape-value .cockpit-metric{height:100%;width:100%;display:flex;align-items:center;justify-content:center;gap:0}
+.cockpit-tape-value .cockpit-metric-label,.cockpit-tape-value small{display:none}
+.cockpit-tape-value strong{display:block;font-size:22px;line-height:1;letter-spacing:-.6px;text-align:center;font-variant-numeric:tabular-nums}
+.cockpit-tape-value .cockpit-metric-altitude strong{font-size:20px}
+.cockpit-horizon .cockpit-tape-caption{font-size:10px;fill:#edf6fc;letter-spacing:.6px}
+.cockpit-horizon .cockpit-tape-unit{font-size:9px;fill:#a9bfcd}
+
+/* Three kinds of control in one dock, told apart by shape rather than by
+   being read. A picker carries a value and is pressed to change it; an action
+   does something now; a setting opens a window. They were identical buttons in
+   one flat row, so nothing said which was which or what was selected. */
+.cockpit-dock-group .cockpit-dock-actions+.cockpit-dock-actions{margin-top:6px}
+.cockpit-toolbar .cockpit-pick{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 10px 0 11px;
+  background:#ffffff0e;border-color:#ffffff1f;border-radius:8px}
+.cockpit-toolbar .cockpit-pick:hover{background:#ffffff18;border-color:#9fd9e866}
+.cockpit-pick-label{font-size:10px;font-weight:600;letter-spacing:.4px;color:#8fa7b3;text-transform:none}
+.cockpit-pick-value{font-size:12.5px;font-weight:600;color:#a8ead9;white-space:nowrap}
+.cockpit-toolbar .cockpit-pick:disabled .cockpit-pick-value{color:#b8c7cf}
+/* A chevron, because the value is the current one and pressing gives the next. */
+.cockpit-pick-next{width:6px;height:6px;flex:none;border-right:1.5px solid #7f96a2;border-bottom:1.5px solid #7f96a2;transform:rotate(-45deg);margin-left:1px}
+.cockpit-toolbar .cockpit-dock-setting{color:#9fbecb}
+.cockpit-toolbar .cockpit-dock-setting:before{content:'';display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-2px;background:currentColor;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 8.5A3.5 3.5 0 1 0 12 15.5 3.5 3.5 0 1 0 12 8.5M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-1.7-1L14.9 3h-3.8l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h3.8l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.4z' fill='black'/%3E%3C/svg%3E") center/contain no-repeat}
+.cockpit-toolbar .cockpit-dock-setting[hidden]{display:none}
+.cockpit-dock-readout{font-size:10px;font-weight:600;letter-spacing:.4px;color:#8fa7b3}
+.cockpit-toolbar .cockpit-control-value{font:600 13px/1 Consolas,monospace;font-variant-numeric:tabular-nums;color:#9defd2;min-width:4.2em}
+
+/* The dock is a window like any other: it needs a way out that is not the
+   handle it was opened from. */
+.cockpit-dock-head{display:flex;align-items:center;gap:10px;padding:10px 0 2px}
+.cockpit-dock-head b{font-size:11px;font-weight:600;letter-spacing:.5px;color:#cfe0e8}
+.cockpit-toolbar .cockpit-dock-close{margin-left:auto;width:28px;height:28px;padding:0;border-radius:7px;font-size:15px;line-height:1;color:#a9bcc6}
+.cockpit-toolbar .cockpit-dock-close:hover{background:#e0867c24;border-color:#e0867c8c;color:#ffd2ca}
+/* Two hint lines sat as inline siblings and ran into one sentence. */
+.cockpit-dock-hint{display:block;color:#8fa7b3;font-size:10.5px;line-height:1.5;padding:2px 0}
+
+/* MFD controls live on their own bezel; the dock only configures simulation. */
+.cockpit-mfd-tools{display:flex;gap:6px;margin-left:auto;flex:none}
+.cockpit-screen-title{gap:10px;height:30px}
+.cockpit-screen-title small{min-width:0;max-width:220px;font-size:10px}
+.cockpit-screen-title .cockpit-mfd-tools button{padding:3px 8px;min-width:52px;height:28px;font-size:12px}
+.cockpit-instruments button:disabled{opacity:.38;cursor:default;box-shadow:none}
+.cockpit-dock-body{width:min(390px,calc(100vw - 32px));padding:0 14px 8px}
+.cockpit-dock-head{position:sticky;top:0;z-index:1;padding:10px 0;border-bottom:1px solid #ffffff18;background:var(--chrome-surface,#556067)}
+.cockpit-dock-head b{font-size:12px}
+.cockpit-toolbar .cockpit-simulation-row .cockpit-pick{gap:5px;padding:0 8px}
+@media(max-width:440px){.cockpit-toolbar .cockpit-simulation-row button{font-size:11px;padding:0 6px}.cockpit-simulation-row .cockpit-pick-label{display:none}}
+
+/* Keep NAV mode and phase in separate lanes, above the time readout. */
+.cockpit-mode-line>.cockpit-metric{max-width:49%;min-width:0}
+.cockpit-mode-line>.cockpit-metric:last-child{justify-content:flex-end}
+.cockpit-mode-line .cockpit-metric-label{flex:none}
+.cockpit-mode-line [data-readout=phase]{min-width:0;line-height:1.2}
+
+/* PFD: distinct attitude, heading, flight data and command-monitor lanes. */
+.cockpit-pfd .cockpit-fma{height:22px;margin-bottom:4px;box-sizing:border-box}
+.cockpit-pfd .cockpit-pfd-stage,.cockpit-pfd .cockpit-horizon{height:240px}
+.cockpit-pfd .cockpit-heading{height:46px;box-sizing:border-box}
+.cockpit-pfd .cockpit-heading-strip{height:46px}
+.cockpit-pfd .cockpit-heading>.cockpit-metric{top:14px;height:27px;padding:0 7px}
+.cockpit-pfd .cockpit-heading>.cockpit-metric strong{font-size:23px}
+.cockpit-pfd .cockpit-heading-basis{display:none}
+.cockpit-pfd .cockpit-flight-bottom{height:27px;box-sizing:border-box}
+.cockpit-pfd .cockpit-flight-bottom strong{font-size:18px}
+.cockpit-pfd .cockpit-route-guidance{height:18px;box-sizing:border-box;font-size:10px;letter-spacing:.3px}
+.cockpit-inputs{height:62px;box-sizing:border-box;padding:5px 0 6px;border-top:1px solid #35505a}
+.cockpit-input-title{display:flex;justify-content:space-between;font-size:9px;letter-spacing:1px;color:#96aebb;line-height:13px}
+.cockpit-input-source{color:#78e4cb;font-weight:normal}
+.cockpit-input-grid{display:grid;grid-template-columns:1.2fr repeat(3,1fr);gap:12px}
+.cockpit-input-cell{min-width:0}
+.cockpit-input-cell .cockpit-metric{height:22px;gap:4px}
+.cockpit-input-cell .cockpit-metric-label{font-size:10px;letter-spacing:0}
+.cockpit-input-cell .cockpit-metric strong{margin-left:auto;font-size:18px;color:#8aedd4}
+.cockpit-input-cell .cockpit-metric small{font-size:9px}
+.cockpit-input-track{position:relative;height:5px;margin-top:3px;background:#233640;border:1px solid #45606d}
+.cockpit-input-track i{position:absolute;top:0;bottom:0;background:#78e4cb}
+.cockpit-input-track i[hidden]{display:none}
+.cockpit-input-track.bipolar:after{content:'';position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:#dceaf0}
+.cockpit-pfd .cockpit-datums{height:18px;box-sizing:border-box;padding-top:3px}
+.cockpit-pfd .cockpit-basis{font-size:9px;letter-spacing:.3px}
+
+/* NAV owns route, schedule and progress; aircraft systems belong to PFD. */
+.cockpit-pfd .cockpit-pfd-stage,.cockpit-pfd .cockpit-horizon{height:200px}
+.cockpit-pfd .cockpit-flight-bottom{height:23px}
+.cockpit-pfd .cockpit-inputs{height:52px;padding:2px 0 3px}
+.cockpit-pfd .cockpit-system-grid{height:42px;box-sizing:border-box;border-top:1px solid #35505a}
+.cockpit-pfd .cockpit-system-grid .cockpit-metric{padding:0 10px;gap:1px 6px}
+.cockpit-pfd .cockpit-system-grid .cockpit-metric-label{font-size:9px}
+.cockpit-pfd .cockpit-system-grid strong{font-size:20px}
+.cockpit-pfd .cockpit-system-grid small{font-size:9px;padding-bottom:0}
+.cockpit-pfd .cockpit-mode-line{height:24px;box-sizing:border-box}
+.cockpit-pfd .cockpit-mode-line strong{font-size:14px;max-width:168px}
+.cockpit-pfd .cockpit-mode-line .cockpit-metric-label{font-size:10px}
+.cockpit-nav .cockpit-nav-controls{position:absolute;left:334px;right:0;top:0;display:grid;grid-template-columns:1.45fr .8fr 1fr;gap:5px;height:31px;margin:0}
+.cockpit-nav .cockpit-nav-controls button{padding:3px 5px;height:28px;font-size:11px;white-space:nowrap}
+.cockpit-nav .cockpit-nav-body{height:296px}
+.cockpit-nav .cockpit-nav-map{position:absolute;left:14px;top:0;margin:0;width:280px;height:280px}
+.cockpit-nav .cockpit-nav-waypoint{left:334px;right:0;top:43px;width:auto;display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;align-content:start}
+.cockpit-nav .cockpit-nav-waypoint .cockpit-metric{align-items:flex-start;gap:3px}
+.cockpit-nav .cockpit-nav-waypoint strong{font-size:23px;max-width:135px}
+.cockpit-nav .cockpit-route-info{grid-column:1/-1;max-width:none;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;height:18px;line-height:18px;font-size:10px}
+.cockpit-nav-autopilot{grid-column:1/-1;display:flex;gap:6px;min-height:28px}
+.cockpit-nav-autopilot button{flex:1;padding:4px;min-width:0;height:28px;font-size:11px}
+.cockpit-nav .cockpit-route-guidance{grid-column:1/-1;font-size:10px;height:28px;line-height:28px}
+.cockpit-nav .cockpit-nav-status{position:absolute;left:0;right:0;bottom:0;height:16px;line-height:16px;font-size:9px}
+.cockpit-route-endpoints{display:grid;grid-template-columns:1fr 26px 1fr;gap:10px;height:43px;box-sizing:border-box;padding:3px 0;border-top:1px solid #45616c;border-bottom:1px solid #2b434d}
+.cockpit-route-endpoint{display:grid;grid-template-columns:1fr auto;align-content:center;gap:2px 6px;min-width:0}
+.cockpit-route-endpoint>span{grid-column:1/-1;color:#96aebb;font-size:9px;letter-spacing:.6px}
+.cockpit-route-endpoint strong{font-size:17px;color:#80e0d0;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;min-width:0}
+.cockpit-route-endpoint small{font-size:10px;color:#9eb6c4;align-self:center;max-width:80px;overflow:hidden;text-overflow:ellipsis}
+.cockpit-route-arrow{color:#91b3c0;align-self:center;text-align:center}
+.cockpit-plan-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:78px;gap:0 10px}
+.cockpit-plan-grid .cockpit-metric{display:grid;grid-template-columns:minmax(0,1fr) auto;align-content:center;gap:2px 3px;min-width:0}
+.cockpit-plan-grid .cockpit-metric-label{grid-column:1/-1;font-size:9px;letter-spacing:0;white-space:nowrap}
+.cockpit-plan-grid strong{font-size:18px;overflow:hidden;text-overflow:ellipsis}
+.cockpit-plan-grid small{font-size:9px;align-self:end}
+.cockpit-plan-grid .cockpit-metric-remaining strong,.cockpit-plan-grid .cockpit-metric-ete strong,.cockpit-plan-grid .cockpit-metric-eta strong{color:#83e8d0}
+.cockpit-progress-note{height:15px;font-size:9px;line-height:15px;color:#9bb1bd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-top:1px solid #2b434d;box-sizing:border-box}
+.cockpit-nav .cockpit-clock-line{height:18px;box-sizing:border-box}
+.cockpit-nav .cockpit-data-status{font-size:9px;max-width:300px}
+.cockpit-plan-clock{display:flex;align-items:center;gap:8px}
+.cockpit-plan-clock>b{font-size:9px;font-weight:normal;color:#97b5c4}
+.cockpit-nav .cockpit-clock-line .cockpit-metric strong{font-size:12px}
+
+.cockpit-nav .cockpit-screen-title{height:26px;margin-bottom:6px}
+
+/* External vision: one full image, controls above, no capture/footer lane. */
+.cockpit-system .cockpit-camera-modes{grid-template-columns:repeat(5,1fr) .85fr;gap:5px;margin:0;height:44px}
+.cockpit-system .cockpit-camera-modes button{height:42px;font-size:12px;padding:3px}
+.cockpit-system .cockpit-camera-modes button:before{font-size:9px;margin-bottom:2px}
+.cockpit-system .cockpit-camera-modes .cockpit-camera-power{border-radius:20px;border:1px solid #9d7650;color:#e3c39c;font-size:13px}
+.cockpit-system .cockpit-camera-power:before{display:none}
+.cockpit-system .cockpit-camera-power[aria-pressed=true]{border-color:#67dcc4;background:#173a36;color:#93ffe5}
+.cockpit-system .cockpit-camera-top{height:26px;font-size:11px}
+.cockpit-system .cockpit-camera-viewport{height:365px}
+
+.cockpit-nav-surface{grid-column:1 / -1;border-top:1px solid #334753;padding-top:7px;font-size:12px;line-height:1.6;color:#9ddccc;white-space:pre-line;overflow-wrap:anywhere;max-height:70px;overflow:auto}

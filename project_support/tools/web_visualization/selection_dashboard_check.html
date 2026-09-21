@@ -1,0 +1,79 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>선택 정보 QA · 시험 입력</title>
+<style>body{margin:0;background:#26363f;color:#eaf5f8;font:13px 'Segoe UI','Malgun Gothic',sans-serif}header{padding:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}button,select{padding:7px;background:#546a75;color:white;border:1px solid #93abb5;border-radius:5px}iframe{border:1px solid #aac1cb;margin:0 12px;display:block;background:#81919a}pre{font-size:11px;white-space:pre-wrap;margin:10px 12px}header strong{margin-right:16px}#case{color:#d1e4ea}</style>
+<header><strong>선택 정보 창 · 시험 입력 / 서버 비행 미접속</strong><select id="size" aria-label="시험 화면 크기"><option value="1366,768">1366 × 768</option><option value="1920,1080">1920 × 1080</option><option value="1024,600">1024 × 600</option><option value="390,700">390 × 700</option></select>
+<button data-case="cruise">UAM 순항</button><button data-case="hold">PSU 대기</button><button data-case="parked">지상 탑승</button><button data-case="aircraft">관측 항공기</button><button data-case="satellite">위성</button><button data-case="missing">미수신</button><button data-case="ticks">200회 갱신</button><button data-case="fold">상세 펼치기</button><button data-case="text">글자 120%</button><button data-case="console">상단 콘솔 간격</button><button data-case="close">닫기</button><span id="case"></span><a href="about:blank" style="color:#bce5eb">검증 종료</a></header>
+<iframe id="frame" title="실제 선택 패널"></iframe><pre id="metrics">준비 중</pre>
+<script type="module">
+if(!new URLSearchParams(location.search).has('frame')){
+  const frame=document.querySelector('#frame'),size=document.querySelector('#size');
+  const resize=()=>{const [w,h]=size.value.split(',');frame.style.width=w+'px';frame.style.height=h+'px';};resize();size.onchange=resize;
+  frame.src=location.pathname+'?frame=1';
+  document.querySelectorAll('[data-case]').forEach(button=>button.onclick=()=>frame.contentWindow.postMessage({case:button.dataset.case},location.origin));
+  window.addEventListener('message',event=>{if(event.origin===location.origin&&event.source===frame.contentWindow&&event.data.metrics)document.querySelector('#metrics').textContent=JSON.stringify(event.data.metrics,null,2);});
+}else{
+  document.body.replaceChildren();
+  const styles=document.createElement('link');styles.rel='stylesheet';styles.href='/static/styles.css';document.head.append(styles);
+  const widgets=document.createElement('link');widgets.rel='stylesheet';widgets.href='https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css';document.head.append(widgets);
+  const style=document.createElement('style');style.textContent='body{background:linear-gradient(130deg,#859298,#768c92 55%,#a6b0b1)}#globe{background:linear-gradient(35deg,transparent 49.8%,#e4eae616 50%,transparent 50.2%);background-size:85px 85px}#qa-label{position:absolute;right:25px;top:20px;font-size:11px;color:#243d49}';document.head.append(style);
+  const index=new DOMParser().parseFromString(await(await fetch('/static/index.html')).text(),'text/html');
+  for(const id of ['globe','selection','hover-card','preview-credits'])document.body.append(index.getElementById(id));
+  const label=document.createElement('span');label.id='qa-label';label.textContent='QA / 시험 상태 · 실제 운항 데이터 아님';document.body.append(label);
+  const errors=[];window.addEventListener('error',event=>errors.push(event.message));window.addEventListener('unhandledrejection',event=>errors.push(String(event.reason)));
+  const script=document.createElement('script');script.src='https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js';document.head.append(script);await new Promise((resolve,reject)=>{script.onload=resolve;script.onerror=reject;});
+  const {SelectionPanel}=await import('/static/selection_panel.js');
+  const panel=new SelectionPanel(Cesium);panel.setAssets(await(await fetch('/bench/assets.json')).json());
+  const $=id=>document.getElementById(id);
+  $('clear').onclick=()=>panel.show(null);$('track').onclick=()=>{$('track').setAttribute('aria-pressed',String($('track').getAttribute('aria-pressed')!=='true'));};
+  const base={entity_id:'scenario:UAM0015',name:'UAM0015 · FPL000069',kind:'uam',source:'scenario',provenance:'simulation',derivation:'simulated',quality:'nominal',
+    latitude_deg:37.5248,longitude_deg:126.9201,altitude_m:304.8,velocity_ecef_mps:[40,50,0],heading_deg:55,pitch_deg:2.4,roll_deg:-1.8,tilt_deg:90,rotor_radps:242,flight_phase:'cruise',
+    orientation_source:'attitude',visual_asset_id:'projectairsim_airtaxi',visual_match:'representative',state_time:1789106400,observation_time:1789106400,received_time:1789106400};
+  const mission={state:{aircraft_id:'UAM0015',flight_id:'FPL000069',phase:'cruise',flight_mode:'fixed_wing',airborne:true,speed_mps:64.03,tilt_deg:90,seats:4,passengers:3,on_board:3,
+    origin:'VP001',destination:'VP005',adherence:{progress:.42,plan_share:.5,delay_s:95,remaining_s:300}},
+    flight:{origin_name:'여의도',destination_name:'목동'},remaining:12,paths:'지나온 항적 120점 · 예상 경로'};
+  let current='cruise',benchmark=null;
+  function apply(which){
+    current=which;
+    if(which==='close'){panel.show(null);return;}
+    if(which==='text'){document.documentElement.style.setProperty('--display-text-scale','1.2');return;}
+    if(which==='console'){
+      const old=document.querySelector('#qa-console');if(old){old.remove();document.body.removeAttribute('data-scenario-console');document.body.style.removeProperty('--scenario-console-height');}
+      else {const box=document.createElement('div');box.id='qa-console';box.className='scenario-console';box.innerHTML='<div class="sc-surface" style="height:160px;padding:20px">상단 콘솔 크기 시험 · 160px · 조작 연결 없음</div>';document.body.append(box);document.body.dataset.scenarioConsole='true';document.body.style.setProperty('--scenario-console-height','160px');}return;
+    }
+    if(which==='fold'){$('selection-data').open=!$('selection-data').open;return;}
+    if(which==='ticks'){
+      panel.show(base);panel.setMission(mission);const cards=$('flight-readouts').firstElementChild,steps=$('mission-steps').firstElementChild;
+      const start=performance.now();for(let i=0;i<200;i++){panel.show({...base,altitude_m:304.8+i*.01});panel.setMission({...mission,state:{...mission.state,on_board:i%4}});}
+      benchmark={updates:200,elapsed_ms:+(performance.now()-start).toFixed(1),cards_reused:cards===$('flight-readouts').firstElementChild,steps_reused:steps===$('mission-steps').firstElementChild};return;
+    }
+    if(which==='missing'){panel.show({entity_id:'unknown',kind:'aircraft'});panel.setMission(null);return;}
+    if(which==='aircraft'){
+      panel.show({...base,entity_id:'a',name:'KAL 123',kind:'aircraft',provenance:'live',source:'opensky',derivation:'estimated',quality:'stale',visual_asset_id:'',
+        flight_phase:null,orientation_source:'ground_track',altitude_m:10400,velocity_ecef_mps:[200,50,0],observation_time:1789106370});panel.setMission(null);return;
+    }
+    if(which==='satellite'){
+      panel.show({entity_id:'s',name:'ISS · QA',kind:'satellite',provenance:'cached',derivation:'sgp4',source:'celestrak',quality:'nominal',altitude_m:420000,
+        latitude_deg:32,longitude_deg:128,velocity_ecef_mps:[7000,100,0],state_time:1789106400,orbit_epoch:1789063200,orientation_source:'unavailable'});
+      panel.setMission(null);panel.setTrajectory({kind:'satellite',span_seconds:5400,summary:{period_minutes:92.8,apogee_km:423,perigee_km:419,inclination_deg:51.6,epoch_age_hours:12}});return;
+    }
+    const holding=which==='hold',parked=which==='parked';
+    panel.show({...base,flight_phase:holding?'hold':parked?'parked':'cruise',tilt_deg:holding||parked?0:90,rotor_radps:parked?0:242,
+      velocity_ecef_mps:holding||parked?[0,0,0]:base.velocity_ecef_mps,altitude_m:parked?81:304.8});
+    panel.setMission(holding?{...mission,state:{...mission.state,phase:'hold',holding:true,flight_mode:'multirotor',hold_seconds:143,sequence:4},clearance:{sequence:4,reason:'도착 FATO 점유 중'}}:
+      parked?{...mission,state:{...mission.state,phase:'parked',flight_id:null,airborne:false,flight_mode:'ground',adherence:null,vertiport:'여의도',stand:'G1',on_board:1,passenger_flow:{phase:'boarding',moved:1,count:3,share:.33}}}:mission);
+  }
+  function measure(){
+    const bounds=$('selection').getBoundingClientRect(),body=$('selection-body').getBoundingClientRect(),facts=document.querySelector('.mission-facts').getBoundingClientRect();
+    parent.postMessage({metrics:{case:current,viewport:[innerWidth,innerHeight],panel:[Math.round(bounds.width),Math.round(bounds.height)],
+      in_view:bounds.left>=0&&bounds.right<=innerWidth&&bounds.top>=0&&bounds.bottom<=innerHeight,
+      console_clear:!document.querySelector('#qa-console')||bounds.top>document.querySelector('#qa-console').getBoundingClientRect().bottom,
+      horizontal_overflow:$('selection-body').scrollWidth>$('selection-body').clientWidth+1,
+      mission_facts_visible:!$('mission').hidden&&facts.bottom<=body.bottom,
+      readouts:$('flight-readouts').children.length,preview_status:$('preview-status').textContent,preview_canvases:document.querySelectorAll('#model-preview canvas').length,
+      selected:$('selected-name').textContent,source:$('selected-source').textContent,steps:$('mission').hidden?[]:[...$('mission-steps').querySelectorAll('[aria-current]')].map(n=>n.textContent),
+      detail_open:$('selection-data').open,text_scale:getComputedStyle(document.documentElement).getPropertyValue('--display-text-scale')||'1',benchmark,errors}},location.origin);
+  }
+  window.addEventListener('message',event=>{if(event.origin===location.origin&&event.source===parent&&event.data.case){apply(event.data.case);setTimeout(measure,350);}});
+  window.addEventListener('resize',()=>setTimeout(measure,250));window.addEventListener('pagehide',()=>panel.destroy(),{once:true});
+  apply('cruise');setInterval(measure,1000);
+}
+</script></html>

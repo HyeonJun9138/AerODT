@@ -1,0 +1,26 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>AeroDT 버티포트 운영 QA</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/app/styles.css">
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>#map{position:fixed;inset:0}#qa-side{position:fixed;left:76px;top:18px;bottom:18px;width:330px;overflow:auto;padding:14px;background:#435663ed;border-radius:12px}#qa-tools{position:fixed;top:18px;right:25px;z-index:9;background:#233d4ced;padding:9px;border-radius:8px;font-size:11px}body{--left-offset:406px}body.qa-mobile{--left-offset:0px}body.qa-mobile #qa-side{display:none}body.qa-mobile .vp-console{left:10px;right:auto;width:360px}#qa-tools button{font-size:11px;min-height:28px}</style>
+</head><body data-drawer="open"><div id="map"></div><aside id="qa-side"><h3>Stakeholders</h3><div id="panel"></div></aside>
+<div id="qa-tools">독립 검증 / 입력 fixture · 기상 실측 아님 <button id="qa-layout">360px 패널</button><button id="qa-flight">비행 바 함께 표시</button><button id="qa-snow">눈 아이콘 시험</button></div>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {StakeholderPanel} from '/app/stakeholder_panel.js';
+import {VertiportPanel} from '/app/vertiport_panel.js';
+import {FlightControlBar} from '/app/flight_control_bar.js';
+import {LiveGlobe} from '/visualization/globe.js';
+const C=Cesium,viewer=new C.Viewer('map',{baseLayer:false,animation:false,timeline:false,baseLayerPicker:false,geocoder:false,homeButton:false,sceneModePicker:false,navigationHelpButton:false,infoBox:false,selectionIndicator:false});
+try{viewer.imageryLayers.addImageryProvider(await C.ArcGisMapServerImageryProvider.fromUrl('https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'));}catch{}
+const data=await fetch('/fixture').then(r=>r.json());
+const records=data.records.vertiports,focus=r=>viewer.camera.setView({destination:C.Cartesian3.fromDegrees(r.layout.frame.longitude,r.layout.frame.latitude,1200),orientation:{heading:0,pitch:-Math.PI/2,roll:0}});
+for(const r of records){const f=r.layout.frame;viewer.entities.add({position:C.Cartesian3.fromDegrees(f.longitude,f.latitude,20),point:{pixelSize:8,color:C.Color.CYAN},label:{text:r.name,font:'14px sans-serif',pixelOffset:new C.Cartesian2(0,-20)}});}
+if(records.length)focus(records[0]);
+const flight=new FlightControlBar();
+const panel=new VertiportPanel({api:{list:async()=>data.records,weather:async()=>data.weather},onFocus:focus,selectInView:r=>LiveGlobe.prototype.vertiportInView.call({C,viewer},r),onOpen:()=>flight.setCollapsed(true)});
+const stakeholders=new StakeholderPanel({vertiportPanel:panel});stakeholders.role='vertiport';stakeholders.render(document.querySelector('#panel'));
+document.querySelector('#qa-layout').onclick=()=>document.body.classList.toggle('qa-mobile');
+document.querySelector('#qa-flight').onclick=()=>{const plan={vehicle:{id:'QA-FLIGHT'},departure:{name:'여의도'},arrival:{name:'목동'},legs:[{stage:'cruise',stage_label:'순항',start_s:0,end_s:60,duration_s:60}],totals:{duration_s:60}};flight.show(plan,{run_id:'qa'},[],'검증용 표시');flight.setCollapsed(true);};
+document.querySelector('#qa-snow').onclick=()=>{data.weather={received_time:Date.now()/1000,points:[{...panel.record.layout.frame,observed_time:new Date().toISOString(),weather_code:73,temperature_c:-2,wind_speed_ms:3,wind_direction_deg:330,wind_gust_ms:5}]};document.querySelector('#qa-tools').firstChild.textContent='QA 기상 시험값 / 실측 아님 ';void panel.readWeather();};
+window.addEventListener('pagehide',()=>{panel.destroy();flight.destroy();viewer.destroy();},{once:true});
+</script></body></html>

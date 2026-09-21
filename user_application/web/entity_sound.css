@@ -1,0 +1,9 @@
+.sound-settings{border-top:1px solid #c0d7df26;margin-top:14px;padding-top:12px}
+.sound-settings h3{margin:0 0 10px;font-size:12px;color:#d7edf2}
+.sound-settings label{display:flex;align-items:center;gap:10px;font-size:12px;margin-top:8px;white-space:nowrap}
+.sound-settings input{width:100%;min-width:55px;accent-color:#91dece}
+.sound-settings output{min-width:3em;text-align:right;font-variant-numeric:tabular-nums}
+.sound-settings p{font-size:11px;line-height:1.65;color:#bed0d8;margin:10px 0 0}
+#sound-status{min-height:3.3em}
+#sound-toggle[aria-pressed=true]{color:#9be6d6;background:#83d6c51f}
+#sound-toggle[aria-pressed=false] .sound-waves{opacity:.25}

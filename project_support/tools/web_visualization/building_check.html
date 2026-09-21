@@ -1,0 +1,68 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>AeroDT 건물 시각화 검증</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>html,body,#globe{margin:0;width:100%;height:100%;overflow:hidden;background:#07111d;color:#edf4fa;font:13px 'Segoe UI',sans-serif}nav{position:absolute;top:12px;left:12px;display:flex;gap:6px;flex-wrap:wrap;max-width:90%}button,select{background:#162b38;color:#edf4fa;border:1px solid #829baa;border-radius:7px;padding:8px;cursor:pointer}pre{position:absolute;left:12px;bottom:36px;background:#06111fdd;padding:12px;max-width:580px;font:12px monospace;pointer-events:none}#errors{color:#ffb4a3}</style>
+<div id="globe"></div><nav>
+<button id="seoul">서울 시청</button><button id="yongsan">용산</button><button id="gangnam">강남</button>
+<button id="top">수직 -90°</button><button id="tilt">틸트 -25°</button><button id="horizon">수평 -8°</button><button id="turn">반대 방향</button><button id="city">도시 6 km</button><button id="far">도시 20 km</button><button id="orbit">궤도</button>
+<select id="provider" aria-label="건물 자료"><option value="vworld_3d">정밀 3D 텍스처</option><option value="vworld">압출 건물</option><option value="osm">OSM 건물</option></select>
+<select id="quality" aria-label="건물 상세도"><option value="balanced">균형 192 MB</option><option value="compact">가볍게 96 MB</option><option value="wide">정밀 256 MB</option></select>
+<select id="distance" aria-label="건물 표시 거리"><option value="auto">자동 8~40 km</option><option value="near">8 km</option><option value="city">20 km</option><option value="metro">40 km</option></select>
+<select id="opacity" aria-label="건물 진하기"><option value="0.9">90%</option><option value="0.55">55%</option><option value="1">100%</option></select>
+<button id="terrain">지형 켜기/끄기</button><button id="buildings">건물 켜기/끄기</button><button id="measure">10초 측정</button><button id="sweep">8초 시점 이동</button><button id="shader">원본 재질 비교</button><button id="clip">범위 클리핑 비교</button>
+<select id="lod" aria-label="LOD 비교"><option value="all">부모 순차</option><option value="skip">중간 단계 생략</option><option value="direct">근거리 직행</option></select></nav>
+<pre><span id="stats">지도 준비 중</span><span id="errors"></span></pre>
+<script>window.CESIUM_BASE_URL='https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/';</script>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {LiveGlobe} from '/visualization/globe.js';
+const state={terrain:'loading',buildings:'waiting',errors:[]};
+window.addEventListener('error',e=>state.errors.push(e.message));
+window.addEventListener('unhandledrejection',e=>state.errors.push(String(e.reason?.message??e.reason)));
+const globe=new LiveGlobe(Cesium,'globe',{onTerrain:s=>state.terrain=s,onBuildings:s=>state.buildings=s,onWarning:m=>state.errors.push(m)});
+globe.viewer.scene.renderError.addEventListener((_s,e)=>state.errors.push(e.message));
+let point=[126.978,37.5635],pitch=-25,heading=0,height=550;
+const view=()=>{globe.stopTracking();globe.viewer.camera.setView({destination:Cesium.Cartesian3.fromDegrees(...point,height),orientation:{heading:Cesium.Math.toRadians(heading),pitch:Cesium.Math.toRadians(pitch),roll:0}});};
+for(const [id,p] of Object.entries({seoul:[126.978,37.5635],yongsan:[126.982,37.532],gangnam:[127.028,37.493]}))document.getElementById(id).onclick=()=>{point=p;height=550;view();};
+document.getElementById('top').onclick=()=>{pitch=-90;height=850;view();};
+document.getElementById('tilt').onclick=()=>{pitch=-25;height=550;view();};
+document.getElementById('horizon').onclick=()=>{pitch=-8;height=220;view();};
+document.getElementById('turn').onclick=()=>{heading=(heading+180)%360;view();};
+document.getElementById('city').onclick=()=>{point=[126.93,37.46];pitch=-45;heading=0;height=6000;view();};
+document.getElementById('far').onclick=()=>{point=[126.95,37.41];pitch=-55;heading=0;height=20000;view();};
+document.getElementById('orbit').onclick=()=>{height=150000;view();};
+document.getElementById('provider').onchange=e=>globe.setBuildingsProvider(e.target.value);
+const appearance=()=>globe.setBuildingAppearance({quality:document.getElementById('quality').value,opacity:Number(document.getElementById('opacity').value),distance:document.getElementById('distance').value});
+document.getElementById('quality').onchange=appearance;document.getElementById('opacity').onchange=appearance;
+document.getElementById('distance').onchange=appearance;
+document.getElementById('terrain').onclick=()=>globe.setTerrainEnabled(globe.terrainFlat);
+document.getElementById('buildings').onclick=()=>globe.setBuildingsEnabled(!globe.buildingsEnabled);
+document.getElementById('shader').onclick=()=>{const tiles=globe.vworld3d.tileset;if(tiles)tiles.customShader=tiles.customShader?undefined:globe.vworld3dFocus.shader;state.rawMaterial=!tiles?.customShader;};
+document.getElementById('clip').onclick=()=>{const tiles=globe.vworld3d.tileset;if(tiles){tiles.clippingPlanes.enabled=!tiles.clippingPlanes.enabled;state.clip=tiles.clippingPlanes.enabled;}};
+document.getElementById('lod').onchange=e=>{const t=globe.vworld3d.tileset;if(!t)return;t.skipLevelOfDetail=e.target.value!=='all';t.immediatelyLoadDesiredLevelOfDetail=e.target.value==='direct';t.maximumScreenSpaceError=globe.vworld3dFocus.quality==='compact'?16:10;};
+let measure=null;
+document.getElementById('measure').onclick=()=>{measure={until:performance.now()+10000,values:[],previous:null};state.measure='측정 중';};
+document.getElementById('sweep').onclick=()=>{
+ const start=performance.now(),initial=heading;
+ const step=()=>{const t=Math.min(1,(performance.now()-start)/8000);heading=initial+40*Math.sin(t*Math.PI);view();if(t<1)requestAnimationFrame(step);};step();
+};
+globe.viewer.scene.postRender.addEventListener(()=>{
+  for(const tiles of [globe.buildings.tileset,globe.vworld3d.tileset])if(tiles){tiles.qaLastSelected=tiles.qaSelected??0;tiles.qaSelected=0;}
+  if(!measure)return;const now=performance.now();if(measure.previous!==null)measure.values.push(now-measure.previous);measure.previous=now;
+  if(now>=measure.until){const a=measure.values.sort((a,b)=>a-b);state.measure={frames:a.length,p50:a[Math.floor(a.length*.5)],p95:a[Math.floor(a.length*.95)],max:a.at(-1)};measure=null;}
+});
+await globe.imagery();globe.setBuildingsProvider(document.getElementById('provider').value);appearance();view();
+setInterval(()=>{
+ const tiles=globe.buildingProvider==='vworld_3d'?globe.vworld3d.tileset:globe.buildings.tileset;
+ if(tiles&&!tiles.qaSelectionObserved){tiles.qaSelectionObserved=true;tiles.tileVisible.addEventListener(()=>tiles.qaSelected=(tiles.qaSelected??0)+1);}
+ if(tiles&&globe.buildingProvider==='vworld_3d'&&!tiles.qaObserved){tiles.qaObserved=true;tiles.tileFailed.addEventListener(e=>{const path=new URL(e.url,location.href).pathname;state.errors.push(path+': '+String(e.message));state.errors=state.errors.slice(-6);});}
+ const c=globe.viewer.camera;
+ document.getElementById('stats').textContent=JSON.stringify({provider:globe.buildingProvider,...state,errors:undefined,visibility:document.visibilityState,focused:document.hasFocus(),
+  pitch:Math.round(Cesium.Math.toDegrees(c.pitch)),height:Math.round(c.positionCartographic.height),fps:Math.round(globe.timing.summary().fps),
+  resolutionScale:globe.viewer.resolutionScale,buffer:[globe.viewer.canvas.width,globe.viewer.canvas.height],groundScans:globe.buildingViewCache.scans,
+  view:(globe.buildingProvider==='osm'?globe.osmBuildingFocus:globe.vworld3dFocus)?.view,
+  footprints:globe.vworldBuildings.stats,tileMB:Math.round((tiles?.totalMemoryUsageInBytes??0)/1048576),tilesVisible:tiles?.show,tilesLoaded:tiles?.tilesLoaded,
+  sse:tiles?.maximumScreenSpaceError,memorySse:tiles?.memoryAdjustedScreenSpaceError,selectedTiles:tiles?.qaLastSelected,modelsReady:tiles?.statistics?.numberOfTilesWithContentReady,measure:state.measure},null,2);
+ document.getElementById('errors').textContent=state.errors.length?'\n오류: '+state.errors.join('\n'):'';
+},1000);
+window.addEventListener('pagehide',()=>globe.destroy(),{once:true});
+</script></html>

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "aircraft": {
+    "model_id": "constant_velocity_v1",
+    "max_extrapolation_seconds": 60,
+    "max_bridge_gap_seconds": 75,
+    "max_speed_mps": 450,
+    "max_climb_mps": 150,
+    "correction_seconds": 3,
+    "max_innovation_m": 5000,
+    "innovation_gap_fraction": 0.5,
+    "visual_asset_id": "amvlab_a320"
+  },
+  "satellite": {
+    "model_id": "sgp4_v1",
+    "max_epoch_age_seconds": 259200,
+    "max_future_epoch_seconds": 86400,
+    "max_update_jump_m": 20000,
+    "view_margin_deg": 3.0
+  },
+  "uam": {
+    "model_id": "aerodt_native_uam_v1",
+    "visual_asset_id": "projectairsim_airtaxi",
+    "state_source": "aerodt_native_runtime"
+  },
+  "aircraft_models": [
+    {
+      "model_id": "constant_velocity_v1",
+      "label": "등속 외삽",
+      "turn": false,
+      "note": "관측된 속도와 진행 방향이 그대로 이어진다고 봅니다. 직선으로 나아가므로 선회 중에는 바깥으로 벗어납니다."
+    },
+    {
+      "model_id": "coordinated_turn_v1",
+      "label": "선회 보정 외삽",
+      "turn": true,
+      "max_turn_rate_dps": 3.0,
+      "turn_blend": 0.6,
+      "note": "연이은 관측의 진행 방향 변화로 선회율을 재고 그 선회를 이어 갑니다. 표준 선회율(3°/s)까지만 인정하며 직진 중에는 등속과 같습니다."
+    }
+  ]
+}

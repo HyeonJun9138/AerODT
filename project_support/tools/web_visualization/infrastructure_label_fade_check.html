@@ -1,0 +1,29 @@
+<!doctype html><meta charset="utf-8"><title>라벨 페이드 검증</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>body{margin:0}#view{height:90vh}#panel{position:absolute;top:10px;left:10px;background:#fff;padding:15px;z-index:5}</style>
+<div id="view"></div><div id="panel"><button id="run">페이드 검증</button><pre id="result">준비 중</pre></div>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {InfrastructureLabelFade} from '/visualization/infrastructure_label_fade.js';
+import {PlaceLabels} from '/visualization/place_labels.js';
+import {EntityScene} from '/visualization/entity_scene.js';
+const C=Cesium,v=new C.Viewer('view',{baseLayer:false,baseLayerPicker:false,geocoder:false,timeline:false,animation:false});
+v.camera.setView({destination:C.Cartesian3.fromDegrees(127,37.55,120000)});
+const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;
+const ctx=canvas.getContext('2d');ctx.font='50px sans-serif';ctx.fillStyle='white';ctx.fillText('서울 SEOUL',100,250);
+const p=new PlaceLabels({load:()=>C.SingleTileImageryProvider.fromUrl(canvas.toDataURL(),{rectangle:C.Rectangle.fromDegrees(126.5,37.2,127.5,37.9)}),attach:provider=>v.imageryLayers.addImageryProvider(provider)});
+await p.setEnabled(true);p.setSuspended(true);
+const s=new EntityScene(C,v),item={entity:{entity_id:'test'},labelSmall:false};
+item.label=s.layers.aircraft.labels.add({position:C.Cartesian3.fromDegrees(127.1,37.55,10000),text:'TEST AIRCRAFT',showBackground:true,font:'24px sans-serif'});s.items.set('test',item);
+const infra=new InfrastructureLabelFade(C),annotation=v.entities.add({position:C.Cartesian3.fromDegrees(126.9,37.5,1000),label:{text:'버티포트 / 생성 항로',font:'24px sans-serif',fillColor:C.Color.CYAN,showBackground:true}});
+const result=document.getElementById('result');result.textContent='준비 완료';
+document.getElementById('run').onclick=()=>{
+ p.setSuspended(false);const start=performance.now();s.fadeLabelsIn(start);let samples=[];
+ const remove=v.scene.preRender.addEventListener(()=>{const elapsed=performance.now()-start;p.update(start+elapsed);s.updateLabelFades(start+elapsed);infra.update([annotation],v,start+elapsed);
+  if(samples.length===0 || (samples.length===1&&elapsed>=450) || (samples.length===2&&elapsed>=950))samples.push({infrastructure:annotation.label.translucencyByDistance.getValue(v.clock.currentTime).nearValue,elapsed,place:p.layer.alpha,entity:item.label.fillColor.alpha,background:item.label.backgroundColor.alpha});
+  if(samples.length===3){remove();result.textContent=JSON.stringify({pass:samples[0].infrastructure===0&&samples[1].infrastructure>0&&samples[1].infrastructure<1&&samples[2].infrastructure===1&&samples[0].entity<.2&&samples[1].entity>0&&samples[1].entity<1&&samples[2].entity===1&&samples[2].place===1,samples},null,2);}
+ });
+};
+window.addEventListener('pagehide',()=>{p.destroy();v.destroy();},{once:true});
+</script>
+

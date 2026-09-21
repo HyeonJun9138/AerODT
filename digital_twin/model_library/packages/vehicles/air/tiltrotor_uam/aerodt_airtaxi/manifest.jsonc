@@ -1,0 +1,15 @@
+{
+  "package-id": "aerodt.vehicle.air.tiltrotor_uam.airtaxi",
+  "version": "0.2.2",
+  "model": "model.jsonc",
+  "scene": "scene.jsonc",
+  "sensors": "sensors.jsonc",
+  "energy-model": "energy.json",
+  "physics": "fast-physics",
+  "controller": "simple-flight",
+  "airframe": "vtol-quad-tiltrotor",
+  "legacy-baseline": {
+    "project": "ProjectAirSim",
+    "commit": "097429f56fee32b0edfe508820bf2323ee7f2cb2"
+  }
+}

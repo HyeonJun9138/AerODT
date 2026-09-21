@@ -1,0 +1,131 @@
+/* Detached replay instrumentation. No global panel overrides. */
+/* One flight being scrubbed and a whole day being replayed are the same kind of
+   thing to an operator, so they sit in the same place and take the same shape:
+   the line under the target chips, centred, and collapsible to a single row.
+   Only one is ever on screen at a time. It used to sit along the bottom edge as
+   a wide instrument panel; the readings that made it wide have moved to the
+   vehicle itself. */
+.flight-console{position:fixed;left:calc(var(--left-offset) + var(--edge));right:var(--edge);
+  top:calc(var(--edge) + var(--top-bar) + 6px);z-index:5;display:flex;justify-content:center;
+  pointer-events:none;container:flight-console / inline-size;transition:left .22s ease}
+/* The surface is the shared one — .glass's tokens — so this reads as the same
+   material as the settings panel and the layer bar. Only the drop shadow is its
+   own: it floats over imagery rather than over a page. */
+.flight-console-surface{width:min(880px,100%);min-width:0;color:#e9f1f5;border:1px solid var(--glass-border);border-radius:12px;background:var(--panel-glass);box-shadow:inset 0 1px 0 #ffffff12,0 10px 34px #0d161d59;-webkit-backdrop-filter:blur(14px) saturate(.8);backdrop-filter:blur(14px) saturate(.8);pointer-events:auto;overflow:hidden;font-size:12px;font-variant-numeric:tabular-nums}
+.flight-console-header{display:flex;align-items:center;gap:16px;padding:9px 14px;border-bottom:1px solid #9cbcca1f}
+.flight-console-identity{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;min-width:0;flex:1}
+.flight-console-eyebrow{font-size:9px;font-weight:650;letter-spacing:1.6px;color:#94cddc;grid-column:1/-1}
+.flight-console-identity>strong{font-size:14px;font-weight:650;letter-spacing:.3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.flight-console-route{color:#adc1cc;font-size:12px;align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.flight-console-live{display:flex;flex-direction:column;gap:5px;align-items:flex-end;min-width:0}
+.flight-phase-badge{color:var(--stage,#a4e4ed);font-size:11px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.flight-phase-badge:before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;margin-right:7px;vertical-align:1px}
+.flight-console-clock{font-size:12px;letter-spacing:.4px;color:#e2edf5;white-space:nowrap}
+.flight-console-primary{display:flex;gap:8px;align-items:center}
+.flight-console button{font:inherit;border:1px solid #86b5ce30;border-radius:7px;color:#dcebf3;background:#9ec7df0a;cursor:pointer;white-space:nowrap;min-height:32px;padding:5px 10px;transition:background .15s,border-color .15s}
+.flight-console button:hover{background:#89c9e424;border-color:#9cdcf080}
+.flight-console button:focus-visible,.flight-console input:focus-visible,.flight-console summary:focus-visible{outline:2px solid #93e6ff;outline-offset:2px}
+.flight-console .flight-play{min-width:82px;background:#93d8e8;color:#102532;border-color:#b1effa;font-weight:700}
+.flight-console .flight-play[aria-pressed=true]{background:#244755;color:#b1edee;border-color:#92dbe899}
+.flight-console .flight-collapse{padding:5px 9px;font-size:11px;color:#c6dce6}
+.flight-console .flight-dismiss{width:28px;min-width:28px;font-size:20px;padding:0;background:transparent;border-color:transparent;color:#dca7a3}
+.flight-console .flight-dismiss:hover{background:#e4877e22;border-color:#dcaaa54d;color:#ffcbc4}
+.flight-console-content{display:grid;grid-template-rows:1fr;opacity:1;transition:grid-template-rows .25s ease,opacity .18s ease}
+.flight-console-clip{min-height:0;overflow:hidden}
+.flight-console-body{padding:10px 14px 8px;max-height:60vh;overflow:auto;scrollbar-width:thin;scrollbar-color:#8397a3 #59676f}
+
+/* Minimised: the row an operator presses while watching the map, and nothing
+   that has to be read. The same set the day's console keeps. */
+.flight-mini{display:none;align-items:center;gap:6px;padding:5px 8px}
+.flight-console[data-collapsed=true] .flight-console-surface{width:auto}
+.flight-console[data-collapsed=true] .flight-console-header{display:none}
+.flight-console[data-collapsed=true] .flight-mini{display:flex}
+.flight-mini-eyebrow{font-size:9px;font-weight:700;letter-spacing:1.4px;color:#0b1b24;background:#93d8e8;border-radius:5px;padding:2px 5px}
+.flight-mini-clock{font-size:13px;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap;margin-right:2px}
+.flight-console .flight-mini-icon{min-width:34px;text-align:center}
+.flight-console .flight-mini-rate{min-width:42px}
+.flight-console .flight-mini-close{color:#dca7a3}
+.flight-console .flight-mini-close:hover{background:#e4877e22;border-color:#dcaaa54d;color:#ffcbc4}
+/* Out of the layout entirely, not just flattened: a hidden body still has a
+   width, and the surface was sizing itself to the phase list nobody could see. */
+.flight-console[data-collapsed=true] .flight-console-content{display:none}
+.flight-console[data-collapsed=true] .flight-console-eyebrow{display:none}
+.flight-instruments{display:grid;grid-template-columns:1fr 1fr 1.25fr 1fr 1fr 1.7fr;gap:0;margin-bottom:14px}
+.flight-instrument{min-width:0;padding:0 14px;border-right:1px solid #9cbcca1f;display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+.flight-instrument:first-child{padding-left:0}
+.flight-instrument-label{font-size:10px;letter-spacing:.5px;color:#adc1cc}
+.flight-instrument-value{font-size:clamp(18px,2vw,25px);font-weight:600;letter-spacing:-.5px;line-height:1.3;color:#f0f7fb;white-space:nowrap}
+.flight-instrument small{font-size:10px;color:#9fb8c6;line-height:1.2}
+.flight-instrument #plan-battery-text{font-size:18px;letter-spacing:-.4px;white-space:normal}
+.flight-instrument[data-level=low] .flight-instrument-value{color:#ffb1ae}
+.flight-distance{display:flex;gap:7px;align-items:center}
+.flight-meter-track{height:4px;width:100%;max-width:105px;display:block;border-radius:3px;background:#9cc9d222;overflow:hidden;margin-top:2px}
+.flight-meter-track i{display:block;width:0;height:100%;background:#84dfb5;border-radius:3px}
+.flight-instrument[data-level=caution] .flight-meter-track i{background:#e6c783}
+.flight-instrument[data-level=low] .flight-meter-track i{background:#ef9393}
+.flight-tilt-track{height:3px;margin-top:0}.flight-tilt-track i{background:#8dd1ef}
+.flight-instrument[data-mode=transition] .flight-tilt-track i{background:#e5b875}
+.flight-altitude-profile{min-width:0;padding-left:16px}
+.flight-altitude-profile>div{display:flex;justify-content:space-between;gap:5px;font-size:10px;color:#adc1cc}
+.flight-altitude-profile small{font-size:9px;color:#9fb8c6}
+.flight-altitude-profile svg{display:block;width:100%;height:64px;overflow:visible}
+.flight-profile-grid{fill:none;stroke:#9dcdde1c;stroke-width:1}
+.flight-profile-area{fill:#89dbeb14;stroke:none}
+.flight-profile-line{fill:none;stroke:#88d9e9;stroke-width:1.5;vector-effect:non-scaling-stroke}
+.flight-profile-cursor{stroke:#e5c585;stroke-width:1;stroke-dasharray:3 3}
+.flight-profile-dot{fill:#f9da96;stroke:#243843;stroke-width:2}
+.flight-phase-caption{display:flex;align-items:center;gap:10px;color:#88b1c7;font-size:10px;margin:0 0 8px}
+.flight-phase-caption>span:first-child{font-weight:650;color:#bed5e1}
+.flight-phase-caption #plan-leg-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.flight-phase-caption #flight-phase-count{margin-left:auto;flex:none}
+.flight-phase-flow{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(103px,1fr);gap:6px;list-style:none;margin:0;padding:2px 1px 7px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:#59798b transparent}
+.flight-phase-flow>li{min-width:0;position:relative}
+.flight-phase-flow>li+li:before{content:'›';position:absolute;left:-6px;top:24px;color:#65899d;font-size:12px}
+.flight-console .flight-phase{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:5px;position:relative;overflow:hidden;min-height:76px;padding:9px 10px;border-color:#789db723;background:#a5cbe006;text-align:left}
+.flight-phase-number{font-size:10px;color:#779bae;font-weight:550;line-height:1}
+.flight-phase strong{font-size:11px;font-weight:550;color:#b6cdd9;line-height:1.4}
+.flight-phase small{font-size:10px;color:#8baabc}
+.flight-console .flight-phase[data-state=now]{border-color:var(--stage);background:color-mix(in srgb,var(--stage) 12%,#4a5863);box-shadow:inset 0 0 12px #ffffff03}
+.flight-phase[data-state=now] strong,.flight-phase[data-state=now] .flight-phase-number{color:#f1f7fa}
+.flight-phase[data-state=now] .flight-phase-number:after{content:'  진행 중';color:var(--stage);font-weight:650}
+.flight-phase[data-state=done] .flight-phase-number:after{content:'  완료';color:#88bcae}
+.flight-phase[data-state=done] strong{color:#9bbbab}
+.flight-phase-progress{position:absolute;bottom:0;left:0;height:2px;background:var(--stage);opacity:.8;width:0}
+.flight-console-transport{display:flex;align-items:center;gap:6px;margin-top:9px}
+.flight-console-transport button{font-size:11px;padding:4px 9px}
+.flight-console-transport [aria-pressed=true]{background:#8acdd32a;border-color:#a2dde377;color:#b5f0ec}
+/* The one control that takes everything else off the screen; marked so it
+   does not read as another transport button. */
+.flight-console .flight-focus-mode{border-color:#a2dde34d;color:#bfe7ee}
+.flight-console .flight-focus-mode:hover{background:#8acdd32a;border-color:#a2dde399;color:#e6fbff}
+.flight-scrubber{flex:1;min-width:70px;margin:0 9px}
+.flight-console #plan-scrub{display:block;width:100%;height:18px;margin:0;accent-color:#a1e5ec;cursor:pointer;background:transparent}
+.flight-console #plan-scrub::-webkit-slider-runnable-track{height:4px;border-radius:3px;background:linear-gradient(to right,#95dbe3 var(--progress,0%),#93b0c038 var(--progress,0%))}
+.flight-console #plan-scrub::-webkit-slider-thumb{margin-top:-6px}
+.flight-console-details{margin-top:9px;color:#87aabd;font-size:10px}
+.flight-console-details summary{cursor:pointer;width:max-content;max-width:100%;font-size:10px;padding:2px 0}
+.flight-console-details>div{border-top:1px solid #9cbcca1f;margin-top:7px;padding-top:4px}
+.flight-console-details p{font-size:10px;line-height:1.6;overflow-wrap:anywhere;margin:5px 0;color:#b0c7d4}
+@container flight-console (max-width:900px){
+ .flight-instruments{grid-template-columns:repeat(5,minmax(0,1fr))}.flight-altitude-profile{display:none}
+ .flight-console-header{gap:12px}.flight-console-identity{display:flex;flex-direction:column;gap:2px}
+ .flight-console-identity>strong{font-size:12px}.flight-console-route{font-size:10px;align-self:flex-start}
+ .flight-instrument{padding:0 10px}.flight-instrument-value{font-size:19px}
+}
+@container flight-console (max-width:620px){
+ .flight-console-body{padding:12px}.flight-console-header{padding:10px 12px;gap:8px}
+ .flight-console-eyebrow{display:none}.flight-console-route{max-width:180px}
+ .flight-phase-badge{max-width:150px;font-size:10px}.flight-console-clock{font-size:10px}
+ .flight-console-primary{gap:3px}.flight-console .flight-play{min-width:62px;font-size:11px;padding:5px}
+ .flight-instruments{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 0}
+ .flight-instrument:nth-child(3){border:0}.flight-instrument:nth-child(4){padding-left:0}.flight-instrument:nth-child(5){grid-column:span 2;border:0}
+ .flight-console-transport{flex-wrap:wrap}.flight-scrubber{order:2;flex-basis:100%;margin:7px 0 0}
+ .flight-console-transport #flight-focus{margin-left:auto}.flight-console[data-collapsed=true] .flight-console-route{display:none}
+}
+@container flight-console (max-width:390px){
+ .flight-console-header{flex-wrap:wrap}.flight-console-identity{flex-basis:45%}
+ .flight-console-live{order:3;flex-direction:row;flex:1 0 100%;justify-content:space-between}
+ .flight-console-transport button{font-size:10px;padding:4px 6px}.flight-console .flight-collapse{width:24px;min-width:24px}
+}
+@media(max-width:700px){.flight-console{left:10px;right:10px;top:68px}body:has(.flight-console) #layers{top:auto;bottom:calc(var(--edge) + 44px)}}
+@media(prefers-reduced-motion:reduce){.flight-console,.flight-console-content,.flight-console button{transition:none}}

@@ -1,0 +1,97 @@
+{
+  "title": "TOMS-EP",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Total Ozone Mapping Spectrometer (TOMS)/Total Ozone Mapping Spectrometer (TOMS).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "toms.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "toms",
+      "label": "TOMS-EP",
+      "exact": {
+        "norad": [
+          23940
+        ],
+        "names": [
+          "TOMS"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 1.6,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 38.918068
+    }
+  ],
+  "display": {
+    "native_extent": 38.918068,
+    "reference_extent_m": 1.6,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 38.918067932128906
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "toms",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 98620,
+    "sha256": "36578255a65849073c12d596d255a2fc2042730576bfb433bb9073eb66d287d2"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 14,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 22842
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "36578255a65849073c12d596d255a2fc2042730576bfb433bb9073eb66d287d2"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 9400,
+    "sha256": "dc199445ac47ace3fdfb105f934a7f1e02f1650918aff1b66e7ae0b535fe3eca"
+  }
+}

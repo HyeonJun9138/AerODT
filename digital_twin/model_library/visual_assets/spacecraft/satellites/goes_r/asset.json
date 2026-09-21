@@ -1,0 +1,191 @@
+{
+  "title": "GOES-R 계열 (GOES 16~19)",
+  "source": {
+    "provider": "noaa_goesr",
+    "url": "https://www.goes-r.gov/3dModelAR/",
+    "revision": null,
+    "imported_from": "icdcdt",
+    "original_file": "goes_r.glb"
+  },
+  "rights": {
+    "label": "Project owner/provider review",
+    "credit": "NOAA/NASA GOES-R Program",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": false,
+    "note": "Local project use only pending owner/provider permission review; not cleared for public redistribution."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "goes_r",
+      "label": "GOES-R 계열 (GOES 16~19)",
+      "exact": {
+        "norad": [
+          41866,
+          43226,
+          51850,
+          60133
+        ],
+        "names": [
+          "^GOES 1[6-9]$"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 8.5,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 0.999998
+    }
+  ],
+  "display": {
+    "native_extent": 0.999998,
+    "reference_extent_m": 8.5,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 0.9999984661117196
+  },
+  "conversion": {
+    "operation": "web_compatibility_repair",
+    "tool": "asset_library.py",
+    "source_sha256": "26f2f289ec9fc78612de27548247c8caf754a6f0efe182290bbf81dc9cbf41e6",
+    "removed_uris": [],
+    "changes": [
+      "normal accessor 1: normalized 6038, undefined +Y lighting fallback 0",
+      "normal accessor 5: normalized 2917, undefined +Y lighting fallback 0",
+      "normal accessor 9: normalized 1565, undefined +Y lighting fallback 0",
+      "normal accessor 13: normalized 514, undefined +Y lighting fallback 0",
+      "normal accessor 17: normalized 255, undefined +Y lighting fallback 0",
+      "normal accessor 21: normalized 22, undefined +Y lighting fallback 0",
+      "normal accessor 25: normalized 243, undefined +Y lighting fallback 0",
+      "normal accessor 29: normalized 1331, undefined +Y lighting fallback 0",
+      "normal accessor 34: normalized 4097, undefined +Y lighting fallback 0",
+      "normal accessor 39: normalized 90, undefined +Y lighting fallback 0",
+      "normal accessor 44: normalized 1013, undefined +Y lighting fallback 0",
+      "normal accessor 49: normalized 920, undefined +Y lighting fallback 0",
+      "normal accessor 54: normalized 166, undefined +Y lighting fallback 0",
+      "normal accessor 58: normalized 226, undefined +Y lighting fallback 0",
+      "normal accessor 62: normalized 76, undefined +Y lighting fallback 0",
+      "normal accessor 66: normalized 232, undefined +Y lighting fallback 0",
+      "normal accessor 70: normalized 114, undefined +Y lighting fallback 0",
+      "normal accessor 74: normalized 910, undefined +Y lighting fallback 0",
+      "normal accessor 78: normalized 252, undefined +Y lighting fallback 0",
+      "normal accessor 86: normalized 176, undefined +Y lighting fallback 0",
+      "normal accessor 90: normalized 66, undefined +Y lighting fallback 0",
+      "normal accessor 94: normalized 36, undefined +Y lighting fallback 0",
+      "normal accessor 98: normalized 1108, undefined +Y lighting fallback 0",
+      "normal accessor 101: normalized 77, undefined +Y lighting fallback 0",
+      "normal accessor 105: normalized 192, undefined +Y lighting fallback 0",
+      "normal accessor 109: normalized 180, undefined +Y lighting fallback 0",
+      "normal accessor 113: normalized 1136, undefined +Y lighting fallback 0",
+      "normal accessor 118: normalized 2570, undefined +Y lighting fallback 0",
+      "normal accessor 123: normalized 328, undefined +Y lighting fallback 0",
+      "normal accessor 128: normalized 60, undefined +Y lighting fallback 0",
+      "normal accessor 133: normalized 2591, undefined +Y lighting fallback 0",
+      "normal accessor 138: normalized 258, undefined +Y lighting fallback 0",
+      "normal accessor 143: normalized 186, undefined +Y lighting fallback 0",
+      "normal accessor 146: normalized 461, undefined +Y lighting fallback 0",
+      "normal accessor 150: normalized 1259, undefined +Y lighting fallback 0",
+      "normal accessor 154: normalized 1374, undefined +Y lighting fallback 0",
+      "normal accessor 158: normalized 380, undefined +Y lighting fallback 0",
+      "normal accessor 162: normalized 268, undefined +Y lighting fallback 0",
+      "normal accessor 166: normalized 168, undefined +Y lighting fallback 0",
+      "normal accessor 170: normalized 461, undefined +Y lighting fallback 0",
+      "normal accessor 174: normalized 126, undefined +Y lighting fallback 0",
+      "normal accessor 178: normalized 52, undefined +Y lighting fallback 0",
+      "normal accessor 182: normalized 362, undefined +Y lighting fallback 0",
+      "normal accessor 187: normalized 5, undefined +Y lighting fallback 0",
+      "normal accessor 192: normalized 530, undefined +Y lighting fallback 0",
+      "normal accessor 196: normalized 324, undefined +Y lighting fallback 0",
+      "normal accessor 200: normalized 480, undefined +Y lighting fallback 0",
+      "normal accessor 204: normalized 90, undefined +Y lighting fallback 0",
+      "normal accessor 208: normalized 106, undefined +Y lighting fallback 0",
+      "normal accessor 212: normalized 32, undefined +Y lighting fallback 0",
+      "normal accessor 216: normalized 8, undefined +Y lighting fallback 0",
+      "normal accessor 220: normalized 1680, undefined +Y lighting fallback 0",
+      "normal accessor 224: normalized 1992, undefined +Y lighting fallback 0",
+      "normal accessor 228: normalized 935, undefined +Y lighting fallback 0",
+      "normal accessor 232: normalized 167, undefined +Y lighting fallback 0",
+      "normal accessor 236: normalized 54, undefined +Y lighting fallback 0",
+      "normal accessor 240: normalized 122, undefined +Y lighting fallback 0",
+      "normal accessor 244: normalized 892, undefined +Y lighting fallback 0",
+      "normal accessor 248: normalized 98, undefined +Y lighting fallback 0",
+      "normal accessor 252: normalized 17, undefined +Y lighting fallback 0",
+      "normal accessor 256: normalized 373, undefined +Y lighting fallback 0",
+      "normal accessor 260: normalized 128, undefined +Y lighting fallback 0",
+      "normal accessor 264: normalized 36, undefined +Y lighting fallback 0",
+      "normal accessor 269: normalized 427, undefined +Y lighting fallback 0",
+      "normal accessor 274: normalized 252, undefined +Y lighting fallback 0",
+      "normal accessor 279: normalized 328, undefined +Y lighting fallback 0",
+      "normal accessor 284: normalized 1980, undefined +Y lighting fallback 0",
+      "normal accessor 289: normalized 1901, undefined +Y lighting fallback 0",
+      "normal accessor 293: normalized 647, undefined +Y lighting fallback 0",
+      "normal accessor 297: normalized 400, undefined +Y lighting fallback 0",
+      "normal accessor 301: normalized 275, undefined +Y lighting fallback 0",
+      "normal accessor 305: normalized 372, undefined +Y lighting fallback 0",
+      "normal accessor 309: normalized 288, undefined +Y lighting fallback 0",
+      "normal accessor 313: normalized 28, undefined +Y lighting fallback 0",
+      "normal accessor 317: normalized 120, undefined +Y lighting fallback 0",
+      "normal accessor 321: normalized 13206, undefined +Y lighting fallback 12",
+      "normal accessor 326: normalized 2795, undefined +Y lighting fallback 0",
+      "normal accessor 331: normalized 7901, undefined +Y lighting fallback 0",
+      "normal accessor 336: normalized 3449, undefined +Y lighting fallback 0",
+      "normal accessor 341: normalized 1729, undefined +Y lighting fallback 0",
+      "normal accessor 346: normalized 2359, undefined +Y lighting fallback 0",
+      "normal accessor 351: normalized 1978, undefined +Y lighting fallback 0",
+      "normal accessor 356: normalized 121, undefined +Y lighting fallback 0",
+      "normal accessor 361: normalized 653, undefined +Y lighting fallback 0",
+      "normal accessor 366: normalized 1569, undefined +Y lighting fallback 0",
+      "material 10: clamped floating-point colour overshoot"
+    ],
+    "note": "Vertex positions preserved. Missing texture/UV surfaces use base colours; undefined normals use a lighting fallback. Appearance is not guaranteed identical. normal accessor 1: normalized 6038, undefined +Y lighting fallback 0; normal accessor 5: normalized 2917, undefined +Y lighting fallback 0; normal accessor 9: normalized 1565, undefined +Y lighting fallback 0; normal accessor 13: normalized 514, undefined +Y lighting fallback 0; normal accessor 17: normalized 255, undefined +Y lighting fallback 0; normal accessor 21: normalized 22, undefined +Y lighting fallback 0; normal accessor 25: normalized 243, undefined +Y lighting fallback 0; normal accessor 29: normalized 1331, undefined +Y lighting fallback 0; normal accessor 34: normalized 4097, undefined +Y lighting fallback 0; normal accessor 39: normalized 90, undefined +Y lighting fallback 0; normal accessor 44: normalized 1013, undefined +Y lighting fallback 0; normal accessor 49: normalized 920, undefined +Y lighting fallback 0; normal accessor 54: normalized 166, undefined +Y lighting fallback 0; normal accessor 58: normalized 226, undefined +Y lighting fallback 0; normal accessor 62: normalized 76, undefined +Y lighting fallback 0; normal accessor 66: normalized 232, undefined +Y lighting fallback 0; normal accessor 70: normalized 114, undefined +Y lighting fallback 0; normal accessor 74: normalized 910, undefined +Y lighting fallback 0; normal accessor 78: normalized 252, undefined +Y lighting fallback 0; normal accessor 86: normalized 176, undefined +Y lighting fallback 0; normal accessor 90: normalized 66, undefined +Y lighting fallback 0; normal accessor 94: normalized 36, undefined +Y lighting fallback 0; normal accessor 98: normalized 1108, undefined +Y lighting fallback 0; normal accessor 101: normalized 77, undefined +Y lighting fallback 0; normal accessor 105: normalized 192, undefined +Y lighting fallback 0; normal accessor 109: normalized 180, undefined +Y lighting fallback 0; normal accessor 113: normalized 1136, undefined +Y lighting fallback 0; normal accessor 118: normalized 2570, undefined +Y lighting fallback 0; normal accessor 123: normalized 328, undefined +Y lighting fallback 0; normal accessor 128: normalized 60, undefined +Y lighting fallback 0; normal accessor 133: normalized 2591, undefined +Y lighting fallback 0; normal accessor 138: normalized 258, undefined +Y lighting fallback 0; normal accessor 143: normalized 186, undefined +Y lighting fallback 0; normal accessor 146: normalized 461, undefined +Y lighting fallback 0; normal accessor 150: normalized 1259, undefined +Y lighting fallback 0; normal accessor 154: normalized 1374, undefined +Y lighting fallback 0; normal accessor 158: normalized 380, undefined +Y lighting fallback 0; normal accessor 162: normalized 268, undefined +Y lighting fallback 0; normal accessor 166: normalized 168, undefined +Y lighting fallback 0; normal accessor 170: normalized 461, undefined +Y lighting fallback 0; normal accessor 174: normalized 126, undefined +Y lighting fallback 0; normal accessor 178: normalized 52, undefined +Y lighting fallback 0; normal accessor 182: normalized 362, undefined +Y lighting fallback 0; normal accessor 187: normalized 5, undefined +Y lighting fallback 0; normal accessor 192: normalized 530, undefined +Y lighting fallback 0; normal accessor 196: normalized 324, undefined +Y lighting fallback 0; normal accessor 200: normalized 480, undefined +Y lighting fallback 0; normal accessor 204: normalized 90, undefined +Y lighting fallback 0; normal accessor 208: normalized 106, undefined +Y lighting fallback 0; normal accessor 212: normalized 32, undefined +Y lighting fallback 0; normal accessor 216: normalized 8, undefined +Y lighting fallback 0; normal accessor 220: normalized 1680, undefined +Y lighting fallback 0; normal accessor 224: normalized 1992, undefined +Y lighting fallback 0; normal accessor 228: normalized 935, undefined +Y lighting fallback 0; normal accessor 232: normalized 167, undefined +Y lighting fallback 0; normal accessor 236: normalized 54, undefined +Y lighting fallback 0; normal accessor 240: normalized 122, undefined +Y lighting fallback 0; normal accessor 244: normalized 892, undefined +Y lighting fallback 0; normal accessor 248: normalized 98, undefined +Y lighting fallback 0; normal accessor 252: normalized 17, undefined +Y lighting fallback 0; normal accessor 256: normalized 373, undefined +Y lighting fallback 0; normal accessor 260: normalized 128, undefined +Y lighting fallback 0; normal accessor 264: normalized 36, undefined +Y lighting fallback 0; normal accessor 269: normalized 427, undefined +Y lighting fallback 0; normal accessor 274: normalized 252, undefined +Y lighting fallback 0; normal accessor 279: normalized 328, undefined +Y lighting fallback 0; normal accessor 284: normalized 1980, undefined +Y lighting fallback 0; normal accessor 289: normalized 1901, undefined +Y lighting fallback 0; normal accessor 293: normalized 647, undefined +Y lighting fallback 0; normal accessor 297: normalized 400, undefined +Y lighting fallback 0; normal accessor 301: normalized 275, undefined +Y lighting fallback 0; normal accessor 305: normalized 372, undefined +Y lighting fallback 0; normal accessor 309: normalized 288, undefined +Y lighting fallback 0; normal accessor 313: normalized 28, undefined +Y lighting fallback 0; normal accessor 317: normalized 120, undefined +Y lighting fallback 0; normal accessor 321: normalized 13206, undefined +Y lighting fallback 12; normal accessor 326: normalized 2795, undefined +Y lighting fallback 0; normal accessor 331: normalized 7901, undefined +Y lighting fallback 0; normal accessor 336: normalized 3449, undefined +Y lighting fallback 0; normal accessor 341: normalized 1729, undefined +Y lighting fallback 0; normal accessor 346: normalized 2359, undefined +Y lighting fallback 0; normal accessor 351: normalized 1978, undefined +Y lighting fallback 0; normal accessor 356: normalized 121, undefined +Y lighting fallback 0; normal accessor 361: normalized 653, undefined +Y lighting fallback 0; normal accessor 366: normalized 1569, undefined +Y lighting fallback 0; material 10: clamped floating-point colour overshoot"
+  },
+  "schema_version": 1,
+  "asset_id": "goes_r",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 6409152,
+    "sha256": "3ea1e8274437a346a417e815939d690e3dc0d2ad7c5bd451fa313ceb827213d9"
+  },
+  "geometry": {
+    "meshes": 28,
+    "materials": 17,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_texture_transform"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 92193
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 8,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "3ea1e8274437a346a417e815939d690e3dc0d2ad7c5bd451fa313ceb827213d9"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 8666,
+    "sha256": "f516d1e5c7bbe7343c23bfa0a7b6c045498aa0b5896e49c2fe6380030ff0837e"
+  }
+}

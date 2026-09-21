@@ -1,0 +1,10 @@
+{
+  "status": "stopped",
+  "epoch": 46.14346127772218,
+  "global_step": 1429386,
+  "best_ade_m": 18.755284286558766,
+  "elapsed_s": 40920.827999999994,
+  "evaluation_mode": "validation_only",
+  "test_evaluated": false,
+  "cudnn_enabled": false
+}

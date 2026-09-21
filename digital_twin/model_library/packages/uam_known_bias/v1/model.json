@@ -1,0 +1,15 @@
+{
+  "model_id": "known_bias_v1",
+  "version": 1,
+  "label": "기지 편향 역보정 시연",
+  "kind": "deterministic_calibration_demo",
+  "north_m": 3.0,
+  "east_m": -2.0,
+  "height_m": 4.0,
+  "heading_deg": 2.0,
+  "pitch_deg": 1.0,
+  "roll_deg": -0.5,
+  "metres_per_degree": 111320.0,
+  "numerical_variance_floor": 0.000001,
+  "note": "Known additive errors only. Inversion restores each observation epoch; it does not remove transport latency, random noise or model error."
+}

@@ -1,0 +1,102 @@
+/* A still, silver arrival surface. Only the actual progress and hand-over fade
+   move; no continuous blur, canvas, or full-screen zoom competes with the map. */
+#loading {
+  --loading-teal:#138b9b;--loading-sky:#418fca;--loading-lilac:#8f77bd;
+  position:fixed;inset:0;z-index:100;display:grid;place-items:center;
+  padding:40px 24px;overflow:auto;isolation:isolate;color-scheme:light;
+  color:#38464d;background:
+    radial-gradient(ellipse at 12% 78%,#72cfc43b 0%,#72cfc400 54%),
+    radial-gradient(ellipse at 91% 18%,#b7a4dd47 0%,#b7a4dd00 52%),
+    radial-gradient(ellipse at 48% 35%,#ffffffed 0%,#ffffff00 67%),
+    linear-gradient(135deg,#dce3e7,#f0f2f1 49%,#d5dee4);
+  opacity:1;transition:opacity 900ms cubic-bezier(.4,0,.2,1);
+}
+#loading::before {
+  content:"";position:absolute;inset:24px;z-index:-1;pointer-events:none;
+  border:1px solid #ffffff75;border-radius:2px;
+  background:
+    linear-gradient(90deg,transparent 49.95%,#849fa50c 50%,transparent 50.05%),
+    linear-gradient(0deg,transparent 49.9%,#849fa50a 50%,transparent 50.1%);
+}
+#loading::after {
+  content:"";position:absolute;width:min(940px,88vw);height:min(540px,64vw);
+  left:50%;top:48%;transform:translate(-50%,-50%);z-index:-1;pointer-events:none;
+  border:1px solid #829da51a;border-radius:50%;
+  box-shadow:0 0 0 58px #ffffff16,0 0 0 59px #829da50b;
+}
+/* Keep the viewport fixed as the live map arrives underneath. Scaling a large
+   translucent surface during a Cesium flight adds work and can expose edges. */
+#loading[data-phase=leaving]{opacity:0;pointer-events:none}
+#loading[hidden]{display:none!important}
+/* The complete brand is decoded before the group is revealed. The fallback
+   also lets the status and retry remain readable if the early script fails. */
+.loading-content{width:min(900px,100%);text-align:center;margin:auto;
+  opacity:0;animation:loading-content-whole 1ms linear 4s forwards}
+.loading-content[data-ready=true]{opacity:1;animation:none}
+@keyframes loading-content-whole{to{opacity:1}}
+.loading-signature{display:flex;align-items:center;justify-content:center;gap:18px;
+  font-size:10px;font-weight:500;letter-spacing:.3em;line-height:1.7;color:#63757e;margin:0 0 24px}
+.loading-signature::before,.loading-signature::after{content:"";width:38px;height:1px;background:#7d979d66}
+#loading-title{width:min(680px,100%);margin:0 auto 18px;line-height:0}
+.loading-logo{display:block;width:100%;height:auto;object-fit:contain;
+  opacity:0;animation:loading-logo-whole 1ms linear 4s forwards}
+.loading-logo[data-ready=true]{opacity:1;animation:none}
+@keyframes loading-logo-whole{to{opacity:1}}
+#loading-progress {
+  --loading-progress:0%;position:relative;display:inline-block;max-width:100%;
+  font-size:clamp(24px,6.7vw,58px);font-weight:500;letter-spacing:.13em;
+  line-height:1.35;white-space:nowrap;margin:0;padding:4px 0;
+}
+.twinning-base{color:#99a8b2;text-shadow:0 1px 0 #ffffffb3}
+.twinning-fill {
+  position:absolute;inset:4px 0;white-space:nowrap;color:#3c464b;
+  background:
+    linear-gradient(90deg,transparent calc(var(--loading-progress) - 1%),#ffffffb3 var(--loading-progress),transparent calc(var(--loading-progress) + 1%)),
+    linear-gradient(100deg,var(--loading-teal),var(--loading-sky) 52%,var(--loading-lilac));
+  background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  clip-path:inset(0 calc(100% - var(--loading-progress)) 0 0);
+}
+/* The small readout shares the letters' real progress. It has no timer or
+   decorative fill that can imply completed work while requests are pending. */
+#loading-progress::before{content:attr(data-percent) " %";position:absolute;right:0;bottom:-29px;
+  width:48px;text-align:right;font-size:11px;line-height:20px;font-weight:500;
+  font-variant-numeric:tabular-nums;letter-spacing:.08em;color:#617680}
+#loading-progress:not([data-percent])::before{content:"0 %"}
+#loading-progress::after{content:"";position:absolute;left:0;right:64px;bottom:-20px;height:2px;
+  border-radius:2px;background:linear-gradient(90deg,var(--loading-teal),var(--loading-lilac)) 0 0 / var(--loading-progress) 100% no-repeat,#879da429}
+.loading-status{margin:56px auto 0;min-height:94px;max-width:540px}
+#loading-step{margin:0;font-size:13px;font-weight:500;letter-spacing:.035em;line-height:1.85;color:#526771;overflow-wrap:anywhere}
+#loading .loading-tagline{margin:16px 0 0;font-size:10px;letter-spacing:.23em;line-height:1.8;color:#6c7d86}
+#loading #retry{margin:18px auto 0;min-height:42px;padding:0 22px;border:1px solid #657f895c;
+  background:#ffffffb3;border-radius:24px;color:#354f5c;font-size:12px;font-weight:500;box-shadow:inset 0 1px 0 #fffc}
+#loading #retry:hover{background:#fff;border-color:#537f94}
+#loading #retry:focus-visible{outline:2px solid #33758f;outline-offset:4px}
+#loading[data-phase=error] #loading-step{color:#894d35}
+#loading[data-phase=error] .twinning-fill{-webkit-text-fill-color:#79513d;background:none}
+#loading[data-phase=error] #loading-progress::before{color:#894d35}
+#loading[data-phase=error] #loading-progress::after{background:#a7816959}
+@media(max-width:480px){
+  #loading{padding:30px 24px}#loading::before{inset:12px}
+  .loading-signature{gap:10px;font-size:8px;letter-spacing:.16em;margin-bottom:26px}
+  .loading-signature::before,.loading-signature::after{width:18px}
+  #loading-title{margin-bottom:28px}#loading-progress{letter-spacing:.09em}
+  .loading-status{margin-top:53px}#loading-step{font-size:12px;letter-spacing:0}
+}
+@media(max-height:540px){
+  #loading{padding:24px}.loading-signature{margin-bottom:12px}
+  #loading-title{width:min(410px,70vw);margin-bottom:10px}#loading-progress{font-size:32px}
+  .loading-status{margin-top:48px;min-height:0}#loading .loading-tagline{margin-top:9px}
+}
+@media(prefers-reduced-motion:reduce){
+  /* Match LoadingScreen's 400ms hand-over without overriding this fade later. */
+  #loading{transition:opacity 400ms ease}
+}
+@media(forced-colors:active){
+  #loading{background:Canvas;color:CanvasText}#loading::before,#loading::after{display:none}
+  .loading-signature,#loading-step,#loading .loading-tagline,#loading-progress::before{color:CanvasText}
+  .loading-signature::before,.loading-signature::after{background:CanvasText}
+  .twinning-base{color:GrayText;text-shadow:none}
+  .twinning-fill{background:none;-webkit-text-fill-color:CanvasText}
+  #loading-progress::after{forced-color-adjust:none;background:linear-gradient(90deg,Highlight,Highlight) 0 0 / var(--loading-progress) 100% no-repeat,GrayText}
+  #loading #retry{border-color:ButtonText;background:ButtonFace;color:ButtonText;box-shadow:none}
+}

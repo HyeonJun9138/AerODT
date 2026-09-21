@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "model_id": "flying_objects_v1",
+  "source_repository": "Javvanny/yolov8m_flying_objects_detection",
+  "revision": "07d22a0c022c349323ded7f8f5806e59cf420683",
+  "source_url": "https://huggingface.co/Javvanny/yolov8m_flying_objects_detection/resolve/07d22a0c022c349323ded7f8f5806e59cf420683/yolov8m/weights/best.pt",
+  "source_sha256": "d878939944007db445fdffe8283ad9ed4d9e6feba2ccb45ecc10f1142dac39a2",
+  "artifact": "model.onnx",
+  "sha256": "642f461aa9417b14713fd72b8071e6d93acee4e9afa9c68642be3455993f5cab",
+  "format": "onnx",
+  "input_shape": [
+    1,
+    3,
+    640,
+    640
+  ],
+  "source_classes": [
+    "\u0411\u041f\u041b\u0410 \u043a\u043e\u043f\u0442\u0435\u0440",
+    "\u0441\u0430\u043c\u043e\u043b\u0435\u0442",
+    "\u0432\u0435\u0440\u0442\u043e\u043b\u0435\u0442",
+    "\u043f\u0442\u0438\u0446\u0430",
+    "\u0411\u041f\u041b\u0410 \u0441\u0430\u043c\u0435\u043b\u0435\u0442"
+  ],
+  "classes": [
+    "Drone",
+    "Airplane",
+    "Helicopter",
+    "Bird",
+    "Fixed-wing drone"
+  ],
+  "class_mapping_note": "Actual checkpoint has five foreground classes and no Background; model card is not the class index contract.",
+  "card_license": "MIT (publisher claim)",
+  "dependency_license": "Ultralytics AGPL-3.0 or Enterprise; not relicensed by the model card",
+  "license_review_required": true,
+  "license_url": "https://www.ultralytics.com/license",
+  "conversion": {
+    "torch": "2.6.0+cpu",
+    "ultralytics": "8.3.203",
+    "onnx": "1.18.0",
+    "loader": "torch.load(weights_only=True), fixed reviewed globals",
+    "safe_globals": [
+      "torch.nn.modules.activation.SiLU",
+      "torch.nn.modules.batchnorm.BatchNorm2d",
+      "torch.nn.modules.container.ModuleList",
+      "torch.nn.modules.container.Sequential",
+      "torch.nn.modules.conv.Conv2d",
+      "torch.nn.modules.loss.BCEWithLogitsLoss",
+      "torch.nn.modules.pooling.MaxPool2d",
+      "torch.nn.modules.upsampling.Upsample",
+      "ultralytics.nn.modules.block.Bottleneck",
+      "ultralytics.nn.modules.block.C2f",
+      "ultralytics.nn.modules.block.DFL",
+      "ultralytics.nn.modules.block.SPPF",
+      "ultralytics.nn.modules.conv.Concat",
+      "ultralytics.nn.modules.conv.Conv",
+      "ultralytics.nn.modules.head.Detect",
+      "ultralytics.nn.tasks.DetectionModel",
+      "ultralytics.utils.IterableSimpleNamespace",
+      "ultralytics.utils.loss.BboxLoss",
+      "ultralytics.utils.loss.v8DetectionLoss",
+      "ultralytics.utils.tal.TaskAlignedAssigner"
+    ]
+  },
+  "limitations": [
+    "No verified UAM-specific training",
+    "Ground-view training may not generalize to onboard synthetic imagery",
+    "No measured operational accuracy; no simulator ground-truth boxes"
+  ]
+}

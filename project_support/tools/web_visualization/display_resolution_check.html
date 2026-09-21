@@ -1,0 +1,85 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>PC별 화면 맞춤 및 도입부 감속 검증</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<link rel="stylesheet" href="/nav7/static/styles.css">
+<style>#qa{position:fixed;top:12px;left:12px;right:12px;z-index:15;padding:12px;font-size:12px}#qa button,#qa a{margin-right:6px}#qa-result{white-space:pre-wrap;font-size:11px;max-height:220px;overflow:auto}.qa-note{color:#c3d3db}#settings-panel{left:16px;bottom:16px}</style>
+<div id="globe"></div><section class="glass" id="settings-panel"><h2>설정</h2><h3>지도 표시</h3><div id="display-settings"></div></section>
+<aside id="qa" class="glass"><strong>격리 QA · 공유 서버/비행 변경 없음</strong>
+<p class="qa-note">기본값은 실제 창. 해상도 버튼은 CSS 캔버스 크기 / DPR 시험 입력이며 실제 모니터를 바꾸지 않습니다.</p>
+<button id="actual">실제 화면</button><button id="hidpi">1280 × 720 / 2배</button><button id="fourk">2560 × 1440 / 1.5배</button>
+<button id="small">좁은 창</button><button id="motion">이동 해상도 / 복원</button><button id="entry">도입부 재생</button><button id="measure">실제 버퍼 확인</button><a href="about:blank">검증 종료</a>
+<pre id="qa-result">Cesium 준비 중</pre></aside>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {LiveGlobe} from '/nav7/visualization/globe.js';
+import {DisplayResolution} from '/nav7/visualization/display_resolution.js';
+import {ENTRY,planEntry,entryView,entryZoomProgress} from '/nav7/visualization/entry_flight.js';
+import {displayQualitySetting} from '/nav7/static/display_settings.js';
+import {labelSizeSetting} from '/nav7/static/label_size.js';
+const C=Cesium,g=new LiveGlobe(C,'globe',{terrainEnabled:false,loadTrajectory:async()=>null,loadFlightTrack:async()=>null}),v=g.viewer;
+g.setBuildingsEnabled(false);
+const output=document.getElementById('qa-result'),root=document.getElementById('globe');
+const preferences=new Map(),storage={getItem:key=>preferences.get(key),setItem:(key,value)=>preferences.set(key,value)};
+const label=labelSizeSetting({document,storage,apply:scale=>g.setLabelScale(scale)});
+const ui=displayQualitySetting({document,storage,applyLabels:value=>label.recommend(value)});
+document.getElementById('display-settings').append(ui.row,label.row);ui.attach(g.displayResolution);
+const errors=[];v.scene.renderError.addEventListener((_s,e)=>{errors.push(e.message);output.textContent='FAIL '+e.message;});
+window.addEventListener('error',e=>{errors.push(e.message);output.textContent='FAIL '+e.message;});
+const home={longitude:126.978,latitude:37.5665,height:120000};
+const metrics=()=>({visibility:document.visibilityState,profile:g.displayResolution.profile,cadence:g.displayResolution.result,
+  actualBuffer:[v.canvas.width,v.canvas.height],client:[v.canvas.clientWidth,v.canvas.clientHeight],
+  resolutionScale:v.resolutionScale,actualBrowserDpr:window.devicePixelRatio,
+  interpolation:getComputedStyle(v.canvas).imageRendering,labelPercent:label.percent,
+  dropdownFont:getComputedStyle(ui.select).fontSize,panelOverflow:ui.row.scrollWidth>ui.row.clientWidth,
+  errors,note:'초기 화면 cadence, 미래 FPS / 물리 GPU 벤치마크 아님'});
+const show=()=>output.textContent=JSON.stringify(metrics(),null,2);
+document.getElementById('measure').onclick=show;
+const fixture=(width,height,dpr)=>{
+  root.style.width=width?width+'px':'';root.style.height=height?height+'px':'';
+  g.displayResolution.destroy();
+  const environment={document,ResizeObserver,devicePixelRatio:dpr??window.devicePixelRatio,
+    innerWidth:window.innerWidth,innerHeight:window.innerHeight,setTimeout:window.setTimeout.bind(window),clearTimeout:window.clearTimeout.bind(window),
+    addEventListener:window.addEventListener.bind(window),removeEventListener:window.removeEventListener.bind(window),
+    matchMedia:window.matchMedia.bind(window)};
+  g.displayResolution=new DisplayResolution(v,{environment});ui.attach(g.displayResolution);
+  v.resize();v.scene.requestRender();show();
+};
+document.getElementById('actual').onclick=()=>fixture();
+document.getElementById('hidpi').onclick=()=>fixture(1280,720,2);
+document.getElementById('fourk').onclick=()=>fixture(2560,1440,1.5);
+document.getElementById('small').onclick=()=>fixture(700,500,2);
+let probe=null,motionTimer;
+document.getElementById('motion').onclick=()=>{
+  g.entryActive=true;const base=g.displayResolution.profile.pixelRatio;
+  const original=g.renderBudget.update;g.renderBudget.update=()=>.7;
+  clearTimeout(motionTimer);motionTimer=setTimeout(()=>{
+    const moving=v.resolutionScale;
+    g.renderBudget.update=original;g.displayResolution.applyMotion(1);
+    v.resize();show();output.textContent+='\n'+JSON.stringify({base,moving,restored:v.resolutionScale,pass:Math.abs(moving-base*.7)<1e-6&&Math.abs(v.resolutionScale-base)<1e-6});
+  },1500);
+};
+document.getElementById('entry').onclick=async()=>{
+  if(probe)return;
+  const button=document.getElementById('entry');button.disabled=true;
+  probe={frames:0,previousHeight:Infinity,monotonic:true,tail:[],started:performance.now()};
+  const remove=v.scene.postRender.addEventListener(()=>{
+    const height=v.camera.positionCartographic.height;
+    probe.monotonic&&=height<=probe.previousHeight+1e-5;probe.previousHeight=height;probe.frames++;
+    if(height<150000)probe.tail.push(height);
+  });
+  try {
+    await g.entry();remove();const p=planEntry(home);
+    const result={...probe,elapsedMs:performance.now()-probe.started,finalHeight:v.camera.positionCartographic.height,
+      finalInputs:v.scene.screenSpaceCameraController.enableInputs,
+      zoomProgress:[.7,.85,.95,.99,1].map(t=>({t,progress:entryZoomProgress(t),height:entryView(p,t).height}))};
+    output.textContent=JSON.stringify(result,null,2);probe=null;
+  } finally {remove();button.disabled=false;}
+};
+try {
+  v.imageryLayers.addImageryProvider(await C.TileMapServiceImageryProvider.fromUrl(C.buildModuleUrl('Assets/Textures/NaturalEarthII')));
+  await g.showRoutes({nodes:[{id:'a',name:'여의도 · 화면 글자 확인',longitude:126.93,latitude:37.526,altitude_m:305},
+    {id:'b',name:'목동 · 화면 글자 확인',longitude:126.884,latitude:37.531,altitude_m:305}],
+    links:[{id:'ab',name:'QA 항로',from:'a',to:'b',segment:'F',width_m:300}]});
+  const start=performance.now();await ui.calibrate();show();output.textContent+='\n화면 준비 '+Math.round(performance.now()-start)+'ms';
+} catch(e){output.textContent='FAIL '+e.message;}
+window.addEventListener('pagehide',()=>{clearTimeout(motionTimer);g.destroy();},{once:true});
+</script></html>

@@ -1,0 +1,191 @@
+@import url('./pilot_operations.css');
+/* The console for a scheduled day. Display only: it holds no state of its own,
+   and every number on it came from the server a second ago.
+
+   It rides at the top of the map, centred, on the line under the target chips:
+   a replayed day is what the whole screen is showing, so its clock belongs
+   beside the other headline readings rather than down in a corner. It is kept
+   narrow and low so it covers as little of the map as a bar with this much on
+   it can. Only one console is ever on screen: a day being replayed and a single
+   flight being scrubbed are different modes. */
+.scenario-console{position:fixed;left:calc(var(--left-offset) + var(--edge));
+  right:var(--edge);top:calc(var(--edge) + var(--top-bar) + 6px);z-index:5;
+  display:flex;justify-content:center;pointer-events:none;transition:left .22s ease}
+.sc-surface{width:min(860px,100%);min-width:0;color:#e9f1f5;border:1px solid var(--glass-border);
+  border-radius:12px;background:var(--panel-glass);box-shadow:inset 0 1px 0 #ffffff12,0 10px 34px #0d161d59;
+  -webkit-backdrop-filter:blur(14px) saturate(.8);backdrop-filter:blur(14px) saturate(.8);
+  pointer-events:auto;overflow:hidden;font-size:12px;font-variant-numeric:tabular-nums}
+
+.sc-header{display:flex;align-items:center;gap:12px;padding:7px 12px;border-bottom:1px solid #9cbcca1f}
+/* The eyebrow and the day sit on the clock's line rather than above it: three
+   stacked lines of heading is most of the bar's height for none of its work. */
+.sc-identity{display:flex;align-items:baseline;gap:8px;min-width:0}
+.sc-eyebrow{font-size:9px;font-weight:650;letter-spacing:1.4px;color:#94cddc;white-space:nowrap}
+.sc-clock{font-size:15px;font-weight:650;letter-spacing:.5px}
+.sc-day{color:#adc1cc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* How far through the scheduled day the clock has come. It is the one thing on
+   the console that is a shape rather than a number, because "how much of the
+   day is left" is the question an operator asks without reading. */
+.sc-progress{flex:1;min-width:60px;height:4px;border-radius:2px;background:#7fa9bd28;overflow:hidden}
+.sc-progress-fill{display:block;height:100%;width:0;border-radius:2px;background:linear-gradient(90deg,#5fd6a4,#7fe9f5);
+  transition:width .4s linear}
+.sc-state{font-size:10px;font-weight:650;letter-spacing:.6px;padding:3px 9px;border-radius:999px;
+  border:1px solid #9cbcca33;color:#cfe2ea;white-space:nowrap}
+.sc-state[data-state=playing]{color:#7ff0bb;border-color:#5fd6a455;background:#5fd6a41c}
+.sc-state[data-state=paused]{color:#ffd166;border-color:#ffd16648;background:#ffd16616}
+.sc-state[data-state=finished]{color:#adc1cc}
+
+/* Each figure on one line - label, number, footnote - so six of them are a
+   strip rather than a block. */
+.sc-figures{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:#9cbcca1f}
+.sc-figure{display:flex;align-items:baseline;gap:5px;padding:5px 9px;background:var(--panel-glass);min-width:0}
+.sc-figure-label{font-size:9px;font-weight:650;letter-spacing:.8px;color:#94cddc;white-space:nowrap}
+.sc-figure>strong{font-size:13px;font-weight:650}
+.sc-figure>small{font-size:9px;color:#8fa6b3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Waiting for a landing slot is the number this whole rehearsal exists to
+   produce, so it is the one that is allowed to shout. */
+.sc-figure[data-id=holding]>strong{color:#ffd166}
+
+.sc-transport{display:flex;align-items:center;gap:8px;padding:6px 12px;flex-wrap:wrap}
+.sc-transport-group{display:flex;gap:6px}
+.sc-speeds{display:flex;gap:4px;margin-inline:auto}
+.sc-button{font:inherit;color:#dcecf3;background:#2d4b5c4d;border:1px solid #9cbcca33;border-radius:8px;
+  padding:6px 12px;cursor:pointer;white-space:nowrap;transition:background .15s ease,border-color .15s ease}
+.sc-button:hover:not(:disabled){background:#3a607666;border-color:#9cbcca55}
+.sc-button:disabled{opacity:.45;cursor:default}
+.sc-speed{padding:6px 9px;min-width:38px}
+.sc-button[aria-pressed=true]{background:#5fd6a42e;border-color:#5fd6a466;color:#bff5dd}
+.sc-icon[aria-pressed=true]{background:#ff6b6b2e;border-color:#ff6b6b66;color:#ffc9c9}
+.sc-close{margin-left:4px}
+.sc-minimise{padding:5px 9px;font-size:11px}
+
+/* Minimised: one row under the clock. What is left is what an operator uses
+   while actually watching the map - the day's clock, play, pause, how fast,
+   a picture, a recording - and everything that is a reading rather than a
+   control waits until the console is opened out again. */
+.sc-mini{display:none;align-items:center;gap:6px;padding:5px 8px}
+.scenario-console[data-minimised=true] .sc-surface{width:auto}
+.scenario-console[data-minimised=true] .sc-header,
+.scenario-console[data-minimised=true] .sc-figures,
+.scenario-console[data-minimised=true] .sc-transport,
+.scenario-console[data-minimised=true] .sc-engine-note{display:none}
+.scenario-console[data-minimised=true] .sc-mini{display:flex}
+.sc-mini-eyebrow{font-size:9px;font-weight:700;letter-spacing:1.4px;color:#0b1b24;background:#7be7ff;
+  border-radius:5px;padding:2px 5px}
+.sc-mini-clock{font-size:13px;font-weight:650;font-variant-numeric:tabular-nums;margin-right:2px}
+.sc-icon{padding:6px 9px;min-width:34px;text-align:center}
+.sc-mini-speed{padding:6px 9px;min-width:42px}
+
+/* Recording is of the screen, not of the day, so it is said where it cannot be
+   mistaken for one of the day's numbers: its own mark, and how long it has run. */
+.sc-rec{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:650;
+  font-variant-numeric:tabular-nums;color:#ffc9c9;background:#ff6b6b26;border:1px solid #ff6b6b55;
+  border-radius:999px;padding:2px 8px;animation:sc-rec-pulse 1.6s ease-in-out infinite}
+@keyframes sc-rec-pulse{50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.sc-rec{animation:none}}
+
+@media (max-width:1100px){
+  .sc-figures{grid-template-columns:repeat(3,1fr)}
+  .sc-speeds{margin-inline:0;order:3;width:100%;justify-content:center}
+}
+
+/* The loader in the multi-flight card: reading a day of flights and standing
+   84 aircraft on their decks takes a moment, and saying nothing for that moment
+   reads as a button that did not work. */
+.dm-plan{display:grid;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #9cbcca1f}
+.dm-plan-busy{display:flex;align-items:center;gap:8px;color:#cfe2ea}
+.dm-plan-busy i{width:12px;height:12px;border-radius:50%;border:2px solid #7fe9f5;border-top-color:transparent;
+  animation:dm-plan-spin .8s linear infinite}
+@keyframes dm-plan-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.dm-plan-busy i{animation-duration:2.4s}}
+.dm-plan-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.dm-plan-cell{display:grid;gap:1px;padding:6px 8px;border-radius:7px;background:#2d4b5c33}
+.dm-plan-cell span{font-size:9px;font-weight:650;letter-spacing:1.1px;color:#94cddc}
+.dm-plan-cell strong{font-size:14px}
+.dm-plan-models{display:flex;flex-wrap:wrap;gap:4px}
+.dm-plan-model{font-size:10px;padding:3px 8px;border-radius:999px;border:1px solid #9cbcca33;color:#cfe2ea}
+.dm-plan-warn{color:#ffd166;font-size:11px}
+
+/* Every stakeholder screen says whether it is showing the world or a rehearsal.
+   A screen that reads exactly like the live one while it is showing a day in
+   October is the kind of thing somebody makes a decision on. */
+  border:1px solid #ffd16648;background:#ffd1660f;color:#ffe4a3;font-size:11px}
+
+/* What the replayed day is doing at one deck, under that deck operator's own
+   screen. Waiting comes first: it is what the operator is looking for. */
+.scenario-deck{display:grid;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid #9cbcca1f}
+.scenario-deck-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.scenario-deck-head strong{font-size:12px}
+.scenario-deck-clock{color:#94cddc;font-variant-numeric:tabular-nums}
+.scenario-deck-figures{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.scenario-deck-figure{display:grid;gap:1px;padding:6px 8px;border-radius:7px;background:#2d4b5c33;text-align:center}
+.scenario-deck-figure span{font-size:9px;font-weight:650;letter-spacing:1px;color:#94cddc}
+.scenario-deck-figure strong{font-size:15px}
+.scenario-deck-figure[data-warn=true]{background:#ffd16618}
+.scenario-deck-figure[data-warn=true] strong{color:#ffd166}
+.scenario-deck-title{margin:0 0 4px;font-size:10px;font-weight:650;letter-spacing:1px;color:#94cddc}
+.scenario-deck-rows,.scenario-deck-pads{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.scenario-deck-row,.scenario-deck-pads li{display:grid;grid-template-columns:auto auto 1fr;gap:8px;align-items:baseline;
+  padding:5px 8px;border-radius:6px;background:#2d4b5c26;font-size:11px}
+.scenario-deck-row{cursor:pointer}
+.scenario-deck-row:hover{background:#3a607640}
+.scenario-deck-row[data-hold=true]{background:#ffd16616;border:1px solid #ffd16630}
+.scenario-deck-flight{color:#94cddc;font-variant-numeric:tabular-nums}
+.scenario-deck-row small,.scenario-deck-pads small{color:#8fa6b3;text-align:right}
+.scenario-deck-empty{padding:5px 8px;color:#8fa6b3;font-size:11px}
+
+.sc-engine-note{margin:6px 14px 10px;color:var(--muted,#b6cbd1);font-size:10px;}
+
+/* The pilot's screen: how fast a UAM is flown. Knots and feet per minute
+   because that is what the numbers mean to whoever sets them, with what they
+   come to in metres a second underneath so nobody converts in their head. */
+.pilot-source{margin:0 0 4px;font-size:10px;color:#94cddc}
+.pilot-note{margin:0 0 10px;font-size:10px;line-height:1.6;color:#8fa6b3}
+.pilot-fields{display:grid;gap:7px}
+.pilot-field{display:grid;grid-template-columns:1fr 92px;gap:6px 8px;align-items:center;
+  padding:7px 9px;border-radius:8px;background:#2d4b5c2e}
+.pilot-label{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.pilot-label strong{font-size:11px;font-weight:600}
+.pilot-unit{font-size:9px;color:#94cddc}
+/* The one number that is the airframe's rather than the operating figures'. */
+.pilot-ours{font-size:9px;padding:1px 6px;border-radius:999px;background:#ffd16626;color:#ffd9a3}
+.pilot-field input{width:100%;text-align:right}
+.pilot-hint{grid-column:1/-1;font-size:9px;line-height:1.5;color:#8fa6b3}
+.pilot-block{margin-top:12px}
+.pilot-subheading{margin:0 0 5px;font-size:10px;font-weight:650;letter-spacing:1px;color:#94cddc}
+.pilot-phases{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.pilot-phase{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:baseline;
+  padding:4px 8px;border-radius:6px;background:#2d4b5c26;font-size:11px}
+.pilot-phase b{font-variant-numeric:tabular-nums}
+.pilot-phase small{color:#8fa6b3;min-width:64px;text-align:right;font-variant-numeric:tabular-nums}
+.pilot-phase[data-phase=cruise]{background:#7fe9f51c}
+.pilot-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;
+  padding-top:10px;border-top:1px solid #9cbcca1f;flex-wrap:wrap}
+.pilot-derived{font-size:10px;color:#94cddc;font-variant-numeric:tabular-nums}
+.pilot-buttons{display:flex;gap:6px}
+.pilot-apply{background:#5fd6a42e;border-color:#5fd6a466;color:#bff5dd;font-weight:650}
+
+/* What a UAM is doing in its mission, under its position. Waiting for a landing
+   slot is marked, because that is the state an operator is looking for. */
+#mission{margin:16px 0 10px}
+#mission h3{font-size:10px;font-weight:600;letter-spacing:.6px;color:#d8e8ee;margin:0 0 2px}
+#mission-detail{margin:6px 0 8px;font-size:11px}
+#mission-detail>div{display:flex;justify-content:space-between;gap:12px;
+  border-bottom:1px solid #b8cdd414;padding:7px 0}
+#mission-detail dt{color:#d1dce2;font-size:10px;flex:none}
+#mission-detail dd{margin:0;text-align:right;font-size:10px;color:#d4e3ea;
+  font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+/* The mode colours the heading: on the wing is the one an operator picks out of
+   a list, and a hold still wins because waiting is what they are looking for. */
+#mission[data-mode="고정익"] h3{color:#9fe8ff}
+#mission[data-mode="모드 전환 (천이)"] h3{color:#cbe3a8}
+#mission[data-holding=true] h3{color:#ffd166}
+/* How far through the flight is. The pale mark is where the plan said it would
+   be by now, so ahead and behind read at a glance rather than as a subtraction. */
+.mission-progress{position:relative;height:4px;border-radius:3px;margin:6px 0 2px;
+  background:#b8cdd422;overflow:hidden}
+.mission-progress-done{position:absolute;inset:0 auto 0 0;width:var(--done,0%);
+  border-radius:3px;background:linear-gradient(90deg,#4fb9d8,#9fe8ff);
+  transition:width .4s linear}
+.mission-progress-planned{position:absolute;top:-2px;bottom:-2px;width:1px;
+  left:var(--planned,0%);background:#ffffffb0}

@@ -1,0 +1,5 @@
+# Ground-assist rotor collective
+The manual bridge selected ground assist below 10% collective. Its empty actuator controls kept physical rotors stopped, creating a discontinuity at the switch to airborne integration.
+Extend UamVehicleRuntime::AdvanceGroundAssist with a final optional collective argument, default zero. Validate finite [0,1] before advancing state. Pass throttle-only controls through the existing FinishTick mixer and actuators; no duplicate rotor state or display-only RPM.
+Existing four-argument source callers retain zero-throttle behavior; C++ callers require rebuilding for the new signature. No Python C ABI or wire-schema changes. Manual v10 uses its existing smoothed collective. Ground assist stays constrained to the existing low-throttle contact envelope; flight physics resumes with the existing actuator state and pending wrench.
+Validation: low-throttle monotonic RPM, 9.9%-10.1% continuity, stop at zero, 3 m/s taxi and liftoff; 27 manual regressions pass. Live joystick and Unreal not verified.

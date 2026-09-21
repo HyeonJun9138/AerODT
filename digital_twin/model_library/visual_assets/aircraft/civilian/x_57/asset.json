@@ -1,0 +1,400 @@
+{
+  "title": "X-57",
+  "source": {
+    "provider": "nasa",
+    "url": "https://raw.githubusercontent.com/nasa/NASA-3D-Resources/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/X-57/X-57.glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "original_file": "3D Models/X-57/X-57.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "credit": "NASA 3D Resources; individual contributor credit should be retained where supplied",
+    "public_export": true,
+    "note": "NASA repository asset declaration applies; no endorsement. Logos and third-party rights remain separate. Repository meta.json also names NOSA 1.3; retained for review."
+  },
+  "representation": "mission_visualization",
+  "display": {
+    "native_extent": null,
+    "reference_extent_m": null,
+    "scale_basis": "unverified; preview auto-fit only",
+    "forward_axis": "unverified",
+    "browser_measured_extent": 433.5122691697932
+  },
+  "aliases": [],
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "x_57",
+  "category": "aircraft/civilian",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 13302236,
+    "sha256": "f7e36ef23425ab2aae808a2f19883b8d52a5c8b46fb7d92deb3449431f04333a"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 0,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 1369522
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "f7e36ef23425ab2aae808a2f19883b8d52a5c8b46fb7d92deb3449431f04333a"
+  },
+  "thumbnail": {
+    "path": "thumbnail_flight_72869e4224d9.jpg",
+    "bytes": 25936,
+    "sha256": "72869e4224d955e6ad9bc42b6c3ea41edb5a9e99249f3b5fa2451e13929e2479",
+    "source_model_sha256": "3cfe9708cdd29416ab1a4baf6636803ae8f6813a59504ff75edcb4683a14d319",
+    "variant": "flight",
+    "width": 960,
+    "height": 640,
+    "view": "neutral VTOL front three-quarter, model-specific framing, grey studio background"
+  },
+  "flight_visual": {
+    "path": "turnaround_model.glb",
+    "sha256": "33b62f9c52c97b7d69d020c74ae46be730e84e824cf2a69bf741be01241d3e08",
+    "source_sha256": "f7e36ef23425ab2aae808a2f19883b8d52a5c8b46fb7d92deb3449431f04333a",
+    "rotors": {
+      "axis": "y",
+      "nodes": [
+        {
+          "name": "X57_tip_rotor_1",
+          "turn": -1,
+          "axis": "x"
+        },
+        {
+          "name": "X57_tip_rotor_2",
+          "turn": 1,
+          "axis": "x"
+        },
+        {
+          "name": "X57_inboard_rotor_-1_1",
+          "axis": "x",
+          "turn": -1,
+          "start_at_tilt_deg": 85
+        },
+        {
+          "name": "X57_inboard_rotor_-1_2",
+          "axis": "x",
+          "turn": -1,
+          "start_at_tilt_deg": 85
+        },
+        {
+          "name": "X57_inboard_rotor_-1_3",
+          "axis": "x",
+          "turn": -1,
+          "start_at_tilt_deg": 85
+        },
+        {
+          "name": "X57_inboard_rotor_-1_4",
+          "axis": "x",
+          "turn": -1,
+          "start_at_tilt_deg": 85
+        },
+        {
+          "name": "X57_inboard_rotor_-1_5",
+          "axis": "x",
+          "turn": -1,
+          "start_at_tilt_deg": 85
+        },
+        {
+          "name": "X57_inboard_rotor_-1_6",
+          "axis": "x",
+          "turn": -1,
+          "start_at_tilt_deg": 85
+        },
+        {
+          "name": "X57_inboard_rotor_1_1",
+          "axis": "x",
+          "turn": 1,
+          "start_at_tilt_deg": 85
+        },
+        {
+          "name": "X57_inboard_rotor_1_2",
+          "axis": "x",
+          "turn": 1,
+          "start_at_tilt_deg": 85
+        },
+        {
+          "name": "X57_inboard_rotor_1_3",
+          "axis": "x",
+          "turn": 1,
+          "start_at_tilt_deg": 85
+        },
+        {
+          "name": "X57_inboard_rotor_1_4",
+          "axis": "x",
+          "turn": 1,
+          "start_at_tilt_deg": 85
+        },
+        {
+          "name": "X57_inboard_rotor_1_5",
+          "axis": "x",
+          "turn": 1,
+          "start_at_tilt_deg": 85
+        },
+        {
+          "name": "X57_inboard_rotor_1_6",
+          "axis": "x",
+          "turn": 1,
+          "start_at_tilt_deg": 85
+        }
+      ],
+      "tilt": {
+        "axis": "z",
+        "sign": -1,
+        "frame": "parent",
+        "nodes": [
+          {
+            "name": "X57_tip_hinge_1",
+            "axis": "z",
+            "sign": 1,
+            "offset_deg": -90
+          },
+          {
+            "name": "X57_tip_hinge_2",
+            "axis": "z",
+            "sign": 1,
+            "offset_deg": -90
+          }
+        ]
+      },
+      "control_surfaces": {
+        "source": "attitude_proxy_not_actuator_telemetry",
+        "nodes": [
+          {
+            "name": "X57_aileron_-1",
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "mix": {
+              "roll": 1
+            },
+            "limit_deg": 20
+          },
+          {
+            "name": "X57_elevator_-1",
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "mix": {
+              "pitch": 1
+            },
+            "limit_deg": 20
+          },
+          {
+            "name": "X57_aileron_1",
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "mix": {
+              "roll": -1
+            },
+            "limit_deg": 20
+          },
+          {
+            "name": "X57_elevator_1",
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "mix": {
+              "pitch": 1
+            },
+            "limit_deg": 20
+          },
+          {
+            "name": "X57_rudder",
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "mix": {
+              "yaw": 1
+            },
+            "limit_deg": 20
+          }
+        ]
+      }
+    },
+    "note": "Hypothetical wing-tip VTOL conversion, not real X-57 capability. Twelve inboard propellers rotate only at tilt >=85 deg by user display policy; not actual X-57 high-lift operation. Synthetic pearl-white livery and dark cabin glazing. Original NASA model preserved; .0254 visual scale retained. Cabin and KP2-reference glazing: build_uam_cabins.py; exterior vertex positions and rig nodes retained. Clear cockpit glazing: clear_uam_glazing.py; pale cool tint, alpha 0.12, nonmetal. Rounded cabin supports; optional seated illustration and passenger viewpoints. Exterior and rig retained.",
+    "purpose": "AirTaxi dynamics visual substitute; not manufacturer simulation",
+    "validation": "gltf-passed",
+    "bytes": 3704492
+  },
+  "cockpit": {
+    "schema_version": 1,
+    "viewpoints": [
+      {
+        "id": "seat_01",
+        "label": "승객석 1",
+        "eye": [
+          1.9962,
+          1.2509000000000001,
+          -0.20790000000000003
+        ],
+        "occupant_node": "Cabin_occupant_01"
+      },
+      {
+        "id": "seat_02",
+        "label": "승객석 2",
+        "eye": [
+          1.9962,
+          1.2509000000000001,
+          0.20790000000000003
+        ],
+        "occupant_node": "Cabin_occupant_02"
+      },
+      {
+        "id": "seat_03",
+        "label": "승객석 3",
+        "eye": [
+          1.4562,
+          1.2509000000000001,
+          -0.20790000000000003
+        ],
+        "occupant_node": "Cabin_occupant_03"
+      },
+      {
+        "id": "seat_04",
+        "label": "승객석 4",
+        "eye": [
+          1.4562,
+          1.2509000000000001,
+          0.20790000000000003
+        ],
+        "occupant_node": "Cabin_occupant_04"
+      }
+    ],
+    "occupant_nodes": [
+      "Cabin_occupant_01",
+      "Cabin_occupant_02",
+      "Cabin_occupant_03",
+      "Cabin_occupant_04"
+    ],
+    "occupant_default_scale": 0.0001,
+    "eye": [
+      2.43,
+      1.06,
+      -0.2
+    ],
+    "forward": [
+      1,
+      0,
+      0
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ],
+    "passenger_seats": 4,
+    "screens": [
+      {
+        "id": "pfd",
+        "center": [
+          2.8519500000000004,
+          0.8845000000000001,
+          -0.2986000000000001
+        ],
+        "width": 0.12320000000000003,
+        "height": 0.12150000000000001,
+        "right": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "id": "nav",
+        "center": [
+          2.8519500000000004,
+          0.8845000000000001,
+          -0.16000000000000003
+        ],
+        "width": 0.12320000000000003,
+        "height": 0.12150000000000001,
+        "right": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "id": "system",
+        "center": [
+          2.8519500000000004,
+          0.8845000000000001,
+          -0.021400000000000002
+        ],
+        "width": 0.12320000000000003,
+        "height": 0.12150000000000001,
+        "right": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ]
+      }
+    ],
+    "interior": "flight_model.glb: AeroDT_Cabin; illustrative geometry fitted to glazing envelope, not certified dimensions",
+    "coordinate_frame": "flight_glb_scene_before_display_scale",
+    "seat_nodes": [
+      "Cabin_passenger_01",
+      "Cabin_passenger_02",
+      "Cabin_passenger_03",
+      "Cabin_passenger_04"
+    ],
+    "ground_door": {
+      "nodes": {
+        "right": "Ground_door_left",
+        "left": "Ground_door_right"
+      },
+      "nodes_note": "The glTF node names are inverted against the airframe: every node the original author named L sits at negative z and every R at positive z (the position lights settle it), while build_ground_doors.py named the negative-z hatch \"right\". These keys are the side of the aircraft, so they are mapped across the names rather than to them. Rebuilding with the corrected tool names the nodes properly and this mapping becomes name-for-name.",
+      "forward_m": 1.6,
+      "right_m": 1.011668441772461,
+      "height_m": 0.81,
+      "open_deg": 78,
+      "purpose": "illustrative side hatch; not certified geometry"
+    }
+  }
+}

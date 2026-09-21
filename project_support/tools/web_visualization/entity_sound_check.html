@@ -1,0 +1,46 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>AeroDT 기체 음향 검증</title>
+<link rel="stylesheet" href="../../../user_application/web/entity_sound.css">
+<style>body{margin:36px;background:#101d27;color:#d7edf2;font:14px system-ui;max-width:800px}button,select,input{margin:8px;padding:8px}pre{white-space:pre-wrap}.sound-settings{max-width:370px}</style>
+<h1>선택 기체 음향 · 독립 QA</h1><p>실운항 연결 없음. 기본 음소거. 합성음의 단계 전환과 출력 신호를 검사합니다.</p>
+<button id="sound-toggle" aria-pressed="false">기체 사운드 켜기 / 끄기</button>
+<section class="sound-settings"><label>음량 <input id="sound-volume" type="range" min="0" max="100" value="45"><output id="sound-volume-value"></output></label><p id="sound-status"></p></section>
+<label>대상 <select id="kind"><option value="uam">전기 UAM</option><option value="aircraft">일반 항공기</option><option value="satellite">위성 연출</option><option value="none">선택 해제</option></select></label>
+<label>회전수 rad/s <input id="rpm" type="range" min="0" max="550" value="300"></label>
+<label>틸트 ° <input id="tilt" type="range" min="0" max="90" value="0"></label>
+<label>거리 m <input id="distance" type="number" min="0" value="100"></label>
+<button id="offline">실제 Web Audio 오프라인 검증</button><pre id="result">검증 대기</pre><pre id="state"></pre>
+<script type="module">
+import {SelectedEntityAudio} from '../../../digital_twin/visualization/web/selected_entity_audio.js';
+import {EntitySoundControls} from '../../../user_application/web/entity_sound_controls.js';
+const $=id=>document.getElementById(id),audio=new SelectedEntityAudio();
+const read=()=>$('kind').value==='none'?null:{entity:{entity_id:$('kind').value,kind:$('kind').value,flight_phase:'climb',rotor_radps:+$('rpm').value,tilt_deg:+$('tilt').value,speed_mps:40,visual_asset_id:'joby_s4'},distance:+$('distance').value};
+const controls=new EntitySoundControls({audio,readSample:read,storage:{getItem:()=>null,setItem(){}}});
+const timer=setInterval(()=>$('state').textContent=JSON.stringify({enabled:audio.enabled,context:audio.context?.state??'not_created',voiceBanks:audio.voices.length,selected:audio.key,polling:Boolean(controls.timer)}),200);
+$('offline').onclick=async()=>{
+  $('result').textContent='오프라인 렌더링 중';
+  try{
+    const c=new OfflineAudioContext(1,48000*12,48000),resume=c.resume.bind(c);
+    c.resume=async()=>{};c.close=async()=>{};
+    const engine=new SelectedEntityAudio({createContext:()=>c});await engine.enable();c.resume=resume;engine.setVolume(1);
+    const uam={entity_id:'u',kind:'uam',flight_phase:'climb',rotor_radps:200,tilt_deg:0,speed_mps:20};
+    engine.update({entity:uam,distance:80});
+    const changes=[
+      [2,{entity:{...uam,rotor_radps:450},distance:80}],
+      [4,{entity:{...uam,rotor_radps:330,tilt_deg:90,speed_mps:65},distance:80}],
+      [6,{entity:{entity_id:'jet',kind:'aircraft',speed_mps:230},distance:100}],
+      [8,{entity:{entity_id:'sat',kind:'satellite'},distance:100}],
+      [10,null],
+    ];
+    const events=changes.map(([time,sample])=>c.suspend(time).then(()=>{engine.update(sample);return resume();}));
+    const buffer=await c.startRendering();await Promise.all(events);
+    const values=buffer.getChannelData(0),windows=[];let peak=0,maxStep=0;
+    for(let start=0;start<values.length;start+=24000){let sum=0;
+      for(let i=start;i<start+24000;i++){sum+=values[i]**2;peak=Math.max(peak,Math.abs(values[i]));if(i)maxStep=Math.max(maxStep,Math.abs(values[i]-values[i-1]));}
+      windows.push({seconds:start/48000,rms:Math.sqrt(sum/24000)});
+    }
+    const passed=Number.isFinite(peak)&&peak>0&&peak<.9&&maxStep<.15&&windows.at(-1).rms<.001&&windows[2].rms>.001;
+    $('result').textContent=JSON.stringify({passed,peak,maxStep,windows},null,2);await engine.destroy();
+  }catch(error){$('result').textContent=String(error);}
+};
+window.addEventListener('pagehide',()=>{clearInterval(timer);void controls.destroy();},{once:true});
+</script></html>

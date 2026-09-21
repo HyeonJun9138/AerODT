@@ -1,0 +1,97 @@
+{
+  "title": "Aqua (EOS PM-1)",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Aqua (B)/Aqua (B).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "aqua.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "aqua",
+      "label": "Aqua (EOS PM-1)",
+      "exact": {
+        "norad": [
+          27424
+        ],
+        "names": [
+          "^AQUA$"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 16.7,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 17.7775
+    }
+  ],
+  "display": {
+    "native_extent": 17.7775,
+    "reference_extent_m": 16.7,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 17.77750027179718
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "aqua",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 1104016,
+    "sha256": "f0761181a1d378b6b3e270e8eee8bf20c241b7d577933630369b0cffd4b521e1"
+  },
+  "geometry": {
+    "meshes": 6,
+    "materials": 5,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 49401
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 2,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "f0761181a1d378b6b3e270e8eee8bf20c241b7d577933630369b0cffd4b521e1"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 9897,
+    "sha256": "32975534ab56dbd6e46eb68eec42c83f42d260ac2f708c80fd55d30959e2b8b0"
+  }
+}

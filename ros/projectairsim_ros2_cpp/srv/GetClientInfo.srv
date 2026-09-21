@@ -1,5 +1,0 @@
----
-string client_version
-string nng_version
-string build_commit_hash
-bool success

@@ -1,0 +1,335 @@
+{
+  "schema_version": 1,
+  "asset_id": "nasa_quadrotor_collflap",
+  "title": "NASA Quadrotor 기준기체 (콜렉티브·플랩)",
+  "category": "aircraft/civilian",
+  "purpose": "visual_only",
+  "representation": "specific",
+  "aliases": [
+    "nasa_quadrotor_collflap",
+    "quadcollflap"
+  ],
+  "source": {
+    "provider": "NASA",
+    "url": "https://www.nasa.gov/reference/uam-refs/",
+    "revision": "downloaded 2026-09-14",
+    "original_file": "quadcollflap.vsp3",
+    "note": "Large four-rotor passenger configuration, collective and flap control. Published as an OpenVSP parametric model, not as a mesh."
+  },
+  "rights": {
+    "label": "public domain (US Government work)",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "credit": "NASA",
+    "public_export": true,
+    "note": "Produced by the NASA Revolutionary Vertical Lift Technology project and the Aeronautics Systems Analysis Branch. NASA material is generally not subject to copyright and may be used. The NASA insignia and logos are not included here and are separately restricted. Nothing in this dashboard implies NASA endorsement of AeroDT. The airframe is a published concept for analysis, not a certified or manufactured aircraft."
+  },
+  "display": {
+    "reference_extent_m": 12.920729,
+    "extent": {
+      "x": 12.663798231033327,
+      "y": 4.2872566246032715,
+      "z": 12.920728914550784
+    },
+    "cabin_m": {
+      "width": 1.96,
+      "length": 3.84,
+      "height": 2.082
+    },
+    "scale_basis": "Source feet converted once by the GLB root scale 0.3048. NASA reference convention, not certified physical measurements.",
+    "forward_axis": "+X",
+    "up_axis": "+Y",
+    "origin": "Visual footprint centre at ground level; not a mass-property or CG definition"
+  },
+  "geometry": {
+    "meshes": 22,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [],
+    "native_coordinates": "glTF metre scene, +X nose, +Y up; original feet mesh under the canonical root",
+    "physical_dimensions_verified": false
+  },
+  "conversion": {
+    "operation": "openvsp_geom_export",
+    "tool": "project_support/tools/visual_assets/openvsp_parts.py + openvsp_cabin.py",
+    "note": "Each OpenVSP Geom exported on its own and assembled into one glTF, so the rotors are separate nodes rather than welded into the airframe. Analysis surfaces (actuator disks, mass and CG markers) are not shape and were left out. The window band reuses the fuselage's own triangles and changes only their material: no vertex was moved, added or removed, so the outer shape is the shape NASA published. Cabin, seats and instrument panel are new geometry added inside.",
+    "repairs": [
+      "feet_to_meters_root",
+      "canonical_forward_axis",
+      "measured_rotor_shaft_basis",
+      "airframe_specific_tilt",
+      "nasa_reference_blue_pbr",
+      "cockpit_frame_conversion"
+    ],
+    "repair_tool": "project_support/tools/visual_assets/repair_nasa_assets.py"
+  },
+  "model": {
+    "path": "model.glb",
+    "bytes": 1345632,
+    "sha256": "0eb79d949fb7b8fe68b412d771fa598d97db4a766c8307a6b6aa3f8bfb55d16e"
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser": "passed",
+    "browser_sha256": "0eb79d949fb7b8fe68b412d771fa598d97db4a766c8307a6b6aa3f8bfb55d16e",
+    "browser_scope": "Manual Three.js exterior inspection of 9 models; Cesium 1.143 using production loadVisualModel and RotorSpin loaded 9 models with no missing rig nodes. Hover/cruise inspected for multi-tiltrotor, tiltduct and tiltwing. Not an actual flight mission or all-seat cockpit acceptance.",
+    "http_model_and_thumbnail_sha256": "passed",
+    "physical_dimensions_verified": false
+  },
+  "rotors": {
+    "axis": "y",
+    "turn_sign": "1 turns the way a right hand turns about +Y, counter-clock-wise from above.",
+    "direction_basis": "Inferred from the airframe, not declared by the source. OpenVSP records no rotation direction for these models, so each mirrored pair turns in opposite directions.",
+    "note": "Each rotor is re-based to its measured blade-plane normal with local +Y as its shaft. The rest geometry and hub are preserved.",
+    "nodes": [
+      {
+        "name": "AeroDT_Rotor_32",
+        "turn": -1,
+        "hub": [
+          4.004252675010681,
+          2.951324953262329,
+          3.7688520000000003
+        ],
+        "side": "right",
+        "blades": 5,
+        "declared_diameter": 5.583326400000001,
+        "measured_diameter": 5.597426448000001,
+        "source_shaft_axis": [
+          7.783394346950739e-12,
+          0.9999999999999998,
+          -1.7274737196260048e-11
+        ],
+        "axis": "y"
+      },
+      {
+        "name": "AeroDT_Rotor_34",
+        "turn": 1,
+        "hub": [
+          4.004252675010681,
+          2.951324953262329,
+          -3.7688520000000003
+        ],
+        "side": "left",
+        "blades": 5,
+        "declared_diameter": 5.583326400000001,
+        "measured_diameter": 5.597426448000001,
+        "source_shaft_axis": [
+          -7.783394578673973e-12,
+          1.0000000000000002,
+          -1.727484821856251e-11
+        ],
+        "axis": "y"
+      },
+      {
+        "name": "AeroDT_Rotor_36",
+        "turn": -1,
+        "hub": [
+          -3.533451324989319,
+          3.9297329532623295,
+          3.7688520000000003
+        ],
+        "side": "right",
+        "blades": 5,
+        "declared_diameter": 5.583326400000001,
+        "measured_diameter": 5.597426448000001,
+        "source_shaft_axis": [
+          -9.927791454383807e-12,
+          0.9999999999999998,
+          -1.7274626173957586e-11
+        ],
+        "axis": "y"
+      },
+      {
+        "name": "AeroDT_Rotor_38",
+        "turn": 1,
+        "hub": [
+          -3.533451324989319,
+          3.9297329532623295,
+          -3.7688520000000003
+        ],
+        "side": "left",
+        "blades": 5,
+        "declared_diameter": 5.583326400000001,
+        "measured_diameter": 5.597426448000001,
+        "source_shaft_axis": [
+          9.927790295766964e-12,
+          1.0000000000000002,
+          -1.727484821856251e-11
+        ],
+        "axis": "y"
+      }
+    ]
+  },
+  "cockpit": {
+    "schema_version": 1,
+    "viewpoints": [
+      {
+        "id": "seat_01",
+        "label": "승객석 1",
+        "eye": [
+          1.463135075010681,
+          1.962767113262329,
+          -0.3200095200000001
+        ],
+        "occupant_node": "Cabin_occupant_01"
+      },
+      {
+        "id": "seat_02",
+        "label": "승객석 2",
+        "eye": [
+          1.463135075010681,
+          1.962767113262329,
+          0.32000952
+        ],
+        "occupant_node": "Cabin_occupant_02"
+      },
+      {
+        "id": "seat_03",
+        "label": "승객석 3",
+        "eye": [
+          0.7231416350106812,
+          1.962767113262329,
+          -0.3200095200000001
+        ],
+        "occupant_node": "Cabin_occupant_03"
+      },
+      {
+        "id": "seat_04",
+        "label": "승객석 4",
+        "eye": [
+          0.7231416350106812,
+          1.962767113262329,
+          0.32000952
+        ],
+        "occupant_node": "Cabin_occupant_04"
+      },
+      {
+        "id": "seat_05",
+        "label": "승객석 5",
+        "eye": [
+          -0.016851804989318868,
+          1.962767113262329,
+          -0.32000952000000005
+        ],
+        "occupant_node": "Cabin_occupant_05"
+      },
+      {
+        "id": "seat_06",
+        "label": "승객석 6",
+        "eye": [
+          -0.01685180498931883,
+          1.962767113262329,
+          0.32000952000000005
+        ],
+        "occupant_node": "Cabin_occupant_06"
+      }
+    ],
+    "occupant_nodes": [
+      "Cabin_occupant_01",
+      "Cabin_occupant_02",
+      "Cabin_occupant_03",
+      "Cabin_occupant_04",
+      "Cabin_occupant_05",
+      "Cabin_occupant_06"
+    ],
+    "occupant_default_scale": 0.0001,
+    "eye": [
+      1.463135075010681,
+      1.962767113262329,
+      -0.3200095200000001
+    ],
+    "forward": [
+      1.0,
+      0.0,
+      -6.123233995736766e-17
+    ],
+    "up": [
+      0.0,
+      1.0,
+      0.0
+    ],
+    "passenger_seats": 6,
+    "screens": [
+      {
+        "id": "pfd",
+        "center": [
+          2.143052435010681,
+          1.682777833262329,
+          -0.23500080000000015
+        ],
+        "width": 0.20000976,
+        "height": 0.15998952000000002,
+        "right": [
+          6.123233995736766e-17,
+          0.0,
+          1.0
+        ],
+        "up": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "id": "nav",
+        "center": [
+          2.143052435010681,
+          1.682777833262329,
+          -1.312241152470386e-16
+        ],
+        "width": 0.20000976,
+        "height": 0.15998952000000002,
+        "right": [
+          6.123233995736766e-17,
+          0.0,
+          1.0
+        ],
+        "up": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "id": "system",
+        "center": [
+          2.143052435010681,
+          1.682777833262329,
+          0.23500079999999987
+        ],
+        "width": 0.20000976,
+        "height": 0.15998952000000002,
+        "right": [
+          6.123233995736766e-17,
+          0.0,
+          1.0
+        ],
+        "up": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      }
+    ],
+    "seat_nodes": [
+      "Cabin_passenger_01",
+      "Cabin_passenger_02",
+      "Cabin_passenger_03",
+      "Cabin_passenger_04",
+      "Cabin_passenger_05",
+      "Cabin_passenger_06"
+    ],
+    "interior": "AeroDT_Cabin: illustrative geometry fitted to the measured fuselage envelope, not certified cabin dimensions",
+    "coordinate_frame": "gltf_model_meters"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 47111,
+    "sha256": "703fdcd5627db13c57420853135b75e68f1075af3ef5e3929d33b5bd9b379a24",
+    "width": 760,
+    "height": 428,
+    "view": "Repaired model, manual browser studio render; no GLB loaded by the library shelf"
+  }
+}

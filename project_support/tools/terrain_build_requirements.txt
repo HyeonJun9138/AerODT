@@ -1,0 +1,6 @@
+# Optional offline environment, not runtime server dependencies.
+numpy==2.2.6
+scipy==1.15.3
+rasterio>=1.4,<1.5
+mapbox-vector-tile==2.2.0
+matplotlib>=3.9,<4

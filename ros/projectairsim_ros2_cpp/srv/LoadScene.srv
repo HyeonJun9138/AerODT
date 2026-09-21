@@ -1,4 +1,0 @@
-string scene_file
-bool is_primary_client
----
-bool success

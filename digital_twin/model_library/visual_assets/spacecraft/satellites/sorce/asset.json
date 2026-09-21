@@ -1,0 +1,97 @@
+{
+  "title": "SORCE",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Solar Radiation and Climate Experiment (SORCE)/Solar Radiation and Climate Experiment (SORCE).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "sorce.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "sorce",
+      "label": "SORCE",
+      "exact": {
+        "norad": [
+          27651
+        ],
+        "names": [
+          "^SORCE"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 3.4,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 243.036244
+    }
+  ],
+  "display": {
+    "native_extent": 243.036244,
+    "reference_extent_m": 3.4,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 243.0362437432712
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "sorce",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 366492,
+    "sha256": "8ec505080199227d25897f5157f4cd87e60092d69b16079deb3ca32caa2ce10d"
+  },
+  "geometry": {
+    "meshes": 15,
+    "materials": 29,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 115513
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "8ec505080199227d25897f5157f4cd87e60092d69b16079deb3ca32caa2ce10d"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 10106,
+    "sha256": "fbd625c2a4ff03c145dcb8155eecfd2805e3818498ddf5bc3c86eeb6c7a6d991"
+  }
+}

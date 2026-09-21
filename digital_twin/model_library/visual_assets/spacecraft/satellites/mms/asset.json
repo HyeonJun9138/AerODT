@@ -1,0 +1,100 @@
+{
+  "title": "MMS 자기권 관측위성",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Magnetospheric Multiscale (MMS) (A)/Magnetospheric Multiscale (MMS) (A).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "mms.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "mms",
+      "label": "MMS 자기권 관측위성",
+      "exact": {
+        "norad": [
+          40482,
+          40483,
+          40484,
+          40485
+        ],
+        "names": [
+          "^MMS [1-4]$"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 3.5,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 8.527019
+    }
+  ],
+  "display": {
+    "native_extent": 8.527019,
+    "reference_extent_m": 3.5,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 8.527018547058105
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "mms",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 335808,
+    "sha256": "e3688a8db82f1918c3b4525f4ceed08b614a3a2c5be09ade5711baba30262eef"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 0,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 139502
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "e3688a8db82f1918c3b4525f4ceed08b614a3a2c5be09ade5711baba30262eef"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 4557,
+    "sha256": "fcab86d82fff37ed3ae070fb66cc60e1519284d47472599362078d0ff853a8a9"
+  }
+}

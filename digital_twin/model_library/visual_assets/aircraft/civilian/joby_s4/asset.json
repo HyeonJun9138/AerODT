@@ -1,0 +1,492 @@
+{
+  "title": "Joby S4 eVTOL",
+  "source": {
+    "provider": "Fab marketplace",
+    "url": "https://www.fab.com/",
+    "revision": "local working copy, 2026-09-09",
+    "original_file": "joby-aviation-s4-evtol/source/111.fbx",
+    "note": "Purchased on Fab by the operator. The copy in the working tree carries no licence, author or listing file, so the original author is not recorded here and should be filled in from the Fab receipt."
+  },
+  "rights": {
+    "label": "Fab licence (purchased)",
+    "url": "https://www.fab.com/eula",
+    "credit": "purchased on Fab by the AeroDT operator; original author as named on the Fab listing",
+    "public_export": true,
+    "note": "The operator holds a purchased Fab licence, which covers using the model in their own products. It does not generally cover handing the model file itself to third parties, so serving it from an AeroDT deployment is within that licence while exposing the visual-asset directory on a public site is not. Depicts a real manufacturer's aircraft; no endorsement is implied."
+  },
+  "representation": "specific",
+  "aliases": [
+    "joby",
+    "joby_s4"
+  ],
+  "display": {
+    "native_extent": 10.69921928857746,
+    "reference_extent_m": 10.7,
+    "scale_basis": "metres. The FBX is authored in arbitrary units (0.82 across), so the export applies a uniform factor of 13.1024 chosen to put the wingspan at the published S4 figure of 10.7 m. The result measures 10.70 x 2.89 x 6.05 m against a real length of about 6.4 m. The factor is a display choice, not a measurement of the model.",
+    "forward_axis": "unverified (longitudinal axis is Z; nose direction not established)",
+    "up_axis": "+Y",
+    "extent": {
+      "x": 10.69921928857746,
+      "y": 2.8942475783142276,
+      "z": 6.046070404752089
+    },
+    "part_count": 7,
+    "browser_measured_extent": 10.69921928857746
+  },
+  "conversion": {
+    "operation": "unreal_gltf_export",
+    "tool": "project_support/tools/visual_assets/export_unreal_asset_gltf.py",
+    "note": "Unreal glTF exporter output, unmodified. Textures written as JPEG quality 85 by the exporter. Imported from FBX as a combined static mesh and scaled to metres on export; materials were baked to 512 px texture sets by the exporter. The six propellers were then given their own nodes by project_support/tools/visual_assets/split_rotor_nodes.py so a renderer can turn them: the exporter had welded the whole aircraft into one mesh, which leaves the blades unable to move. No vertex was moved, added or removed -- each rotor's vertices are written relative to its own hub and the node carries the hub instead, so the triangle count, every world position and the overall extent are identical to the export.",
+    "material_slots": [
+      "04_-_Default",
+      "Material__25",
+      "01_-_Default",
+      "07_-_Default",
+      "03_-_Default",
+      "WorldGridMaterial"
+    ],
+    "repairs": [
+      "split the 30 propeller blades into 6 rotor nodes (5 blades each, verified as one radius about each hub); no vertex moved"
+    ]
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Reloaded in Cesium 1.143 after the rotor split: scene load, one rendered frame, all six rotor nodes resolved and turned about their own hubs with the hub translations unchanged. No animation/scale/flight-direction certification.",
+    "browser_sha256": "0f73ce4a33c724dd80ee67e40eb8bdb7a1c0907f6b0e53eee470d1e3edd6a682"
+  },
+  "schema_version": 1,
+  "asset_id": "joby_s4",
+  "category": "aircraft/civilian",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 733644,
+    "sha256": "0f73ce4a33c724dd80ee67e40eb8bdb7a1c0907f6b0e53eee470d1e3edd6a682"
+  },
+  "geometry": {
+    "meshes": 7,
+    "materials": 6,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [],
+    "native_coordinates": "glTF right-handed +Y up; forward unverified (longitudinal axis is Z; nose direction not established), up +Y (declared by the intake spec)",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 12840
+  },
+  "thumbnail": {
+    "path": "thumbnail_flight_0ce97b03c466.jpg",
+    "bytes": 30381,
+    "sha256": "0ce97b03c466c29f3ad9875d957c565563883065c891587de16351594bbdf3cf",
+    "source_model_sha256": "2e65d06d13935607ee1f3d71f3777179898fb87426afee8e022cc625a6ce4c1f",
+    "variant": "flight",
+    "width": 960,
+    "height": 640,
+    "view": "neutral VTOL front three-quarter, model-specific framing, grey studio background"
+  },
+  "rotors": {
+    "note": "The six lift/cruise propellers, each given its own node by split_rotor_nodes.py. Each rotor is five blades on one hub, found as connected geometry and confirmed to sit at a single radius (0.0496 in model units) about that hub. The blades are thin along their own Y, so the spin is a rotation about that axis inside the node.",
+    "axis": "y",
+    "turn_sign": "1 turns the way a right hand turns about +Y, which reads counter-clock-wise from above; -1 is clock-wise.",
+    "direction_basis": "Inferred from the airframe, not declared by the source: the model carries no rotor direction, and the rotors are three mirror-symmetric pairs, so each pair is turned in opposite directions the way a multirotor balances its torque. Left-hand rotors turn one way and their right-hand partners the other.",
+    "nodes": [
+      {
+        "name": "AeroDT_Rotor_1",
+        "turn": 1,
+        "hub": [
+          -0.1332,
+          0.0161,
+          -0.4851
+        ],
+        "side": "left"
+      },
+      {
+        "name": "AeroDT_Rotor_2",
+        "turn": -1,
+        "hub": [
+          0.1332,
+          0.0161,
+          -0.4851
+        ],
+        "side": "right"
+      },
+      {
+        "name": "AeroDT_Rotor_3",
+        "turn": 1,
+        "hub": [
+          -0.3112,
+          0.0317,
+          -0.3682
+        ],
+        "side": "left"
+      },
+      {
+        "name": "AeroDT_Rotor_4",
+        "turn": -1,
+        "hub": [
+          0.3112,
+          0.0317,
+          -0.3682
+        ],
+        "side": "right"
+      },
+      {
+        "name": "AeroDT_Rotor_5",
+        "turn": 1,
+        "hub": [
+          -0.1329,
+          0.0511,
+          -0.2077
+        ],
+        "side": "left"
+      },
+      {
+        "name": "AeroDT_Rotor_6",
+        "turn": -1,
+        "hub": [
+          0.1329,
+          0.0511,
+          -0.2077
+        ],
+        "side": "right"
+      }
+    ],
+    "tilt_note": "The six nacelles tilt on the real S4, but this export welded them into the airframe: only the blades were separable. Tilting blades whose nacelles cannot follow would swing them out of their mounts, so no tilt is declared here. Recovering it needs the nacelles exported as their own parts."
+  },
+  "flight_visual": {
+    "path": "cabin_section_fitted_model.glb",
+    "sha256": "b3c7ada36d3a5076ac19d74390dad7365d833170a1a79f4a874e5b3b9815f87a",
+    "source_sha256": "0f73ce4a33c724dd80ee67e40eb8bdb7a1c0907f6b0e53eee470d1e3edd6a682",
+    "rotors": {
+      "axis": "y",
+      "nodes": [
+        {
+          "name": "AeroDT_Rotor_1",
+          "turn": -1,
+          "axis": "y"
+        },
+        {
+          "name": "AeroDT_Rotor_2",
+          "turn": 1,
+          "axis": "y"
+        },
+        {
+          "name": "AeroDT_Rotor_3",
+          "turn": -1,
+          "axis": "y"
+        },
+        {
+          "name": "AeroDT_Rotor_4",
+          "turn": 1,
+          "axis": "y"
+        },
+        {
+          "name": "AeroDT_Rotor_5",
+          "turn": -1,
+          "axis": "y"
+        },
+        {
+          "name": "AeroDT_Rotor_6",
+          "turn": 1,
+          "axis": "y"
+        }
+      ],
+      "tilt": {
+        "axis": "z",
+        "sign": -1,
+        "frame": "parent",
+        "nodes": [
+          {
+            "name": "Joby_hinge_1",
+            "axis": "x",
+            "sign": -1,
+            "offset_deg": 0
+          },
+          {
+            "name": "Joby_hinge_2",
+            "axis": "x",
+            "sign": -1,
+            "offset_deg": 0
+          },
+          {
+            "name": "Joby_hinge_3",
+            "axis": "x",
+            "sign": -1,
+            "offset_deg": 0
+          },
+          {
+            "name": "Joby_hinge_4",
+            "axis": "x",
+            "sign": -1,
+            "offset_deg": 0
+          },
+          {
+            "name": "Joby_hinge_5",
+            "axis": "x",
+            "sign": 1,
+            "offset_deg": 0
+          },
+          {
+            "name": "Joby_hinge_6",
+            "axis": "x",
+            "sign": 1,
+            "offset_deg": 0
+          }
+        ]
+      },
+      "control_surfaces": {
+        "source": "native_actuator_with_visual_yaw",
+        "nodes": [
+          {
+            "name": "Joby_wing_surface_1",
+            "axis": [
+              0.9770441363566055,
+              0.006538361745081128,
+              0.21293662305217864
+            ],
+            "mix": {
+              "roll": 1
+            },
+            "limit_deg": 20,
+            "geometry_basis": "Inspected livery/panel edges and trailing-edge geometry; fitted visual hinge, not manufacturer data"
+          },
+          {
+            "name": "Joby_wing_surface_2",
+            "axis": [
+              0.9843441562172713,
+              0.01301830854103772,
+              0.17577572575198883
+            ],
+            "mix": {
+              "roll": 1
+            },
+            "limit_deg": 20,
+            "geometry_basis": "Inspected livery/panel edges and trailing-edge geometry; fitted visual hinge, not manufacturer data"
+          },
+          {
+            "name": "Joby_wing_surface_3",
+            "axis": [
+              0.9940138536758956,
+              0.009279181461090271,
+              0.10885933810108954
+            ],
+            "mix": {
+              "roll": 1
+            },
+            "limit_deg": 20,
+            "geometry_basis": "Inspected livery/panel edges and trailing-edge geometry; fitted visual hinge, not manufacturer data"
+          },
+          {
+            "name": "Joby_wing_surface_4",
+            "axis": [
+              0.9951908697465868,
+              -0.008945846505657704,
+              -0.09754539765324453
+            ],
+            "mix": {
+              "roll": -1
+            },
+            "limit_deg": 20,
+            "geometry_basis": "Inspected livery/panel edges and trailing-edge geometry; fitted visual hinge, not manufacturer data"
+          },
+          {
+            "name": "Joby_wing_surface_5",
+            "axis": [
+              0.9770440941963258,
+              -0.0065384441897633205,
+              -0.21293681396991684
+            ],
+            "mix": {
+              "roll": -1
+            },
+            "limit_deg": 20,
+            "geometry_basis": "Inspected livery/panel edges and trailing-edge geometry; fitted visual hinge, not manufacturer data"
+          },
+          {
+            "name": "Joby_wing_surface_6",
+            "axis": [
+              0.9843441202886051,
+              -0.013018412214654052,
+              -0.17577591927411856
+            ],
+            "mix": {
+              "roll": -1
+            },
+            "limit_deg": 20,
+            "geometry_basis": "Inspected livery/panel edges and trailing-edge geometry; fitted visual hinge, not manufacturer data"
+          },
+          {
+            "name": "Joby_ruddervator_-1",
+            "axis": [
+              0.9760502567200038,
+              -0.21700812318289642,
+              0.015276479615782917
+            ],
+            "mix": {
+              "pitch": -1,
+              "yaw": -0.7
+            },
+            "limit_deg": 20,
+            "geometry_basis": "Inspected livery/panel edges and trailing-edge geometry; fitted visual hinge, not manufacturer data"
+          },
+          {
+            "name": "Joby_ruddervator_1",
+            "axis": [
+              0.9766641219312704,
+              0.21422356630243095,
+              -0.015344594256246612
+            ],
+            "mix": {
+              "pitch": -1,
+              "yaw": 0.7
+            },
+            "limit_deg": 20,
+            "geometry_basis": "Inspected livery/panel edges and trailing-edge geometry; fitted visual hinge, not manufacturer data"
+          }
+        ],
+        "telemetry": "control_surface_deg: left/right aileron and elevator runtime angles; yaw is visual demand, not a measured rudder actuator. Older samples use attitude proxy."
+      }
+    },
+    "note": "AirTaxi-matched display extent; -Z nose normalized to +X. Front four tilt forward and rear pair backward; front disc hubs aligned to pod-tip hinges with short connecting necks. Pearl-white body, dark authored windows, wing control surfaces neutralized. Visual geometry only, not engineering joint data. Cabin and KP2-reference glazing: build_uam_cabins.py; exterior vertex positions and rig nodes retained. Clear cockpit glazing: clear_uam_glazing.py; pale cool tint, alpha 0.12, nonmetal. Rounded cabin supports; optional seated illustration and passenger viewpoints. Exterior and rig retained.",
+    "purpose": "AirTaxi dynamics visual substitute; not manufacturer simulation",
+    "validation": "gltf-passed",
+    "display_extent_m": 10.8,
+    "bytes": 2131400,
+    "measured_extent_m": 7.351877379,
+    "seats": 2,
+    "size_basis": "2인승 운항용 대표 크기: 길이 5.837 m, 높이 2.922 m, 스팬 10.8 m. GLB 실측 최대 변 7.351877379 m에 균일 배율 1.469013 적용. 단일/수동/다중/Physical 화면 공통. 제조사 확정 제원이나 실기체 좌석 배치를 뜻하지 않는다. 탑승객 키 1.65~1.85 m를 기준으로 비교; 카메라 거리에 따라 기체를 확대하지 않는다.",
+    "control_surface_geometry": "20260917 recut: fixed supports, narrow hinge rails, swept/dihedral axes; existing cabin retained",
+    "cabin_envelope_fit": "20260917-v2: inset local transverse sections from indexed shell triangles; static interior only"
+  },
+  "cockpit": {
+    "schema_version": 1,
+    "viewpoints": [
+      {
+        "id": "seat_01",
+        "label": "승객석 1",
+        "eye": [
+          0.3144,
+          0.7707999999999999,
+          0
+        ],
+        "occupant_node": "Cabin_occupant_01"
+      },
+      {
+        "id": "seat_02",
+        "label": "승객석 2",
+        "eye": [
+          -0.1056,
+          0.7707999999999999,
+          0
+        ],
+        "occupant_node": "Cabin_occupant_02"
+      }
+    ],
+    "occupant_nodes": [
+      "Cabin_occupant_01",
+      "Cabin_occupant_02"
+    ],
+    "occupant_default_scale": 0.0001,
+    "eye": [
+      0.68,
+      0.77,
+      0
+    ],
+    "forward": [
+      1,
+      0,
+      0
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ],
+    "passenger_seats": 2,
+    "screens": [
+      {
+        "id": "pfd",
+        "center": [
+          1.0544,
+          0.614,
+          -0.13275
+        ],
+        "width": 0.118,
+        "height": 0.108,
+        "right": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "id": "nav",
+        "center": [
+          1.0544,
+          0.614,
+          0
+        ],
+        "width": 0.118,
+        "height": 0.108,
+        "right": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "id": "system",
+        "center": [
+          1.0544,
+          0.614,
+          0.13275
+        ],
+        "width": 0.118,
+        "height": 0.108,
+        "right": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ]
+      }
+    ],
+    "interior": "flight_model.glb: AeroDT_Cabin; illustrative geometry fitted to glazing envelope, not certified dimensions",
+    "coordinate_frame": "flight_glb_scene_before_display_scale",
+    "seat_nodes": [
+      "Cabin_passenger_01",
+      "Cabin_passenger_02"
+    ],
+    "interior_refinement": "premium_cabin_20260917; contoured seats, matte trim, shallow bins, emissive light strips; display-only",
+    "ground_door": {
+      "nodes": {
+        "right": "Ground_door_left",
+        "left": "Ground_door_right"
+      },
+      "nodes_note": "The glTF node names are inverted against the airframe: every node the original author named L sits at negative z and every R at positive z (the position lights settle it), while build_ground_doors.py named the negative-z hatch \"right\". These keys are the side of the aircraft, so they are mapped across the names rather than to them. Rebuilding with the corrected tool names the nodes properly and this mapping becomes name-for-name.",
+      "forward_m": 0.10283087720688168,
+      "right_m": 0.6925543001458386,
+      "height_m": 0.5582247619802148,
+      "open_deg": 78,
+      "purpose": "illustrative side hatch; not certified geometry"
+    }
+  }
+}

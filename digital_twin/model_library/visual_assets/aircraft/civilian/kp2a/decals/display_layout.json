@@ -1,0 +1,119 @@
+{
+  "note": "User-requested enlarged side marks below canopy plus two horizontal wing-top rows; display layout, not original Blueprint placement. Original PNGs remain unchanged.",
+  "marks": [
+    {
+      "name": "KP2A_LogoDecal_2_GEN_VARIABLE",
+      "texture": "KADA_Logo.png",
+      "surface": "Body",
+      "center_m": [
+        -0.5,
+        -1.17,
+        -0.73
+      ],
+      "half_extent_m": [
+        0.25,
+        0.65,
+        0.9
+      ],
+      "normal": [
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "name": "KP2A_LogoDecal_1_GEN_VARIABLE",
+      "texture": "VIBUM_Logo.png",
+      "surface": "Body",
+      "center_m": [
+        -0.5,
+        -1.17,
+        0.73
+      ],
+      "half_extent_m": [
+        0.25,
+        0.65,
+        0.9
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "name": "KP2A_Top_KADA",
+      "texture": "KADA_Logo.png",
+      "surface": "Top",
+      "center_m": [
+        0.35,
+        0.1,
+        0
+      ],
+      "half_extent_m": [
+        0.3,
+        0.8,
+        1.1
+      ],
+      "basis": [
+        [
+          0,
+          -1,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "normal": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "KP2A_Top_VIBUM",
+      "texture": "VIBUM_Logo.png",
+      "surface": "Top",
+      "center_m": [
+        -0.15,
+        0.1,
+        0
+      ],
+      "half_extent_m": [
+        0.3,
+        0.8,
+        1.1
+      ],
+      "basis": [
+        [
+          0,
+          -1,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "normal": [
+        0,
+        1,
+        0
+      ]
+    }
+  ]
+}

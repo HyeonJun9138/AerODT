@@ -1,0 +1,5 @@
+{
+  "celestrak_enabled": true,
+  "celestrak_group": "active",
+  "celestrak_poll_seconds": 7200
+}

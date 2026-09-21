@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AeroDT · Visual Asset Library</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0c1422;color:#e5edf7;font:15px system-ui,sans-serif}header{padding:28px 40px;border-bottom:1px solid #29415b}h1{margin:5px 0 10px;font-size:30px}small{color:#7bd3db;letter-spacing:2px}p{color:#aabbd1}button,input,select{background:#203653;color:#e5edf7;border:1px solid #426484;border-radius:6px;padding:10px;margin-right:8px}button{cursor:pointer}#status{display:block;margin-top:14px;color:#8ee3bd}main{padding:24px 40px}#gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}.card{border:1px solid #29415b;border-radius:10px;overflow:hidden;background:#121f32}.card img{width:100%;aspect-ratio:1.4;object-fit:contain}.card div{padding:12px}.card p{margin:5px 0;font-size:12px}.bad{color:#ffbe88}#stage{width:480px;max-width:100%;margin-bottom:20px}canvas{max-width:100%}a{color:#8bdce2}
+</style>
+<header><small>AERODT / SHARED MODEL LIBRARY</small><h1>공유 3D 자산 라이브러리</h1>
+<p>로컬 검수 도구 · 형상만 제공 · 동역학과 실측 상태는 포함하지 않습니다</p>
+<button id="run">전체 WebGL 검증 및 미리보기 생성</button><input id="search" placeholder="모델 검색" aria-label="모델 검색">
+<select id="category" aria-label="분류"><option value="">전체</option><option value="aircraft/civilian">민간 비행체</option><option value="aircraft/military">군용 계열</option><option value="spacecraft/satellites">위성 / 우주정거장</option><option value="people/civilian">사람 / 승객</option></select>
+<output id="status">카탈로그 읽는 중</output></header>
+<main><div id="stage"></div><div id="gallery"></div></main>
+<script type="importmap">{"imports":{"three":"/vendor/build/three.module.js","three/addons/":"/vendor/examples/jsm/"}}</script>
+<script type="module" src="preview.js"></script></html>

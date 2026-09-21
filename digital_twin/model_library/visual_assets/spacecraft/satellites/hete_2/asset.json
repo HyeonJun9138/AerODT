@@ -1,0 +1,97 @@
+{
+  "title": "HETE-2",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/High Energy Transient Explorer/High Energy Transient Explorer.glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "hete_2.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "hete_2",
+      "label": "HETE-2",
+      "exact": {
+        "norad": [
+          26561
+        ],
+        "names": [
+          "^HETE"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 1,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 1.556005
+    }
+  ],
+  "display": {
+    "native_extent": 1.556005,
+    "reference_extent_m": 1,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 1.5560050010681152
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "hete_2",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 61836,
+    "sha256": "f514f7cff65c0d4d565408b3f6ba113c4a3b97321a3fe770c89f67820e83922c"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 23,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 4452
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "f514f7cff65c0d4d565408b3f6ba113c4a3b97321a3fe770c89f67820e83922c"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 11227,
+    "sha256": "63d7914bda198a933f57197ea9f2edbc9a1b2f295750d58fa8e6a5a7a0cfb12a"
+  }
+}

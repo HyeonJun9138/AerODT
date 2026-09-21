@@ -1,0 +1,32 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>단일 비행 / 틸트 QA</title>
+<link rel="stylesheet" href="/app/styles.css">
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>html,body{margin:0;width:100%;height:100%;background:#142331}#view{position:absolute;left:420px;right:0;top:0;bottom:0}#panel{position:absolute;width:390px;padding:14px;top:0;bottom:0;overflow:auto;color:white}#qa{position:absolute;top:12px;right:12px;z-index:5;background:#142331ed;color:white;padding:14px;border-radius:8px}#qa button,#qa select{padding:8px;margin:4px}#report{font:12px monospace;white-space:pre-wrap;max-width:340px}#qa{top:8px;left:432px;right:12px;padding:8px}#qa br{display:none}#report{position:fixed;bottom:20px;right:12px;background:#142331dd;padding:10px;pointer-events:none;font-size:10px} </style>
+<div id="view"></div><div id="panel"></div><div id="qa"><b>비행용 3D 모델 검증</b><br><select id="model" aria-label="검증 모델"></select><br><button id="vtol">VTOL 0°</button><button id="half">천이 45°</button><button id="cruise">순항 90°</button><button id="rotate">로터 재생</button><br><button id="side">측면</button><button id="top">위에서</button><pre id="report">준비 중</pre></div>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {PlanPanel} from '/app/plan_panel.js';
+import {FlightLayer} from '/visualization/flight_layer.js';
+import {RotorSpin} from '/visualization/rotor_spin.js';
+const C=Cesium, viewer=new C.Viewer('view',{baseLayer:false,globe:false,skyBox:false,skyAtmosphere:false,animation:false,timeline:false,baseLayerPicker:false,geocoder:false,homeButton:false,sceneModePicker:false,navigationHelpButton:false,selectionIndicator:false,infoBox:false});
+viewer.scene.backgroundColor=C.Color.fromCssColorString('#65808b');
+const catalog=await fetch('/catalog').then(r=>r.json()), options=await fetch('/options').then(r=>r.json());
+const entries=catalog.assets??catalog;
+const assets=id=>entries.find(a=>a.asset_id===id);
+const report=document.querySelector('#report'),picker=document.querySelector('#model');
+for(const m of options.visual_models)picker.add(new Option(m.name,m.id));
+const layer=new FlightLayer(C,viewer,{assets,onWarning:m=>report.textContent=m});
+const panel=new PlanPanel({api:{options:async()=>options,fly:async raw=>{const r=await fetch('/fly',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(raw)});if(!r.ok)throw Error('계산 실패');return r.json();}},onPlan:p=>{layer.show(p);if(model){viewer.scene.primitives.remove(model);model=null;}},onSample:s=>{if(s){layer.moveTo(s);viewer.camera.lookAt(C.Cartesian3.fromDegrees(s.position.longitude,s.position.latitude,s.position.altitude_m),new C.HeadingPitchRange(.8,-.35,24));}},groundHeights:async p=>p.map(()=>0)});
+await panel.render(document.querySelector('#panel'));
+let model,spin,angle=0,playing=false,last=performance.now();
+const anchor=C.Cartesian3.fromDegrees(127,37.5,100), matrix=C.Transforms.headingPitchRollToFixedFrame(anchor,new C.HeadingPitchRoll(0,0,0));
+viewer.entities.add({position:C.Cartesian3.fromDegrees(127,37.5,99.8),box:{dimensions:new C.Cartesian3(30,30,.2),material:C.Color.fromCssColorString('#354856')}});
+function camera(side=false){viewer.camera.lookAt(anchor,new C.HeadingPitchRange(.75,side?-.08:-.6, picker.value==='amvlab_evtol'?4:23));}
+function showReport(){report.textContent=JSON.stringify({model:picker.value,tilt_deg:angle,parts:spin?.counts,missing:spin?.missing,radius:model?.ready?model.boundingSphere.radius:null,bytes:assets(picker.value)?.flight_visual?'flight_model':'original'},null,2);}
+async function load(){if(model)viewer.scene.primitives.remove(model);layer.clear();angle=0;const a=assets(picker.value), f=a.flight_visual??a;model=await C.Model.fromGltfAsync({url:f.uri,modelMatrix:matrix,upAxis:C.Axis.Y,forwardAxis:C.Axis.X,minimumPixelSize:0,scale:1});viewer.scene.primitives.add(model);spin=new RotorSpin(C,f.rotors);let done=false;const off=viewer.scene.postRender.addEventListener(()=>{if(!done&&model.ready){done=true;spin.attach(model);showReport();off();}});camera();}
+picker.onchange=()=>load();for(const [id,a] of [['vtol',0],['half',45],['cruise',90]])document.getElementById(id).onclick=()=>{angle=a;spin.advance(0,0,a*Math.PI/180);showReport();};
+document.getElementById('rotate').onclick=()=>playing=!playing;
+document.getElementById('side').onclick=()=>camera(true);document.getElementById('top').onclick=()=>camera(false);
+viewer.scene.preRender.addEventListener(()=>{const now=performance.now();if(playing&&spin)spin.advance((now-last)/1000,300,angle*Math.PI/180,true);last=now;});
+await load();
+</script></html>

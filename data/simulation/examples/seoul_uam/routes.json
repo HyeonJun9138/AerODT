@@ -1,0 +1,4088 @@
+{
+  "schema_version": 1,
+  "node_id_sequence": 43,
+  "nodes": [
+    {
+      "name": "경부고속도로 양재천 다리",
+      "latitude": 37.471593,
+      "longitude": 127.032031,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP007",
+      "updated_at": "2026-09-09T09:54:13+00:00",
+      "created_at": "2026-09-09T09:43:27+00:00"
+    },
+    {
+      "name": "대치교",
+      "latitude": 37.4977021,
+      "longitude": 127.0738552,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP008",
+      "updated_at": "2026-09-09T09:54:13+00:00",
+      "created_at": "2026-09-09T09:43:27+00:00"
+    },
+    {
+      "name": "청담대교 중간지점",
+      "latitude": 37.526451,
+      "longitude": 127.064361,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP009",
+      "updated_at": "2026-09-09T09:54:13+00:00",
+      "created_at": "2026-09-09T09:43:27+00:00"
+    },
+    {
+      "name": "천호대교 중간지점",
+      "latitude": 37.5428,
+      "longitude": 127.112312,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP010",
+      "updated_at": "2026-09-09T09:54:13+00:00",
+      "created_at": "2026-09-09T09:43:27+00:00"
+    },
+    {
+      "name": "잠실대교 중간지점",
+      "latitude": 37.524288,
+      "longitude": 127.091639,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP011",
+      "updated_at": "2026-09-09T09:54:13+00:00",
+      "created_at": "2026-09-09T09:43:27+00:00"
+    },
+    {
+      "name": "성산대교 중간지점",
+      "latitude": 37.552574,
+      "longitude": 126.891431,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP012",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "선유도 17고지",
+      "latitude": 37.54410287204148,
+      "longitude": 126.90416261216588,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP013",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "서강대교 중간지점",
+      "latitude": 37.53901566610959,
+      "longitude": 126.92691824208725,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP014",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "상도터널",
+      "latitude": 37.5086836,
+      "longitude": 126.95211,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP017",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "주흥교",
+      "latitude": 37.509486,
+      "longitude": 127.016026,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP019",
+      "updated_at": "2026-09-09T09:54:13+00:00",
+      "created_at": "2026-09-09T09:43:27+00:00"
+    },
+    {
+      "name": "성수대교 남단",
+      "latitude": 37.53667664736644,
+      "longitude": 127.03508946083225,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP020",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-09T12:54:26+00:00"
+    },
+    {
+      "name": "중랑천 제방길",
+      "latitude": 37.580774,
+      "longitude": 127.077387,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP021",
+      "updated_at": "2026-09-09T09:54:13+00:00",
+      "created_at": "2026-09-09T09:43:27+00:00"
+    },
+    {
+      "name": "수색교",
+      "latitude": 37.586283,
+      "longitude": 126.886304,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP022",
+      "updated_at": "2026-09-09T09:54:13+00:00",
+      "created_at": "2026-09-09T09:43:27+00:00"
+    },
+    {
+      "name": "아차산 고가차도",
+      "latitude": 37.547423,
+      "longitude": 127.097424,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP026",
+      "updated_at": "2026-09-09T09:54:13+00:00",
+      "created_at": "2026-09-09T09:43:27+00:00"
+    },
+    {
+      "name": "중랑철교",
+      "latitude": 37.59243973613266,
+      "longitude": 127.07101277212394,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP027",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-15T05:14:18+00:00"
+    },
+    {
+      "name": "월릉교",
+      "latitude": 37.616266,
+      "longitude": 127.071394,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP028",
+      "updated_at": "2026-09-09T09:54:13+00:00",
+      "created_at": "2026-09-09T09:43:27+00:00"
+    },
+    {
+      "name": "영등포",
+      "latitude": 37.5159645,
+      "longitude": 126.9077561,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP030",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "건대입구",
+      "latitude": 37.540426,
+      "longitude": 127.069298,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP034",
+      "updated_at": "2026-09-09T09:54:13+00:00",
+      "created_at": "2026-09-09T09:43:27+00:00"
+    },
+    {
+      "name": "행주대교",
+      "latitude": 37.61246474672007,
+      "longitude": 126.79449808843029,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP036",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "시천동 아라로",
+      "latitude": 37.570866,
+      "longitude": 126.68292,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP038",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "영종대교",
+      "latitude": 37.544982,
+      "longitude": 126.576348,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP039",
+      "updated_at": "2026-09-09T09:54:13+00:00",
+      "created_at": "2026-09-09T09:43:27+00:00"
+    },
+    {
+      "name": "운북동",
+      "latitude": 37.508497,
+      "longitude": 126.507888,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP040",
+      "updated_at": "2026-09-09T09:54:13+00:00",
+      "created_at": "2026-09-09T09:43:27+00:00"
+    },
+    {
+      "name": "덕은동",
+      "latitude": 37.575948520307925,
+      "longitude": 126.85147424758819,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-f862eadd",
+      "created_at": "2026-09-09T12:43:26+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "공릉1동 2",
+      "latitude": 37.62886153165523,
+      "longitude": 127.06461513738557,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-ae94cb2e",
+      "created_at": "2026-09-09T12:44:53+00:00",
+      "updated_at": "2026-09-09T12:44:53+00:00"
+    },
+    {
+      "name": "월계3동",
+      "latitude": 37.637471118332186,
+      "longitude": 127.0588819605764,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-7ed04e0a",
+      "created_at": "2026-09-09T12:44:59+00:00",
+      "updated_at": "2026-09-09T12:44:59+00:00"
+    },
+    {
+      "name": "월계동",
+      "latitude": 37.64101638787563,
+      "longitude": 127.04533188200539,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-b5f9d723",
+      "created_at": "2026-09-09T12:45:53+00:00",
+      "updated_at": "2026-09-09T12:45:53+00:00"
+    },
+    {
+      "name": "중화동",
+      "latitude": 37.60222913289644,
+      "longitude": 127.07323335830195,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-f0872511",
+      "created_at": "2026-09-09T12:47:39+00:00",
+      "updated_at": "2026-09-09T12:47:39+00:00"
+    },
+    {
+      "name": "지점",
+      "latitude": 37.5714550570544,
+      "longitude": 127.07853788631,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-ddb926ad",
+      "created_at": "2026-09-09T12:52:47+00:00",
+      "updated_at": "2026-09-09T12:52:47+00:00"
+    },
+    {
+      "name": "중곡1동",
+      "latitude": 37.56016343122469,
+      "longitude": 127.07262601238203,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-058911c6",
+      "created_at": "2026-09-09T12:52:54+00:00",
+      "updated_at": "2026-09-09T12:52:54+00:00"
+    },
+    {
+      "name": "송정동",
+      "latitude": 37.549636411949784,
+      "longitude": 127.06205373385889,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-1150998f",
+      "created_at": "2026-09-09T12:53:00+00:00",
+      "updated_at": "2026-09-09T12:53:00+00:00"
+    },
+    {
+      "name": "응봉동",
+      "latitude": 37.55233014969837,
+      "longitude": 127.04035278348955,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-14215e5d",
+      "created_at": "2026-09-09T12:53:09+00:00",
+      "updated_at": "2026-09-09T12:53:09+00:00"
+    },
+    {
+      "name": "신사동",
+      "latitude": 37.53694625923134,
+      "longitude": 127.02055851153136,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-9af4c639",
+      "created_at": "2026-09-09T12:53:21+00:00",
+      "updated_at": "2026-09-09T12:53:21+00:00"
+    },
+    {
+      "name": "지점 2",
+      "latitude": 37.53419769011124,
+      "longitude": 127.0453224553613,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-2fd2b992",
+      "created_at": "2026-09-09T12:54:46+00:00",
+      "updated_at": "2026-09-09T14:28:40+00:00"
+    },
+    {
+      "name": "자양2동",
+      "latitude": 37.52333794944582,
+      "longitude": 127.07736122883033,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-ee38cd5c",
+      "created_at": "2026-09-09T12:55:03+00:00",
+      "updated_at": "2026-09-09T12:55:03+00:00"
+    },
+    {
+      "name": "지점 3",
+      "latitude": 37.52018884983738,
+      "longitude": 127.06762958704661,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-4d195459",
+      "created_at": "2026-09-09T12:55:37+00:00",
+      "updated_at": "2026-09-09T13:01:06+00:00"
+    },
+    {
+      "name": "지점 4",
+      "latitude": 37.533166980968446,
+      "longitude": 127.10324830218168,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-babba9e7",
+      "created_at": "2026-09-09T12:56:18+00:00",
+      "updated_at": "2026-09-09T12:56:18+00:00"
+    },
+    {
+      "name": "신사동 2",
+      "latitude": 37.52713858904603,
+      "longitude": 127.012726680847,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-e29f9c27",
+      "created_at": "2026-09-09T12:58:38+00:00",
+      "updated_at": "2026-09-09T12:58:38+00:00"
+    },
+    {
+      "name": "반포동",
+      "latitude": 37.51537434471219,
+      "longitude": 126.99611680562188,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-404962bf",
+      "created_at": "2026-09-09T12:58:45+00:00",
+      "updated_at": "2026-09-09T12:58:45+00:00"
+    },
+    {
+      "name": "이촌동",
+      "latitude": 37.51023135281455,
+      "longitude": 126.98148055256958,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-12bd711f",
+      "created_at": "2026-09-09T12:58:51+00:00",
+      "updated_at": "2026-09-09T12:58:51+00:00"
+    },
+    {
+      "name": "이촌동 2",
+      "latitude": 37.51746204962055,
+      "longitude": 126.95876375739596,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-f33cd08b",
+      "created_at": "2026-09-09T12:59:00+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "여의동 2",
+      "latitude": 37.52716928539633,
+      "longitude": 126.9458566664568,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-e4a4b613",
+      "created_at": "2026-09-09T12:59:11+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 5",
+      "latitude": 37.53996554195096,
+      "longitude": 126.91404609740407,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-fa392b36",
+      "created_at": "2026-09-09T12:59:42+00:00",
+      "updated_at": "2026-09-09T12:59:42+00:00"
+    },
+    {
+      "name": "개화동",
+      "latitude": 37.59414056374411,
+      "longitude": 126.81578787436358,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-7f1ea446",
+      "created_at": "2026-09-09T13:01:40+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "이촌2동",
+      "latitude": 37.52179959467249,
+      "longitude": 126.94949337005036,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-577a7099",
+      "created_at": "2026-09-09T13:03:33+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "잠실7동",
+      "latitude": 37.50319515124979,
+      "longitude": 127.07136011648002,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-6edb1160",
+      "created_at": "2026-09-09T13:17:00+00:00",
+      "updated_at": "2026-09-09T13:17:00+00:00"
+    },
+    {
+      "name": "개포3동",
+      "latitude": 37.499369764533085,
+      "longitude": 127.08634407293437,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-6816fd4c",
+      "created_at": "2026-09-09T13:17:07+00:00",
+      "updated_at": "2026-09-09T13:17:07+00:00"
+    },
+    {
+      "name": "신림동",
+      "latitude": 37.48810758158851,
+      "longitude": 126.93119935781671,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-18acf17a",
+      "created_at": "2026-09-09T13:20:28+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "신림동 2",
+      "latitude": 37.49001520329475,
+      "longitude": 126.92385185229942,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-1240a71b",
+      "created_at": "2026-09-09T13:20:51+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 6",
+      "latitude": 37.49349722200151,
+      "longitude": 127.07157578121588,
+      "altitude_m": 350.52,
+      "altitude_reference": "agl",
+      "id": "rn-49290b2b",
+      "created_at": "2026-09-09T13:21:01+00:00",
+      "updated_at": "2026-09-15T14:02:08+00:00"
+    },
+    {
+      "name": "신사동 3",
+      "latitude": 37.48846826761861,
+      "longitude": 126.91493012297991,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-353bcdc9",
+      "created_at": "2026-09-09T13:21:05+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 7",
+      "latitude": 37.48999531326809,
+      "longitude": 127.06556270306545,
+      "altitude_m": 396.24,
+      "altitude_reference": "agl",
+      "id": "rn-f07fcfe8",
+      "created_at": "2026-09-09T13:21:06+00:00",
+      "updated_at": "2026-09-15T14:01:43+00:00"
+    },
+    {
+      "name": "지점 8",
+      "latitude": 37.487682275465055,
+      "longitude": 127.05644542025743,
+      "altitude_m": 396.24,
+      "altitude_reference": "agl",
+      "id": "rn-b0fb979d",
+      "created_at": "2026-09-09T13:21:10+00:00",
+      "updated_at": "2026-09-15T14:00:46+00:00"
+    },
+    {
+      "name": "지점 9",
+      "latitude": 37.48548606356376,
+      "longitude": 126.90162263658308,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-ab1bc572",
+      "created_at": "2026-09-09T13:21:18+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 10",
+      "latitude": 37.4798190499609,
+      "longitude": 127.04380969187581,
+      "altitude_m": 396.24,
+      "altitude_reference": "agl",
+      "id": "rn-fece0b7f",
+      "created_at": "2026-09-09T13:21:18+00:00",
+      "updated_at": "2026-09-15T14:01:08+00:00"
+    },
+    {
+      "name": "대림동",
+      "latitude": 37.49744061164414,
+      "longitude": 126.8940441663967,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-d69ac966",
+      "created_at": "2026-09-09T13:21:28+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "신도림동",
+      "latitude": 37.50964961994399,
+      "longitude": 126.8918533327114,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-2c4b9ba7",
+      "created_at": "2026-09-09T13:21:47+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "문래동5가",
+      "latitude": 37.5141721068658,
+      "longitude": 126.88608431654382,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-c66c1443",
+      "created_at": "2026-09-09T13:22:09+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "양재동",
+      "latitude": 37.47450241488374,
+      "longitude": 127.03872489004864,
+      "altitude_m": 350.52,
+      "altitude_reference": "agl",
+      "id": "rn-a95928cf",
+      "created_at": "2026-09-09T13:22:17+00:00",
+      "updated_at": "2026-09-15T14:02:27+00:00"
+    },
+    {
+      "name": "신도림동 2",
+      "latitude": 37.516076814432296,
+      "longitude": 126.87947839167823,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-cc5ef385",
+      "created_at": "2026-09-09T13:22:19+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 11",
+      "latitude": 37.53287478640821,
+      "longitude": 126.90942094164318,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-b7239877",
+      "created_at": "2026-09-09T13:23:06+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 12",
+      "latitude": 37.553685188468066,
+      "longitude": 127.05083524439164,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-b8f37a50",
+      "created_at": "2026-09-09T13:23:23+00:00",
+      "updated_at": "2026-09-09T13:23:23+00:00"
+    },
+    {
+      "name": "지점 13",
+      "latitude": 37.51591976074702,
+      "longitude": 126.9284498684391,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-f89a0e80",
+      "created_at": "2026-09-09T13:23:27+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 14",
+      "latitude": 37.51882213099567,
+      "longitude": 126.94404395223238,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-88d3c083",
+      "created_at": "2026-09-09T13:23:38+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "가산동",
+      "latitude": 37.483284620961925,
+      "longitude": 126.88495843842662,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-e0295b80",
+      "created_at": "2026-09-09T13:26:10+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 17",
+      "latitude": 37.49229048133898,
+      "longitude": 126.87090492490981,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-87708d4c",
+      "created_at": "2026-09-09T13:26:24+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "남영동",
+      "latitude": 37.55184986514536,
+      "longitude": 126.97064523835422,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-39cf1e9f",
+      "created_at": "2026-09-09T13:27:02+00:00",
+      "updated_at": "2026-09-09T13:30:05+00:00"
+    },
+    {
+      "name": "구로동",
+      "latitude": 37.49961799424419,
+      "longitude": 126.87013936697373,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-c52ee294",
+      "created_at": "2026-09-09T13:27:08+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "청파동1가",
+      "latitude": 37.54491309429383,
+      "longitude": 126.97122422528655,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-589a0279",
+      "created_at": "2026-09-09T13:27:11+00:00",
+      "updated_at": "2026-09-09T13:27:11+00:00"
+    },
+    {
+      "name": "신정6동",
+      "latitude": 37.508511979567494,
+      "longitude": 126.87367951481488,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-412d3a58",
+      "created_at": "2026-09-09T13:27:13+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "한강로1가",
+      "latitude": 37.536956863911335,
+      "longitude": 126.97133433480559,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-6dbd560a",
+      "created_at": "2026-09-09T13:27:15+00:00",
+      "updated_at": "2026-09-09T13:27:15+00:00"
+    },
+    {
+      "name": "한강로2가",
+      "latitude": 37.53161848187353,
+      "longitude": 126.96725556921255,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-03a106aa",
+      "created_at": "2026-09-09T13:27:23+00:00",
+      "updated_at": "2026-09-09T13:27:23+00:00"
+    },
+    {
+      "name": "한강로3가",
+      "latitude": 37.52488313476612,
+      "longitude": 126.9571364330894,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-f8159be6",
+      "created_at": "2026-09-09T13:27:47+00:00",
+      "updated_at": "2026-09-09T13:29:49+00:00"
+    },
+    {
+      "name": "목1동",
+      "latitude": 37.52602943370366,
+      "longitude": 126.88049453896927,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-0cc6ee0b",
+      "created_at": "2026-09-09T13:28:28+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "양평동",
+      "latitude": 37.533062421801795,
+      "longitude": 126.88979472459798,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-2d3f34a0",
+      "created_at": "2026-09-09T13:28:52+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 18",
+      "latitude": 37.55398518320417,
+      "longitude": 126.87707194100679,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-8e82eb0d",
+      "created_at": "2026-09-09T13:29:32+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "상암동",
+      "latitude": 37.56552564789697,
+      "longitude": 126.86995222093938,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-d184cbb5",
+      "created_at": "2026-09-09T13:31:07+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 19",
+      "latitude": 37.47139385132172,
+      "longitude": 127.0168721796558,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-f8be8138",
+      "created_at": "2026-09-09T13:32:14+00:00",
+      "updated_at": "2026-09-09T13:32:14+00:00"
+    },
+    {
+      "name": "하야동",
+      "latitude": 37.59182674976085,
+      "longitude": 126.78404463179025,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-2787697d",
+      "created_at": "2026-09-09T13:32:27+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "방배동",
+      "latitude": 37.47289091417829,
+      "longitude": 126.9972477377311,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-9928083e",
+      "created_at": "2026-09-09T13:32:44+00:00",
+      "updated_at": "2026-09-09T13:32:44+00:00"
+    },
+    {
+      "name": "하야동 2",
+      "latitude": 37.58724908487302,
+      "longitude": 126.8041047553516,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-c7b920c0",
+      "created_at": "2026-09-09T13:32:48+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "은천동",
+      "latitude": 37.483609938721074,
+      "longitude": 126.94017982210421,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-4498b554",
+      "created_at": "2026-09-09T13:34:32+00:00",
+      "updated_at": "2026-09-09T13:34:32+00:00"
+    },
+    {
+      "name": "봉천동",
+      "latitude": 37.48134433500653,
+      "longitude": 126.9528173867326,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-1c4020a9",
+      "created_at": "2026-09-09T13:34:45+00:00",
+      "updated_at": "2026-09-09T13:34:45+00:00"
+    },
+    {
+      "name": "행운동",
+      "latitude": 37.478461114933204,
+      "longitude": 126.96003187628341,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-fdfea4da",
+      "created_at": "2026-09-09T13:35:01+00:00",
+      "updated_at": "2026-09-09T13:35:01+00:00"
+    },
+    {
+      "name": "인헌동",
+      "latitude": 37.47531631915108,
+      "longitude": 126.96846057282615,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-7591c808",
+      "created_at": "2026-09-09T13:35:07+00:00",
+      "updated_at": "2026-09-09T13:35:07+00:00"
+    },
+    {
+      "name": "남현동",
+      "latitude": 37.47637476333583,
+      "longitude": 126.97519045908844,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-0030de41",
+      "created_at": "2026-09-09T13:35:15+00:00",
+      "updated_at": "2026-09-09T13:35:15+00:00"
+    },
+    {
+      "name": "방배2동",
+      "latitude": 37.47643515687899,
+      "longitude": 126.98160945532523,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-57c7fd1e",
+      "created_at": "2026-09-09T13:35:26+00:00",
+      "updated_at": "2026-09-09T13:39:04+00:00"
+    },
+    {
+      "name": "잠원동",
+      "latitude": 37.516017150246306,
+      "longitude": 127.01307191607768,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-7c2dc244",
+      "created_at": "2026-09-09T13:37:06+00:00",
+      "updated_at": "2026-09-10T04:42:43+00:00"
+    },
+    {
+      "name": "반포1동",
+      "latitude": 37.5013026823993,
+      "longitude": 127.01914033591684,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-b38bb01e",
+      "created_at": "2026-09-09T13:37:26+00:00",
+      "updated_at": "2026-09-09T13:37:26+00:00"
+    },
+    {
+      "name": "지점 21",
+      "latitude": 37.47888029180202,
+      "longitude": 127.02764110138672,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-1da1d8e5",
+      "created_at": "2026-09-09T13:37:31+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "서초2동 2",
+      "latitude": 37.483328164755804,
+      "longitude": 127.02603227474725,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-d5da2e77",
+      "created_at": "2026-09-09T13:37:41+00:00",
+      "updated_at": "2026-09-09T13:37:41+00:00"
+    },
+    {
+      "name": "서초2동 3",
+      "latitude": 37.49203266298963,
+      "longitude": 127.02282757239767,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-e5c2908f",
+      "created_at": "2026-09-09T13:38:14+00:00",
+      "updated_at": "2026-09-09T13:38:14+00:00"
+    },
+    {
+      "name": "사당1동",
+      "latitude": 37.48182096715844,
+      "longitude": 126.98196991762467,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-19cab13e",
+      "created_at": "2026-09-09T13:39:17+00:00",
+      "updated_at": "2026-09-09T13:39:17+00:00"
+    },
+    {
+      "name": "사당1동 2",
+      "latitude": 37.48570920772884,
+      "longitude": 126.98206993886936,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-ac8cad70",
+      "created_at": "2026-09-09T13:39:25+00:00",
+      "updated_at": "2026-09-09T13:39:25+00:00"
+    },
+    {
+      "name": "방배4동",
+      "latitude": 37.49184372900524,
+      "longitude": 126.98264135269487,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-8e5ea431",
+      "created_at": "2026-09-09T13:39:33+00:00",
+      "updated_at": "2026-09-09T13:39:33+00:00"
+    },
+    {
+      "name": "동작동",
+      "latitude": 37.49868095195917,
+      "longitude": 126.98303380462397,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-3d2f3c4f",
+      "created_at": "2026-09-09T13:39:50+00:00",
+      "updated_at": "2026-09-09T13:39:50+00:00"
+    },
+    {
+      "name": "동작동 2",
+      "latitude": 37.50378335420282,
+      "longitude": 126.97993364759829,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-cf33a2a7",
+      "created_at": "2026-09-09T13:40:17+00:00",
+      "updated_at": "2026-09-09T13:40:17+00:00"
+    },
+    {
+      "name": "지점 22",
+      "latitude": 37.57055058143772,
+      "longitude": 126.63770876405412,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-975b4495",
+      "created_at": "2026-09-09T13:42:33+00:00",
+      "updated_at": "2026-09-09T13:42:33+00:00"
+    },
+    {
+      "name": "충정로3가",
+      "latitude": 37.55924033475519,
+      "longitude": 126.9619937676925,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-6bb17a26",
+      "created_at": "2026-09-09T13:43:08+00:00",
+      "updated_at": "2026-09-09T13:43:08+00:00"
+    },
+    {
+      "name": "아현동",
+      "latitude": 37.55726481202325,
+      "longitude": 126.95448211077193,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-57bc449f",
+      "created_at": "2026-09-09T13:43:17+00:00",
+      "updated_at": "2026-09-09T14:19:45+00:00"
+    },
+    {
+      "name": "대현동",
+      "latitude": 37.55693882926705,
+      "longitude": 126.94637400091882,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-abb0bf2f",
+      "created_at": "2026-09-09T13:43:21+00:00",
+      "updated_at": "2026-09-09T13:43:21+00:00"
+    },
+    {
+      "name": "20통",
+      "latitude": 37.55518569698662,
+      "longitude": 126.9368943786861,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-c1ec07a8",
+      "created_at": "2026-09-09T13:43:32+00:00",
+      "updated_at": "2026-09-09T13:43:32+00:00"
+    },
+    {
+      "name": "동교동",
+      "latitude": 37.55890827935214,
+      "longitude": 126.92593223034586,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-4000b533",
+      "created_at": "2026-09-09T13:43:41+00:00",
+      "updated_at": "2026-09-09T13:43:41+00:00"
+    },
+    {
+      "name": "목상동",
+      "latitude": 37.57203748754833,
+      "longitude": 126.71140098207289,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-34165e6b",
+      "created_at": "2026-09-09T13:44:09+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 23",
+      "latitude": 37.61393414799677,
+      "longitude": 126.90250096371538,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-1bca0b93",
+      "created_at": "2026-09-09T13:46:09+00:00",
+      "updated_at": "2026-09-09T13:46:09+00:00"
+    },
+    {
+      "name": "향동동",
+      "latitude": 37.60502072054579,
+      "longitude": 126.89988882933781,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-89830f74",
+      "created_at": "2026-09-09T13:46:34+00:00",
+      "updated_at": "2026-09-09T13:46:34+00:00"
+    },
+    {
+      "name": "지점 24",
+      "latitude": 37.594963439830856,
+      "longitude": 126.89473626641157,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-687892d1",
+      "created_at": "2026-09-09T13:46:48+00:00",
+      "updated_at": "2026-09-09T13:46:48+00:00"
+    },
+    {
+      "name": "지점 25",
+      "latitude": 37.57839500754657,
+      "longitude": 126.87447017293587,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-5fe9a8f1",
+      "created_at": "2026-09-09T13:47:06+00:00",
+      "updated_at": "2026-09-09T13:47:06+00:00"
+    },
+    {
+      "name": "합정동",
+      "latitude": 37.548751666066615,
+      "longitude": 126.91106203209311,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-5a8878af",
+      "created_at": "2026-09-09T13:48:08+00:00",
+      "updated_at": "2026-09-09T13:48:08+00:00"
+    },
+    {
+      "name": "서교동",
+      "latitude": 37.554228083853765,
+      "longitude": 126.92055498052824,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-594178a4",
+      "created_at": "2026-09-09T13:48:13+00:00",
+      "updated_at": "2026-09-09T13:48:13+00:00"
+    },
+    {
+      "name": "선주지동",
+      "latitude": 37.57445066066757,
+      "longitude": 126.75373705496283,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-458a5129",
+      "created_at": "2026-09-09T13:49:04+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "영종동",
+      "latitude": 37.522651397620216,
+      "longitude": 126.54045686359493,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-94f5f477",
+      "created_at": "2026-09-09T13:54:15+00:00",
+      "updated_at": "2026-09-09T13:54:15+00:00"
+    },
+    {
+      "name": "지점 26",
+      "latitude": 37.51180345234084,
+      "longitude": 126.57740017121138,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-b5d0edd2",
+      "created_at": "2026-09-09T13:54:20+00:00",
+      "updated_at": "2026-09-09T13:54:20+00:00"
+    },
+    {
+      "name": "지점 27",
+      "latitude": 37.49790929003925,
+      "longitude": 126.63671110187943,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-dd99594d",
+      "created_at": "2026-09-09T13:54:39+00:00",
+      "updated_at": "2026-09-09T13:54:39+00:00"
+    },
+    {
+      "name": "지점 28",
+      "latitude": 37.49904752005076,
+      "longitude": 126.68731289978655,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-30ef9236",
+      "created_at": "2026-09-09T13:55:09+00:00",
+      "updated_at": "2026-09-09T13:55:09+00:00"
+    },
+    {
+      "name": "간석3동",
+      "latitude": 37.474025870653826,
+      "longitude": 126.71595738746436,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-cc0af2d3",
+      "created_at": "2026-09-09T13:55:22+00:00",
+      "updated_at": "2026-09-09T13:55:22+00:00"
+    },
+    {
+      "name": "지점 29",
+      "latitude": 37.47165324083661,
+      "longitude": 126.76985289101583,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-9f8508a9",
+      "created_at": "2026-09-09T13:55:53+00:00",
+      "updated_at": "2026-09-09T13:55:53+00:00"
+    },
+    {
+      "name": "지점 30",
+      "latitude": 37.48181908246425,
+      "longitude": 126.82771164989694,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-4bd89041",
+      "created_at": "2026-09-09T13:56:17+00:00",
+      "updated_at": "2026-09-09T13:56:17+00:00"
+    },
+    {
+      "name": "지점 31",
+      "latitude": 37.48749366599049,
+      "longitude": 126.84864094738757,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-eb9187c9",
+      "created_at": "2026-09-09T13:56:48+00:00",
+      "updated_at": "2026-09-09T13:56:48+00:00"
+    },
+    {
+      "name": "지점 33",
+      "latitude": 37.54612905658098,
+      "longitude": 126.74821049044377,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-deca0746",
+      "created_at": "2026-09-09T14:03:22+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 34",
+      "latitude": 37.529996366983,
+      "longitude": 126.75230722252252,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-2c1fa1a5",
+      "created_at": "2026-09-09T14:03:30+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 35",
+      "latitude": 37.49335959306672,
+      "longitude": 126.74675902445591,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-3f6ab69f",
+      "created_at": "2026-09-09T14:03:56+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 36",
+      "latitude": 37.49335959306672,
+      "longitude": 126.74675902445591,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-f27be83a",
+      "created_at": "2026-09-09T14:03:56+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 37",
+      "latitude": 37.47076290191909,
+      "longitude": 126.75473030398403,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-55ed3d23",
+      "created_at": "2026-09-09T14:04:05+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "구의동",
+      "latitude": 37.550305416895895,
+      "longitude": 127.09038789032195,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-7b4da2e9",
+      "created_at": "2026-09-09T14:07:33+00:00",
+      "updated_at": "2026-09-09T14:07:33+00:00"
+    },
+    {
+      "name": "상도1동",
+      "latitude": 37.50343701384621,
+      "longitude": 126.9475092954397,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-c4963899",
+      "created_at": "2026-09-09T14:07:41+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "능동",
+      "latitude": 37.554830761697254,
+      "longitude": 127.08542540565607,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-08f2b9fb",
+      "created_at": "2026-09-09T14:07:44+00:00",
+      "updated_at": "2026-09-09T14:07:44+00:00"
+    },
+    {
+      "name": "상도1동 2",
+      "latitude": 37.49354199428164,
+      "longitude": 126.95623706407751,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-01b7471f",
+      "created_at": "2026-09-09T14:08:16+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 38",
+      "latitude": 37.48825209826816,
+      "longitude": 126.95803847840415,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-705f6f9d",
+      "created_at": "2026-09-09T14:08:38+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "지점 15",
+      "latitude": 37.55645857093881,
+      "longitude": 126.75090607229274,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-893c3efc",
+      "created_at": "2026-09-09T14:10:27+00:00",
+      "updated_at": "2026-09-09T14:10:27+00:00"
+    },
+    {
+      "name": "지점 32",
+      "latitude": 37.534899369384625,
+      "longitude": 126.93771289165286,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-d39bb3a6",
+      "created_at": "2026-09-09T14:18:59+00:00",
+      "updated_at": "2026-09-10T18:08:51+00:00"
+    },
+    {
+      "name": "약수동",
+      "latitude": 37.544663434876185,
+      "longitude": 127.0076209289861,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-4d7c5c1f",
+      "created_at": "2026-09-09T14:31:30+00:00",
+      "updated_at": "2026-09-09T14:31:30+00:00"
+    },
+    {
+      "name": "지점 39",
+      "latitude": 37.54639727973396,
+      "longitude": 126.99739907481768,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-b28ebef5",
+      "created_at": "2026-09-09T14:31:36+00:00",
+      "updated_at": "2026-09-09T14:31:36+00:00"
+    },
+    {
+      "name": "후암동",
+      "latitude": 37.54972332850425,
+      "longitude": 126.98706457793588,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-52f16b34",
+      "created_at": "2026-09-09T14:31:42+00:00",
+      "updated_at": "2026-09-09T14:31:42+00:00"
+    },
+    {
+      "name": "회현동2가",
+      "latitude": 37.5521312988501,
+      "longitude": 126.9795299273048,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-0019e9a4",
+      "created_at": "2026-09-09T14:31:46+00:00",
+      "updated_at": "2026-09-16T05:17:57+00:00"
+    },
+    {
+      "name": "잠원동 2",
+      "latitude": 37.52069520007115,
+      "longitude": 127.00566113011286,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "rn-c94d9798",
+      "created_at": "2026-09-10T04:43:09+00:00",
+      "updated_at": "2026-09-10T04:43:20+00:00"
+    },
+    {
+      "name": "명촌동",
+      "latitude": 35.54305143942862,
+      "longitude": 129.36619261137554,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP041",
+      "created_at": "2026-09-18T06:30:29+00:00",
+      "updated_at": "2026-09-18T06:30:29+00:00"
+    },
+    {
+      "name": "명촌동 2",
+      "latitude": 35.548372715675875,
+      "longitude": 129.35142092756945,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP042",
+      "created_at": "2026-09-18T06:30:37+00:00",
+      "updated_at": "2026-09-18T06:30:37+00:00"
+    },
+    {
+      "name": "삼산동",
+      "latitude": 35.54962869599413,
+      "longitude": 129.3341471233676,
+      "altitude_m": 304.8,
+      "altitude_reference": "agl",
+      "id": "WP043",
+      "created_at": "2026-09-18T06:30:42+00:00",
+      "updated_at": "2026-09-18T06:30:42+00:00"
+    }
+  ],
+  "links": [
+    {
+      "name": "월릉교 → 공릉1동 2",
+      "from": "WP028",
+      "to": "rn-ae94cb2e",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-22e99d56",
+      "created_at": "2026-09-09T12:45:18+00:00",
+      "updated_at": "2026-09-09T12:45:18+00:00"
+    },
+    {
+      "name": "월계3동 → 공릉1동 2",
+      "from": "rn-7ed04e0a",
+      "to": "rn-ae94cb2e",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-e9340a37",
+      "created_at": "2026-09-09T12:45:25+00:00",
+      "updated_at": "2026-09-09T12:45:25+00:00"
+    },
+    {
+      "name": "월계동 → 월계3동",
+      "from": "rn-b5f9d723",
+      "to": "rn-7ed04e0a",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-518a6f17",
+      "created_at": "2026-09-09T12:46:00+00:00",
+      "updated_at": "2026-09-09T12:46:00+00:00"
+    },
+    {
+      "name": "중화동 → 월릉교",
+      "from": "rn-f0872511",
+      "to": "WP028",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-aa51cc45",
+      "created_at": "2026-09-09T12:47:43+00:00",
+      "updated_at": "2026-09-09T12:47:43+00:00"
+    },
+    {
+      "name": "중랑철교 → 중화동",
+      "from": "WP027",
+      "to": "rn-f0872511",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-82ad0c4d",
+      "created_at": "2026-09-09T12:48:18+00:00",
+      "updated_at": "2026-09-09T12:48:18+00:00"
+    },
+    {
+      "name": "중랑철교 → 중랑천 제방길",
+      "from": "WP027",
+      "to": "WP021",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-80e8b3db",
+      "created_at": "2026-09-09T12:52:25+00:00",
+      "updated_at": "2026-09-09T12:52:25+00:00"
+    },
+    {
+      "name": "신사동 → 응봉동",
+      "from": "rn-9af4c639",
+      "to": "rn-14215e5d",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-d1bbc1db",
+      "created_at": "2026-09-09T12:53:26+00:00",
+      "updated_at": "2026-09-09T12:53:26+00:00"
+    },
+    {
+      "name": "송정동 → 중곡1동",
+      "from": "rn-1150998f",
+      "to": "rn-058911c6",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-9eb74a90",
+      "created_at": "2026-09-09T12:53:36+00:00",
+      "updated_at": "2026-09-09T12:53:36+00:00"
+    },
+    {
+      "name": "중곡1동 → 지점",
+      "from": "rn-058911c6",
+      "to": "rn-ddb926ad",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-7aa5fb21",
+      "created_at": "2026-09-09T12:53:39+00:00",
+      "updated_at": "2026-09-09T12:53:39+00:00"
+    },
+    {
+      "name": "지점 → 중랑천 제방길",
+      "from": "rn-ddb926ad",
+      "to": "WP021",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-06934cd6",
+      "created_at": "2026-09-09T12:53:42+00:00",
+      "updated_at": "2026-09-09T12:53:42+00:00"
+    },
+    {
+      "name": "신사동 → 성수대교 남단",
+      "from": "rn-9af4c639",
+      "to": "WP020",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-33dee6ad",
+      "created_at": "2026-09-09T12:54:33+00:00",
+      "updated_at": "2026-09-09T12:54:33+00:00"
+    },
+    {
+      "name": "지점 2 → 성수대교 남단",
+      "from": "rn-2fd2b992",
+      "to": "WP020",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-dcb78dc1",
+      "created_at": "2026-09-09T12:54:51+00:00",
+      "updated_at": "2026-09-09T12:54:51+00:00"
+    },
+    {
+      "name": "자양2동 → 청담대교 중간지점",
+      "from": "rn-ee38cd5c",
+      "to": "WP009",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-ffe32dcd",
+      "created_at": "2026-09-09T12:55:06+00:00",
+      "updated_at": "2026-09-09T12:55:06+00:00"
+    },
+    {
+      "name": "자양2동 → 잠실대교 중간지점",
+      "from": "rn-ee38cd5c",
+      "to": "WP011",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-06cb60eb",
+      "created_at": "2026-09-09T12:55:21+00:00",
+      "updated_at": "2026-09-09T12:55:21+00:00"
+    },
+    {
+      "name": "지점 2 → 청담대교 중간지점",
+      "from": "rn-2fd2b992",
+      "to": "WP009",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-f4eeac22",
+      "created_at": "2026-09-09T12:55:57+00:00",
+      "updated_at": "2026-09-09T12:55:57+00:00"
+    },
+    {
+      "name": "지점 4 → 잠실대교 중간지점",
+      "from": "rn-babba9e7",
+      "to": "WP011",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-8346d7fa",
+      "created_at": "2026-09-09T12:56:24+00:00",
+      "updated_at": "2026-09-09T12:56:24+00:00"
+    },
+    {
+      "name": "천호대교 중간지점 → 지점 4",
+      "from": "WP010",
+      "to": "rn-babba9e7",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-3c2859e6",
+      "created_at": "2026-09-09T12:56:31+00:00",
+      "updated_at": "2026-09-09T12:56:31+00:00"
+    },
+    {
+      "name": "신사동 → 신사동 2",
+      "from": "rn-9af4c639",
+      "to": "rn-e29f9c27",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-c60c8225",
+      "created_at": "2026-09-09T12:59:59+00:00",
+      "updated_at": "2026-09-09T12:59:59+00:00"
+    },
+    {
+      "name": "반포동 → 이촌동",
+      "from": "rn-404962bf",
+      "to": "rn-12bd711f",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-e52fc710",
+      "created_at": "2026-09-09T13:00:07+00:00",
+      "updated_at": "2026-09-09T13:00:07+00:00"
+    },
+    {
+      "name": "이촌동 → 이촌동 2",
+      "from": "rn-12bd711f",
+      "to": "rn-f33cd08b",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-bd90d53b",
+      "created_at": "2026-09-09T13:00:11+00:00",
+      "updated_at": "2026-09-09T13:00:11+00:00"
+    },
+    {
+      "name": "서강대교 중간지점 → 지점 5",
+      "from": "WP014",
+      "to": "rn-fa392b36",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-37801351",
+      "created_at": "2026-09-09T13:00:58+00:00",
+      "updated_at": "2026-09-09T13:00:58+00:00"
+    },
+    {
+      "name": "지점 5 → 선유도 17고지",
+      "from": "rn-fa392b36",
+      "to": "WP013",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-854f7fe3",
+      "created_at": "2026-09-09T13:01:13+00:00",
+      "updated_at": "2026-09-09T13:01:13+00:00"
+    },
+    {
+      "name": "선유도 17고지 → 성산대교 중간지점",
+      "from": "WP013",
+      "to": "WP012",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-07aaf832",
+      "created_at": "2026-09-09T13:01:18+00:00",
+      "updated_at": "2026-09-09T13:01:18+00:00"
+    },
+    {
+      "name": "개화동 → 덕은동",
+      "from": "rn-7f1ea446",
+      "to": "rn-f862eadd",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-c2fd747a",
+      "created_at": "2026-09-09T13:01:48+00:00",
+      "updated_at": "2026-09-09T13:01:48+00:00"
+    },
+    {
+      "name": "개화동 → 행주대교",
+      "from": "rn-7f1ea446",
+      "to": "WP036",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-941b0cee",
+      "created_at": "2026-09-09T13:01:54+00:00",
+      "updated_at": "2026-09-09T13:01:54+00:00"
+    },
+    {
+      "name": "이촌2동 → 여의동 2",
+      "from": "rn-577a7099",
+      "to": "rn-e4a4b613",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-e9891c5b",
+      "created_at": "2026-09-09T13:03:38+00:00",
+      "updated_at": "2026-09-09T13:03:38+00:00"
+    },
+    {
+      "name": "이촌동 2 → 이촌2동",
+      "from": "rn-f33cd08b",
+      "to": "rn-577a7099",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-ba29d3b0",
+      "created_at": "2026-09-09T13:03:43+00:00",
+      "updated_at": "2026-09-09T13:03:43+00:00"
+    },
+    {
+      "name": "지점 3 → 청담대교 중간지점",
+      "from": "rn-4d195459",
+      "to": "WP009",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-cd2a6e94",
+      "created_at": "2026-09-09T13:12:34+00:00",
+      "updated_at": "2026-09-09T13:12:34+00:00"
+    },
+    {
+      "name": "자양2동 → 지점 3",
+      "from": "rn-ee38cd5c",
+      "to": "rn-4d195459",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-f5f613e6",
+      "created_at": "2026-09-09T13:14:05+00:00",
+      "updated_at": "2026-09-09T13:14:05+00:00"
+    },
+    {
+      "name": "개포3동 → 잠실7동",
+      "from": "rn-6816fd4c",
+      "to": "rn-6edb1160",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-a0052f82",
+      "created_at": "2026-09-09T13:17:12+00:00",
+      "updated_at": "2026-09-09T13:17:12+00:00"
+    },
+    {
+      "name": "지점 3 → 잠실7동",
+      "from": "rn-4d195459",
+      "to": "rn-6edb1160",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-47cf7fcf",
+      "created_at": "2026-09-09T13:17:31+00:00",
+      "updated_at": "2026-09-09T13:17:31+00:00"
+    },
+    {
+      "name": "양재동 → 지점 10",
+      "from": "rn-a95928cf",
+      "to": "rn-fece0b7f",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-d27d4174",
+      "created_at": "2026-09-09T13:22:24+00:00",
+      "updated_at": "2026-09-09T13:22:24+00:00"
+    },
+    {
+      "name": "지점 10 → 지점 8",
+      "from": "rn-fece0b7f",
+      "to": "rn-b0fb979d",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-0a0c9262",
+      "created_at": "2026-09-09T13:22:30+00:00",
+      "updated_at": "2026-09-09T13:22:30+00:00"
+    },
+    {
+      "name": "지점 8 → 지점 7",
+      "from": "rn-b0fb979d",
+      "to": "rn-f07fcfe8",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-1689495e",
+      "created_at": "2026-09-09T13:22:34+00:00",
+      "updated_at": "2026-09-09T13:22:34+00:00"
+    },
+    {
+      "name": "지점 7 → 지점 6",
+      "from": "rn-f07fcfe8",
+      "to": "rn-49290b2b",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-47b6c435",
+      "created_at": "2026-09-09T13:22:38+00:00",
+      "updated_at": "2026-09-09T13:22:38+00:00"
+    },
+    {
+      "name": "지점 6 → 대치교",
+      "from": "rn-49290b2b",
+      "to": "WP008",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-06f055ad",
+      "created_at": "2026-09-09T13:22:41+00:00",
+      "updated_at": "2026-09-09T13:22:41+00:00"
+    },
+    {
+      "name": "대치교 → 잠실7동",
+      "from": "WP008",
+      "to": "rn-6edb1160",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-a6ece866",
+      "created_at": "2026-09-09T13:22:45+00:00",
+      "updated_at": "2026-09-09T13:22:45+00:00"
+    },
+    {
+      "name": "지점 12 → 응봉동",
+      "from": "rn-b8f37a50",
+      "to": "rn-14215e5d",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-24e5c4ab",
+      "created_at": "2026-09-09T13:23:47+00:00",
+      "updated_at": "2026-09-09T13:23:47+00:00"
+    },
+    {
+      "name": "지점 14 → 지점 13",
+      "from": "rn-88d3c083",
+      "to": "rn-f89a0e80",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-7eb937fa",
+      "created_at": "2026-09-09T13:23:48+00:00",
+      "updated_at": "2026-09-09T13:23:48+00:00"
+    },
+    {
+      "name": "지점 12 → 송정동",
+      "from": "rn-b8f37a50",
+      "to": "rn-1150998f",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-d5bb8adc",
+      "created_at": "2026-09-09T13:23:58+00:00",
+      "updated_at": "2026-09-09T13:23:58+00:00"
+    },
+    {
+      "name": "지점 14 → 이촌2동",
+      "from": "rn-88d3c083",
+      "to": "rn-577a7099",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-77b4ee06",
+      "created_at": "2026-09-09T13:23:58+00:00",
+      "updated_at": "2026-09-09T13:23:58+00:00"
+    },
+    {
+      "name": "지점 11 → 선유도 17고지",
+      "from": "rn-b7239877",
+      "to": "WP013",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-0abe11ef",
+      "created_at": "2026-09-09T13:24:23+00:00",
+      "updated_at": "2026-09-09T13:24:23+00:00"
+    },
+    {
+      "name": "영등포 → 신도림동",
+      "from": "WP030",
+      "to": "rn-2c4b9ba7",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-144dc507",
+      "created_at": "2026-09-09T13:24:41+00:00",
+      "updated_at": "2026-09-09T13:24:41+00:00"
+    },
+    {
+      "name": "신도림동 → 문래동5가",
+      "from": "rn-2c4b9ba7",
+      "to": "rn-c66c1443",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-28cf1ec4",
+      "created_at": "2026-09-09T13:24:46+00:00",
+      "updated_at": "2026-09-09T13:24:46+00:00"
+    },
+    {
+      "name": "문래동5가 → 신도림동 2",
+      "from": "rn-c66c1443",
+      "to": "rn-cc5ef385",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-cdf2f60e",
+      "created_at": "2026-09-09T13:24:50+00:00",
+      "updated_at": "2026-09-09T13:24:50+00:00"
+    },
+    {
+      "name": "신도림동 → 대림동",
+      "from": "rn-2c4b9ba7",
+      "to": "rn-d69ac966",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-025ba64e",
+      "created_at": "2026-09-09T13:24:55+00:00",
+      "updated_at": "2026-09-09T13:24:55+00:00"
+    },
+    {
+      "name": "대림동 → 지점 9",
+      "from": "rn-d69ac966",
+      "to": "rn-ab1bc572",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-50b75309",
+      "created_at": "2026-09-09T13:24:58+00:00",
+      "updated_at": "2026-09-09T13:24:58+00:00"
+    },
+    {
+      "name": "지점 9 → 신사동 3",
+      "from": "rn-ab1bc572",
+      "to": "rn-353bcdc9",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-5bc4f0de",
+      "created_at": "2026-09-09T13:25:10+00:00",
+      "updated_at": "2026-09-09T13:25:10+00:00"
+    },
+    {
+      "name": "신사동 3 → 신림동 2",
+      "from": "rn-353bcdc9",
+      "to": "rn-1240a71b",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-146418ad",
+      "created_at": "2026-09-09T13:25:16+00:00",
+      "updated_at": "2026-09-09T13:25:16+00:00"
+    },
+    {
+      "name": "신림동 2 → 신림동",
+      "from": "rn-1240a71b",
+      "to": "rn-18acf17a",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-038c2e51",
+      "created_at": "2026-09-09T13:25:20+00:00",
+      "updated_at": "2026-09-09T13:25:20+00:00"
+    },
+    {
+      "name": "지점 17 → 가산동",
+      "from": "rn-87708d4c",
+      "to": "rn-e0295b80",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-ec10367f",
+      "created_at": "2026-09-09T13:26:32+00:00",
+      "updated_at": "2026-09-09T13:26:32+00:00"
+    },
+    {
+      "name": "신정6동 → 신도림동 2",
+      "from": "rn-412d3a58",
+      "to": "rn-cc5ef385",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-78fc39ea",
+      "created_at": "2026-09-09T13:27:19+00:00",
+      "updated_at": "2026-09-09T13:27:19+00:00"
+    },
+    {
+      "name": "신정6동 → 구로동",
+      "from": "rn-412d3a58",
+      "to": "rn-c52ee294",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-1742445e",
+      "created_at": "2026-09-09T13:27:33+00:00",
+      "updated_at": "2026-09-09T13:27:33+00:00"
+    },
+    {
+      "name": "구로동 → 지점 17",
+      "from": "rn-c52ee294",
+      "to": "rn-87708d4c",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-043efec9",
+      "created_at": "2026-09-09T13:27:37+00:00",
+      "updated_at": "2026-09-09T13:27:37+00:00"
+    },
+    {
+      "name": "이촌2동 → 한강로3가",
+      "from": "rn-577a7099",
+      "to": "rn-f8159be6",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-8b609f6b",
+      "created_at": "2026-09-09T13:28:05+00:00",
+      "updated_at": "2026-09-09T13:28:05+00:00"
+    },
+    {
+      "name": "한강로3가 → 한강로2가",
+      "from": "rn-f8159be6",
+      "to": "rn-03a106aa",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-6024cbb4",
+      "created_at": "2026-09-09T13:28:14+00:00",
+      "updated_at": "2026-09-09T13:28:14+00:00"
+    },
+    {
+      "name": "목1동 → 신도림동 2",
+      "from": "rn-0cc6ee0b",
+      "to": "rn-cc5ef385",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-2da54003",
+      "created_at": "2026-09-09T13:28:34+00:00",
+      "updated_at": "2026-09-09T13:28:34+00:00"
+    },
+    {
+      "name": "양평동 → 목1동",
+      "from": "rn-2d3f34a0",
+      "to": "rn-0cc6ee0b",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-2703eefd",
+      "created_at": "2026-09-09T13:28:58+00:00",
+      "updated_at": "2026-09-09T13:28:58+00:00"
+    },
+    {
+      "name": "한강로2가 → 한강로1가",
+      "from": "rn-03a106aa",
+      "to": "rn-6dbd560a",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-e995f833",
+      "created_at": "2026-09-09T13:29:12+00:00",
+      "updated_at": "2026-09-09T13:29:12+00:00"
+    },
+    {
+      "name": "한강로1가 → 청파동1가",
+      "from": "rn-6dbd560a",
+      "to": "rn-589a0279",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-fff8a27c",
+      "created_at": "2026-09-09T13:29:18+00:00",
+      "updated_at": "2026-09-09T13:29:18+00:00"
+    },
+    {
+      "name": "청파동1가 → 남영동",
+      "from": "rn-589a0279",
+      "to": "rn-39cf1e9f",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-45d833fb",
+      "created_at": "2026-09-09T13:29:23+00:00",
+      "updated_at": "2026-09-09T13:29:23+00:00"
+    },
+    {
+      "name": "지점 18 → 양평동",
+      "from": "rn-8e82eb0d",
+      "to": "rn-2d3f34a0",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-a0ffbfce",
+      "created_at": "2026-09-09T13:29:39+00:00",
+      "updated_at": "2026-09-09T13:29:39+00:00"
+    },
+    {
+      "name": "지점 18 → 상암동",
+      "from": "rn-8e82eb0d",
+      "to": "rn-d184cbb5",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-f7dbc0c0",
+      "created_at": "2026-09-09T13:31:14+00:00",
+      "updated_at": "2026-09-09T13:31:14+00:00"
+    },
+    {
+      "name": "상암동 → 덕은동",
+      "from": "rn-d184cbb5",
+      "to": "rn-f862eadd",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-6866cef7",
+      "created_at": "2026-09-09T13:31:18+00:00",
+      "updated_at": "2026-09-09T13:31:18+00:00"
+    },
+    {
+      "name": "상암동 → 성산대교 중간지점",
+      "from": "rn-d184cbb5",
+      "to": "WP012",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-32244fc4",
+      "created_at": "2026-09-09T13:31:24+00:00",
+      "updated_at": "2026-09-09T13:31:24+00:00"
+    },
+    {
+      "name": "양재동 → 경부고속도로 양재천 다리",
+      "from": "rn-a95928cf",
+      "to": "WP007",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-d8d8ce91",
+      "created_at": "2026-09-09T13:31:28+00:00",
+      "updated_at": "2026-09-09T13:31:28+00:00"
+    },
+    {
+      "name": "방배동 → 지점 19",
+      "from": "rn-9928083e",
+      "to": "rn-f8be8138",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-f64b0192",
+      "created_at": "2026-09-09T13:32:49+00:00",
+      "updated_at": "2026-09-09T13:32:49+00:00"
+    },
+    {
+      "name": "마곡 F1 → 하야동",
+      "from": "fato:VP015:F1",
+      "to": "rn-2787697d",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-bbfff2a2",
+      "created_at": "2026-09-09T13:33:01+00:00",
+      "updated_at": "2026-09-09T13:33:01+00:00"
+    },
+    {
+      "name": "하야동 2 → 마곡 F2",
+      "from": "rn-c7b920c0",
+      "to": "fato:VP015:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-dd8906f1",
+      "created_at": "2026-09-09T13:33:11+00:00",
+      "updated_at": "2026-09-09T13:33:11+00:00"
+    },
+    {
+      "name": "지점 19 → 경부고속도로 양재천 다리",
+      "from": "rn-f8be8138",
+      "to": "WP007",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-cb6382cd",
+      "created_at": "2026-09-09T13:33:46+00:00",
+      "updated_at": "2026-09-09T13:33:46+00:00"
+    },
+    {
+      "name": "하야동 → 행주대교",
+      "from": "rn-2787697d",
+      "to": "WP036",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-c641c4b2",
+      "created_at": "2026-09-09T13:35:08+00:00",
+      "updated_at": "2026-09-09T13:35:08+00:00"
+    },
+    {
+      "name": "개화동 → 하야동 2",
+      "from": "rn-7f1ea446",
+      "to": "rn-c7b920c0",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-2a6f9631",
+      "created_at": "2026-09-09T13:35:22+00:00",
+      "updated_at": "2026-09-09T13:35:22+00:00"
+    },
+    {
+      "name": "방배2동 → 방배동",
+      "from": "rn-57c7fd1e",
+      "to": "rn-9928083e",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-447d547e",
+      "created_at": "2026-09-09T13:35:31+00:00",
+      "updated_at": "2026-09-09T13:35:31+00:00"
+    },
+    {
+      "name": "방배2동 → 남현동",
+      "from": "rn-57c7fd1e",
+      "to": "rn-0030de41",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-305aab23",
+      "created_at": "2026-09-09T13:35:38+00:00",
+      "updated_at": "2026-09-09T13:35:38+00:00"
+    },
+    {
+      "name": "남현동 → 인헌동",
+      "from": "rn-0030de41",
+      "to": "rn-7591c808",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-b43ef658",
+      "created_at": "2026-09-09T13:35:41+00:00",
+      "updated_at": "2026-09-09T13:35:41+00:00"
+    },
+    {
+      "name": "인헌동 → 행운동",
+      "from": "rn-7591c808",
+      "to": "rn-fdfea4da",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-4dd1a2f7",
+      "created_at": "2026-09-09T13:35:50+00:00",
+      "updated_at": "2026-09-09T13:35:50+00:00"
+    },
+    {
+      "name": "행운동 → 봉천동",
+      "from": "rn-fdfea4da",
+      "to": "rn-1c4020a9",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-8e31e526",
+      "created_at": "2026-09-09T13:35:53+00:00",
+      "updated_at": "2026-09-09T13:35:53+00:00"
+    },
+    {
+      "name": "봉천동 → 은천동",
+      "from": "rn-1c4020a9",
+      "to": "rn-4498b554",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-0ecf6e98",
+      "created_at": "2026-09-09T13:36:08+00:00",
+      "updated_at": "2026-09-09T13:36:08+00:00"
+    },
+    {
+      "name": "은천동 → 신림동",
+      "from": "rn-4498b554",
+      "to": "rn-18acf17a",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-ef14ebd3",
+      "created_at": "2026-09-09T13:36:12+00:00",
+      "updated_at": "2026-09-09T13:36:12+00:00"
+    },
+    {
+      "name": "잠원동 → 주흥교",
+      "from": "rn-7c2dc244",
+      "to": "WP019",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-048f24fc",
+      "created_at": "2026-09-09T13:37:19+00:00",
+      "updated_at": "2026-09-09T13:37:19+00:00"
+    },
+    {
+      "name": "경부고속도로 양재천 다리 → 지점 21",
+      "from": "WP007",
+      "to": "rn-1da1d8e5",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-16a3b4cc",
+      "created_at": "2026-09-09T13:37:53+00:00",
+      "updated_at": "2026-09-09T13:37:53+00:00"
+    },
+    {
+      "name": "지점 21 → 서초2동 2",
+      "from": "rn-1da1d8e5",
+      "to": "rn-d5da2e77",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-9bc0c52b",
+      "created_at": "2026-09-09T13:37:59+00:00",
+      "updated_at": "2026-09-09T13:37:59+00:00"
+    },
+    {
+      "name": "서초2동 2 → 서초2동 3",
+      "from": "rn-d5da2e77",
+      "to": "rn-e5c2908f",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-7f84bd6e",
+      "created_at": "2026-09-09T13:38:20+00:00",
+      "updated_at": "2026-09-09T13:38:20+00:00"
+    },
+    {
+      "name": "서초2동 3 → 반포1동",
+      "from": "rn-e5c2908f",
+      "to": "rn-b38bb01e",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-04c59ad4",
+      "created_at": "2026-09-09T13:38:25+00:00",
+      "updated_at": "2026-09-09T13:38:25+00:00"
+    },
+    {
+      "name": "반포1동 → 주흥교",
+      "from": "rn-b38bb01e",
+      "to": "WP019",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-c6ba652f",
+      "created_at": "2026-09-09T13:38:28+00:00",
+      "updated_at": "2026-09-09T13:38:28+00:00"
+    },
+    {
+      "name": "이촌동 → 동작동 2",
+      "from": "rn-12bd711f",
+      "to": "rn-cf33a2a7",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-303a2f2d",
+      "created_at": "2026-09-09T13:40:24+00:00",
+      "updated_at": "2026-09-09T13:40:24+00:00"
+    },
+    {
+      "name": "동작동 2 → 동작동",
+      "from": "rn-cf33a2a7",
+      "to": "rn-3d2f3c4f",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-2f8c0fe4",
+      "created_at": "2026-09-09T13:40:27+00:00",
+      "updated_at": "2026-09-09T13:40:27+00:00"
+    },
+    {
+      "name": "동작동 → 방배4동",
+      "from": "rn-3d2f3c4f",
+      "to": "rn-8e5ea431",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-2bf4cfad",
+      "created_at": "2026-09-09T13:40:30+00:00",
+      "updated_at": "2026-09-09T13:40:30+00:00"
+    },
+    {
+      "name": "방배4동 → 사당1동 2",
+      "from": "rn-8e5ea431",
+      "to": "rn-ac8cad70",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-049e05e2",
+      "created_at": "2026-09-09T13:40:34+00:00",
+      "updated_at": "2026-09-09T13:40:34+00:00"
+    },
+    {
+      "name": "사당1동 2 → 사당1동",
+      "from": "rn-ac8cad70",
+      "to": "rn-19cab13e",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-6d118c20",
+      "created_at": "2026-09-09T13:40:38+00:00",
+      "updated_at": "2026-09-09T13:40:38+00:00"
+    },
+    {
+      "name": "사당1동 → 방배2동",
+      "from": "rn-19cab13e",
+      "to": "rn-57c7fd1e",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-0715b2d4",
+      "created_at": "2026-09-09T13:40:41+00:00",
+      "updated_at": "2026-09-09T13:40:41+00:00"
+    },
+    {
+      "name": "한강로3가 → 이촌동 2",
+      "from": "rn-f8159be6",
+      "to": "rn-f33cd08b",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-0fef8043",
+      "created_at": "2026-09-09T13:41:15+00:00",
+      "updated_at": "2026-09-09T13:41:15+00:00"
+    },
+    {
+      "name": "지점 22 → 영종대교",
+      "from": "rn-975b4495",
+      "to": "WP039",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-262ab569",
+      "created_at": "2026-09-09T13:42:38+00:00",
+      "updated_at": "2026-09-09T13:42:38+00:00"
+    },
+    {
+      "name": "지점 22 → 시천동 아라로",
+      "from": "rn-975b4495",
+      "to": "WP038",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-2a24161c",
+      "created_at": "2026-09-09T13:42:49+00:00",
+      "updated_at": "2026-09-09T13:42:49+00:00"
+    },
+    {
+      "name": "충정로3가 → 아현동",
+      "from": "rn-6bb17a26",
+      "to": "rn-57bc449f",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-1f315f5b",
+      "created_at": "2026-09-09T13:43:58+00:00",
+      "updated_at": "2026-09-09T13:43:58+00:00"
+    },
+    {
+      "name": "아현동 → 대현동",
+      "from": "rn-57bc449f",
+      "to": "rn-abb0bf2f",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-512eea1e",
+      "created_at": "2026-09-09T13:44:02+00:00",
+      "updated_at": "2026-09-09T13:44:02+00:00"
+    },
+    {
+      "name": "대현동 → 20통",
+      "from": "rn-abb0bf2f",
+      "to": "rn-c1ec07a8",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-71009ddd",
+      "created_at": "2026-09-09T13:44:07+00:00",
+      "updated_at": "2026-09-09T13:44:07+00:00"
+    },
+    {
+      "name": "20통 → 동교동",
+      "from": "rn-c1ec07a8",
+      "to": "rn-4000b533",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-63a3b81c",
+      "created_at": "2026-09-09T13:44:11+00:00",
+      "updated_at": "2026-09-09T13:44:11+00:00"
+    },
+    {
+      "name": "목상동 → 시천동 아라로",
+      "from": "rn-34165e6b",
+      "to": "WP038",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-a21f8571",
+      "created_at": "2026-09-09T13:44:23+00:00",
+      "updated_at": "2026-09-09T13:44:23+00:00"
+    },
+    {
+      "name": "지점 25 → 상암동",
+      "from": "rn-5fe9a8f1",
+      "to": "rn-d184cbb5",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-74639477",
+      "created_at": "2026-09-09T13:47:13+00:00",
+      "updated_at": "2026-09-09T13:47:13+00:00"
+    },
+    {
+      "name": "덕은동 → 지점 25",
+      "from": "rn-f862eadd",
+      "to": "rn-5fe9a8f1",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-4065715a",
+      "created_at": "2026-09-09T13:47:21+00:00",
+      "updated_at": "2026-09-09T13:47:21+00:00"
+    },
+    {
+      "name": "지점 25 → 수색교",
+      "from": "rn-5fe9a8f1",
+      "to": "WP022",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-9ca51ec9",
+      "created_at": "2026-09-09T13:47:26+00:00",
+      "updated_at": "2026-09-09T13:47:26+00:00"
+    },
+    {
+      "name": "수색교 → 지점 24",
+      "from": "WP022",
+      "to": "rn-687892d1",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-bec47145",
+      "created_at": "2026-09-09T13:47:34+00:00",
+      "updated_at": "2026-09-09T13:47:34+00:00"
+    },
+    {
+      "name": "지점 24 → 향동동",
+      "from": "rn-687892d1",
+      "to": "rn-89830f74",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-c832b50f",
+      "created_at": "2026-09-09T13:47:40+00:00",
+      "updated_at": "2026-09-09T13:47:40+00:00"
+    },
+    {
+      "name": "향동동 → 지점 23",
+      "from": "rn-89830f74",
+      "to": "rn-1bca0b93",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-b6e12f9b",
+      "created_at": "2026-09-09T13:47:45+00:00",
+      "updated_at": "2026-09-09T13:47:45+00:00"
+    },
+    {
+      "name": "합정동 → 선유도 17고지",
+      "from": "rn-5a8878af",
+      "to": "WP013",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-ff37d262",
+      "created_at": "2026-09-09T13:48:23+00:00",
+      "updated_at": "2026-09-09T13:48:23+00:00"
+    },
+    {
+      "name": "합정동 → 서교동",
+      "from": "rn-5a8878af",
+      "to": "rn-594178a4",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-588b8ace",
+      "created_at": "2026-09-09T13:48:33+00:00",
+      "updated_at": "2026-09-09T13:48:33+00:00"
+    },
+    {
+      "name": "서교동 → 동교동",
+      "from": "rn-594178a4",
+      "to": "rn-4000b533",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-07a59b59",
+      "created_at": "2026-09-09T13:48:37+00:00",
+      "updated_at": "2026-09-09T13:48:37+00:00"
+    },
+    {
+      "name": "선주지동 → 목상동",
+      "from": "rn-458a5129",
+      "to": "rn-34165e6b",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-2a4b60d7",
+      "created_at": "2026-09-09T13:49:08+00:00",
+      "updated_at": "2026-09-09T13:49:08+00:00"
+    },
+    {
+      "name": "하야동 → 선주지동",
+      "from": "rn-2787697d",
+      "to": "rn-458a5129",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-4d219b9d",
+      "created_at": "2026-09-09T13:49:39+00:00",
+      "updated_at": "2026-09-09T13:49:39+00:00"
+    },
+    {
+      "name": "청담대교 중간지점 → 건대입구",
+      "from": "WP009",
+      "to": "WP034",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-d979f49e",
+      "created_at": "2026-09-09T13:51:03+00:00",
+      "updated_at": "2026-09-09T13:51:03+00:00"
+    },
+    {
+      "name": "건대입구 → 송정동",
+      "from": "WP034",
+      "to": "rn-1150998f",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-fd33e4a0",
+      "created_at": "2026-09-09T13:51:20+00:00",
+      "updated_at": "2026-09-09T13:51:20+00:00"
+    },
+    {
+      "name": "운북동 → 영종동",
+      "from": "WP040",
+      "to": "rn-94f5f477",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-0e789775",
+      "created_at": "2026-09-09T13:59:45+00:00",
+      "updated_at": "2026-09-09T13:59:45+00:00"
+    },
+    {
+      "name": "영종동 → 영종대교",
+      "from": "rn-94f5f477",
+      "to": "WP039",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-c8b1e23e",
+      "created_at": "2026-09-09T13:59:48+00:00",
+      "updated_at": "2026-09-09T13:59:48+00:00"
+    },
+    {
+      "name": "영종동 → 지점 26",
+      "from": "rn-94f5f477",
+      "to": "rn-b5d0edd2",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-5d5b88ba",
+      "created_at": "2026-09-09T14:00:05+00:00",
+      "updated_at": "2026-09-09T14:00:05+00:00"
+    },
+    {
+      "name": "지점 26 → 지점 27",
+      "from": "rn-b5d0edd2",
+      "to": "rn-dd99594d",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-d5182c0f",
+      "created_at": "2026-09-09T14:00:11+00:00",
+      "updated_at": "2026-09-09T14:00:11+00:00"
+    },
+    {
+      "name": "지점 27 → 지점 28",
+      "from": "rn-dd99594d",
+      "to": "rn-30ef9236",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-caf53121",
+      "created_at": "2026-09-09T14:04:13+00:00",
+      "updated_at": "2026-09-09T14:04:13+00:00"
+    },
+    {
+      "name": "지점 28 → 간석3동",
+      "from": "rn-30ef9236",
+      "to": "rn-cc0af2d3",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-fd4e38c4",
+      "created_at": "2026-09-09T14:04:17+00:00",
+      "updated_at": "2026-09-09T14:04:17+00:00"
+    },
+    {
+      "name": "지점 33 → 지점 34",
+      "from": "rn-deca0746",
+      "to": "rn-2c1fa1a5",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-19b3b932",
+      "created_at": "2026-09-09T14:04:20+00:00",
+      "updated_at": "2026-09-09T14:04:20+00:00"
+    },
+    {
+      "name": "간석3동 → 지점 37",
+      "from": "rn-cc0af2d3",
+      "to": "rn-55ed3d23",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-19783b02",
+      "created_at": "2026-09-09T14:04:20+00:00",
+      "updated_at": "2026-09-09T14:04:20+00:00"
+    },
+    {
+      "name": "지점 34 → 지점 36",
+      "from": "rn-2c1fa1a5",
+      "to": "rn-f27be83a",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-b112dd7a",
+      "created_at": "2026-09-09T14:04:23+00:00",
+      "updated_at": "2026-09-09T14:04:23+00:00"
+    },
+    {
+      "name": "지점 37 → 지점 29",
+      "from": "rn-55ed3d23",
+      "to": "rn-9f8508a9",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-d96f1b32",
+      "created_at": "2026-09-09T14:04:24+00:00",
+      "updated_at": "2026-09-09T14:04:24+00:00"
+    },
+    {
+      "name": "지점 36 → 지점 37",
+      "from": "rn-f27be83a",
+      "to": "rn-55ed3d23",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-d62e70aa",
+      "created_at": "2026-09-09T14:04:27+00:00",
+      "updated_at": "2026-09-09T14:04:27+00:00"
+    },
+    {
+      "name": "지점 29 → 지점 30",
+      "from": "rn-9f8508a9",
+      "to": "rn-4bd89041",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-03769fe9",
+      "created_at": "2026-09-09T14:04:28+00:00",
+      "updated_at": "2026-09-09T14:04:28+00:00"
+    },
+    {
+      "name": "지점 30 → 지점 31",
+      "from": "rn-4bd89041",
+      "to": "rn-eb9187c9",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-66d55dd5",
+      "created_at": "2026-09-09T14:04:30+00:00",
+      "updated_at": "2026-09-09T14:04:30+00:00"
+    },
+    {
+      "name": "지점 31 → 지점 17",
+      "from": "rn-eb9187c9",
+      "to": "rn-87708d4c",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-d88c8b87",
+      "created_at": "2026-09-09T14:04:34+00:00",
+      "updated_at": "2026-09-09T14:04:34+00:00"
+    },
+    {
+      "name": "성수대교 남단 → 성수 F2",
+      "from": "WP020",
+      "to": "fato:VP009:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-7b191e9d",
+      "created_at": "2026-09-09T14:05:16+00:00",
+      "updated_at": "2026-09-09T14:05:16+00:00"
+    },
+    {
+      "name": "성수 F1 → 지점 2",
+      "from": "fato:VP009:F1",
+      "to": "rn-2fd2b992",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-73ae5412",
+      "created_at": "2026-09-09T14:05:41+00:00",
+      "updated_at": "2026-09-09T14:05:41+00:00"
+    },
+    {
+      "name": "이촌동 2 → 상도터널",
+      "from": "rn-f33cd08b",
+      "to": "WP017",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-2cdd5352",
+      "created_at": "2026-09-09T14:07:28+00:00",
+      "updated_at": "2026-09-09T14:07:28+00:00"
+    },
+    {
+      "name": "능동 → 중곡1동",
+      "from": "rn-08f2b9fb",
+      "to": "rn-058911c6",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-5d61ed4b",
+      "created_at": "2026-09-09T14:07:51+00:00",
+      "updated_at": "2026-09-09T14:07:51+00:00"
+    },
+    {
+      "name": "능동 → 구의동",
+      "from": "rn-08f2b9fb",
+      "to": "rn-7b4da2e9",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-48f3bcfa",
+      "created_at": "2026-09-09T14:07:57+00:00",
+      "updated_at": "2026-09-09T14:07:57+00:00"
+    },
+    {
+      "name": "상도1동 → 상도터널",
+      "from": "rn-c4963899",
+      "to": "WP017",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-d99a7e47",
+      "created_at": "2026-09-09T14:07:57+00:00",
+      "updated_at": "2026-09-09T14:07:57+00:00"
+    },
+    {
+      "name": "구의동 → 아차산 고가차도",
+      "from": "rn-7b4da2e9",
+      "to": "WP026",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-2cd9a3cf",
+      "created_at": "2026-09-09T14:08:01+00:00",
+      "updated_at": "2026-09-09T14:08:01+00:00"
+    },
+    {
+      "name": "아차산 고가차도 → 천호대교 중간지점",
+      "from": "WP026",
+      "to": "WP010",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-ea3373dd",
+      "created_at": "2026-09-09T14:08:05+00:00",
+      "updated_at": "2026-09-09T14:08:05+00:00"
+    },
+    {
+      "name": "상도1동 2 → 상도1동",
+      "from": "rn-01b7471f",
+      "to": "rn-c4963899",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-687ed5e2",
+      "created_at": "2026-09-09T14:08:25+00:00",
+      "updated_at": "2026-09-09T14:08:25+00:00"
+    },
+    {
+      "name": "지점 38 → 봉천동",
+      "from": "rn-705f6f9d",
+      "to": "rn-1c4020a9",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-da356e0f",
+      "created_at": "2026-09-09T14:08:42+00:00",
+      "updated_at": "2026-09-09T14:08:42+00:00"
+    },
+    {
+      "name": "지점 38 → 상도1동 2",
+      "from": "rn-705f6f9d",
+      "to": "rn-01b7471f",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-bc45cd67",
+      "created_at": "2026-09-09T14:08:48+00:00",
+      "updated_at": "2026-09-09T14:08:48+00:00"
+    },
+    {
+      "name": "지점 33 → 지점 15",
+      "from": "rn-deca0746",
+      "to": "rn-893c3efc",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-8257dfb0",
+      "created_at": "2026-09-09T14:10:35+00:00",
+      "updated_at": "2026-09-09T14:10:35+00:00"
+    },
+    {
+      "name": "지점 15 → 선주지동",
+      "from": "rn-893c3efc",
+      "to": "rn-458a5129",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-def1dbc7",
+      "created_at": "2026-09-09T14:10:39+00:00",
+      "updated_at": "2026-09-09T14:10:39+00:00"
+    },
+    {
+      "name": "충정로3가 → 광화문 F2",
+      "from": "rn-6bb17a26",
+      "to": "fato:VP012:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-6e112e54",
+      "created_at": "2026-09-09T14:10:41+00:00",
+      "updated_at": "2026-09-09T14:10:41+00:00"
+    },
+    {
+      "name": "광화문 F1 → 남영동",
+      "from": "fato:VP012:F1",
+      "to": "rn-39cf1e9f",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-de01b687",
+      "created_at": "2026-09-09T14:10:47+00:00",
+      "updated_at": "2026-09-09T14:10:47+00:00"
+    },
+    {
+      "name": "월계동 → 미아 F2",
+      "from": "rn-b5f9d723",
+      "to": "fato:VP006:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-bbb1a80d",
+      "created_at": "2026-09-09T14:12:04+00:00",
+      "updated_at": "2026-09-09T14:12:04+00:00"
+    },
+    {
+      "name": "미아 F1 → 월계동",
+      "from": "fato:VP006:F1",
+      "to": "rn-b5f9d723",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-dba60e18",
+      "created_at": "2026-09-09T14:12:08+00:00",
+      "updated_at": "2026-09-09T14:12:08+00:00"
+    },
+    {
+      "name": "중화동 → 망우 F2",
+      "from": "rn-f0872511",
+      "to": "fato:VP016:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-c9853009",
+      "created_at": "2026-09-09T14:12:36+00:00",
+      "updated_at": "2026-09-09T14:12:36+00:00"
+    },
+    {
+      "name": "망우 F1 → 중랑철교",
+      "from": "fato:VP016:F1",
+      "to": "WP027",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-76037768",
+      "created_at": "2026-09-09T14:12:45+00:00",
+      "updated_at": "2026-09-09T14:12:45+00:00"
+    },
+    {
+      "name": "연신내 F1 → 지점 23",
+      "from": "fato:VP010:F1",
+      "to": "rn-1bca0b93",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-9faa35c1",
+      "created_at": "2026-09-09T14:13:18+00:00",
+      "updated_at": "2026-09-09T14:13:18+00:00"
+    },
+    {
+      "name": "지점 23 → 연신내 F2",
+      "from": "rn-1bca0b93",
+      "to": "fato:VP010:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-4fd7aff1",
+      "created_at": "2026-09-09T14:13:22+00:00",
+      "updated_at": "2026-09-09T14:13:22+00:00"
+    },
+    {
+      "name": "사당 F1 → 방배동",
+      "from": "fato:VP008:F1",
+      "to": "rn-9928083e",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-5193c702",
+      "created_at": "2026-09-09T14:14:24+00:00",
+      "updated_at": "2026-09-09T14:14:24+00:00"
+    },
+    {
+      "name": "방배동 → 사당 F2",
+      "from": "rn-9928083e",
+      "to": "fato:VP008:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-a0c9325f",
+      "created_at": "2026-09-09T14:14:30+00:00",
+      "updated_at": "2026-09-09T14:14:30+00:00"
+    },
+    {
+      "name": "신림동 → 봉천 F2",
+      "from": "rn-18acf17a",
+      "to": "fato:VP007:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-7825234c",
+      "created_at": "2026-09-09T14:14:54+00:00",
+      "updated_at": "2026-09-09T14:14:54+00:00"
+    },
+    {
+      "name": "봉천 F1 → 신림동",
+      "from": "fato:VP007:F1",
+      "to": "rn-18acf17a",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-4831225e",
+      "created_at": "2026-09-09T14:15:02+00:00",
+      "updated_at": "2026-09-09T14:15:02+00:00"
+    },
+    {
+      "name": "강남 F1 → 반포1동",
+      "from": "fato:VP013:F1",
+      "to": "rn-b38bb01e",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-c0e56471",
+      "created_at": "2026-09-09T14:15:46+00:00",
+      "updated_at": "2026-09-09T14:16:10+00:00"
+    },
+    {
+      "name": "합정동 → 상암 F2",
+      "from": "rn-5a8878af",
+      "to": "fato:VP003:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-0f8371c0",
+      "created_at": "2026-09-09T14:16:00+00:00",
+      "updated_at": "2026-09-09T14:16:00+00:00"
+    },
+    {
+      "name": "반포1동 → 강남 F2",
+      "from": "rn-b38bb01e",
+      "to": "fato:VP013:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-d6f337f8",
+      "created_at": "2026-09-09T14:16:17+00:00",
+      "updated_at": "2026-09-09T14:16:17+00:00"
+    },
+    {
+      "name": "상암 F1 → 서교동",
+      "from": "fato:VP003:F1",
+      "to": "rn-594178a4",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-f1546021",
+      "created_at": "2026-09-09T14:16:21+00:00",
+      "updated_at": "2026-09-09T14:16:21+00:00"
+    },
+    {
+      "name": "강남 F1 → 서초2동 2",
+      "from": "fato:VP013:F1",
+      "to": "rn-d5da2e77",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-292a8006",
+      "created_at": "2026-09-09T14:16:27+00:00",
+      "updated_at": "2026-09-09T14:16:27+00:00"
+    },
+    {
+      "name": "서초2동 2 → 강남 F2",
+      "from": "rn-d5da2e77",
+      "to": "fato:VP013:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-e5280229",
+      "created_at": "2026-09-09T14:16:34+00:00",
+      "updated_at": "2026-09-09T14:16:34+00:00"
+    },
+    {
+      "name": "남영동 → 충정로3가",
+      "from": "rn-39cf1e9f",
+      "to": "rn-6bb17a26",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-203af6a9",
+      "created_at": "2026-09-09T14:16:57+00:00",
+      "updated_at": "2026-09-09T14:16:57+00:00"
+    },
+    {
+      "name": "인천 F1 → 운북동",
+      "from": "fato:VP018:F1",
+      "to": "WP040",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-6a71c9d0",
+      "created_at": "2026-09-09T14:17:57+00:00",
+      "updated_at": "2026-09-09T14:17:57+00:00"
+    },
+    {
+      "name": "운북동 → 인천 F2",
+      "from": "WP040",
+      "to": "fato:VP018:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-61feb959",
+      "created_at": "2026-09-09T14:18:03+00:00",
+      "updated_at": "2026-09-09T14:18:03+00:00"
+    },
+    {
+      "name": "남영동 → 광화문 F2",
+      "from": "rn-39cf1e9f",
+      "to": "fato:VP012:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-ebedf8c1",
+      "created_at": "2026-09-09T14:19:09+00:00",
+      "updated_at": "2026-09-09T14:19:09+00:00"
+    },
+    {
+      "name": "지점 32 → 서강대교 중간지점",
+      "from": "rn-d39bb3a6",
+      "to": "WP014",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-2de07603",
+      "created_at": "2026-09-09T14:19:14+00:00",
+      "updated_at": "2026-09-09T14:19:14+00:00"
+    },
+    {
+      "name": "지점 32 → 여의동 2",
+      "from": "rn-d39bb3a6",
+      "to": "rn-e4a4b613",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-0900c0be",
+      "created_at": "2026-09-09T14:19:19+00:00",
+      "updated_at": "2026-09-09T14:19:19+00:00"
+    },
+    {
+      "name": "광화문 F1 → 충정로3가",
+      "from": "fato:VP012:F1",
+      "to": "rn-6bb17a26",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-6b370089",
+      "created_at": "2026-09-09T14:19:24+00:00",
+      "updated_at": "2026-09-09T14:19:24+00:00"
+    },
+    {
+      "name": "지점 32 → 여의도 F2",
+      "from": "rn-d39bb3a6",
+      "to": "fato:VP001:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-3785f5ef",
+      "created_at": "2026-09-09T14:19:24+00:00",
+      "updated_at": "2026-09-09T14:19:24+00:00"
+    },
+    {
+      "name": "지점 11 → 영등포",
+      "from": "rn-b7239877",
+      "to": "WP030",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-29f70c00",
+      "created_at": "2026-09-09T14:20:04+00:00",
+      "updated_at": "2026-09-09T14:20:04+00:00"
+    },
+    {
+      "name": "영등포 → 지점 13",
+      "from": "WP030",
+      "to": "rn-f89a0e80",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-b4749314",
+      "created_at": "2026-09-09T14:20:10+00:00",
+      "updated_at": "2026-09-09T14:20:10+00:00"
+    },
+    {
+      "name": "영등포 → 여의도 F2",
+      "from": "WP030",
+      "to": "fato:VP001:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-d4c76812",
+      "created_at": "2026-09-09T14:20:20+00:00",
+      "updated_at": "2026-09-09T14:20:20+00:00"
+    },
+    {
+      "name": "여의도 F1 → 지점 32",
+      "from": "fato:VP001:F1",
+      "to": "rn-d39bb3a6",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-64b2fdc4",
+      "created_at": "2026-09-09T14:21:02+00:00",
+      "updated_at": "2026-09-09T14:21:02+00:00"
+    },
+    {
+      "name": "사당 F1 → 인헌동",
+      "from": "fato:VP008:F1",
+      "to": "rn-7591c808",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-8e7b8d73",
+      "created_at": "2026-09-09T14:21:05+00:00",
+      "updated_at": "2026-09-09T14:21:05+00:00"
+    },
+    {
+      "name": "인헌동 → 사당 F2",
+      "from": "rn-7591c808",
+      "to": "fato:VP008:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-0df45f0c",
+      "created_at": "2026-09-09T14:21:08+00:00",
+      "updated_at": "2026-09-09T14:21:08+00:00"
+    },
+    {
+      "name": "수서 F1 → 개포3동",
+      "from": "fato:VP017:F1",
+      "to": "rn-6816fd4c",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-db5d5a0d",
+      "created_at": "2026-09-09T14:21:25+00:00",
+      "updated_at": "2026-09-09T14:21:25+00:00"
+    },
+    {
+      "name": "개포3동 → 수서 F2",
+      "from": "rn-6816fd4c",
+      "to": "fato:VP017:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-a6ea9a97",
+      "created_at": "2026-09-09T14:21:28+00:00",
+      "updated_at": "2026-09-09T14:21:28+00:00"
+    },
+    {
+      "name": "상암 F1 → 지점 25",
+      "from": "fato:VP003:F1",
+      "to": "rn-5fe9a8f1",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-52b7f741",
+      "created_at": "2026-09-09T14:21:33+00:00",
+      "updated_at": "2026-09-09T14:21:33+00:00"
+    },
+    {
+      "name": "상암동 → 상암 F2",
+      "from": "rn-d184cbb5",
+      "to": "fato:VP003:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-321a7109",
+      "created_at": "2026-09-09T14:21:45+00:00",
+      "updated_at": "2026-09-09T14:21:45+00:00"
+    },
+    {
+      "name": "지점 2 → 성수 F2",
+      "from": "rn-2fd2b992",
+      "to": "fato:VP009:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-86a6043f",
+      "created_at": "2026-09-09T14:22:57+00:00",
+      "updated_at": "2026-09-09T14:22:57+00:00"
+    },
+    {
+      "name": "성수 F1 → 성수대교 남단",
+      "from": "fato:VP009:F1",
+      "to": "WP020",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-aa09740d",
+      "created_at": "2026-09-09T14:23:05+00:00",
+      "updated_at": "2026-09-09T14:23:05+00:00"
+    },
+    {
+      "name": "잠실 F1 → 지점 3",
+      "from": "fato:VP002:F1",
+      "to": "rn-4d195459",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-90de0483",
+      "created_at": "2026-09-09T14:23:14+00:00",
+      "updated_at": "2026-09-09T14:23:14+00:00"
+    },
+    {
+      "name": "잠실 F1 → 잠실7동",
+      "from": "fato:VP002:F1",
+      "to": "rn-6edb1160",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-c1bfc71c",
+      "created_at": "2026-09-09T14:23:26+00:00",
+      "updated_at": "2026-09-09T14:23:26+00:00"
+    },
+    {
+      "name": "가산 F1 → 지점 31",
+      "from": "fato:VP014:F1",
+      "to": "rn-eb9187c9",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-e4d1ed01",
+      "created_at": "2026-09-09T14:23:39+00:00",
+      "updated_at": "2026-09-09T14:23:39+00:00"
+    },
+    {
+      "name": "지점 31 → 가산 F2",
+      "from": "rn-eb9187c9",
+      "to": "fato:VP014:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-29f2a2d5",
+      "created_at": "2026-09-09T14:24:01+00:00",
+      "updated_at": "2026-09-09T14:24:01+00:00"
+    },
+    {
+      "name": "봉천 F1 → 봉천동",
+      "from": "fato:VP007:F1",
+      "to": "rn-1c4020a9",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-06079d07",
+      "created_at": "2026-09-09T14:24:27+00:00",
+      "updated_at": "2026-09-09T14:24:27+00:00"
+    },
+    {
+      "name": "봉천동 → 봉천 F2",
+      "from": "rn-1c4020a9",
+      "to": "fato:VP007:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-fb8ee543",
+      "created_at": "2026-09-09T14:24:36+00:00",
+      "updated_at": "2026-09-09T14:24:36+00:00"
+    },
+    {
+      "name": "가산 F1 → 가산동",
+      "from": "fato:VP014:F1",
+      "to": "rn-e0295b80",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-2122c771",
+      "created_at": "2026-09-09T14:24:36+00:00",
+      "updated_at": "2026-09-09T14:24:36+00:00"
+    },
+    {
+      "name": "가산동 → 가산 F2",
+      "from": "rn-e0295b80",
+      "to": "fato:VP014:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-d18a46a9",
+      "created_at": "2026-09-09T14:24:40+00:00",
+      "updated_at": "2026-09-09T14:24:40+00:00"
+    },
+    {
+      "name": "구로동 → 가산 F2",
+      "from": "rn-c52ee294",
+      "to": "fato:VP014:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-23c30c83",
+      "created_at": "2026-09-09T14:24:45+00:00",
+      "updated_at": "2026-09-09T14:24:55+00:00"
+    },
+    {
+      "name": "가산 F1 → 구로동",
+      "from": "fato:VP014:F1",
+      "to": "rn-c52ee294",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-b2bafb40",
+      "created_at": "2026-09-09T14:25:02+00:00",
+      "updated_at": "2026-09-09T14:25:02+00:00"
+    },
+    {
+      "name": "여의도 F1 → 지점 11",
+      "from": "fato:VP001:F1",
+      "to": "rn-b7239877",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-6e1834e9",
+      "created_at": "2026-09-09T14:25:09+00:00",
+      "updated_at": "2026-09-09T14:25:09+00:00"
+    },
+    {
+      "name": "천호대교 중간지점 → 천호 F2",
+      "from": "WP010",
+      "to": "fato:VP011:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-aad9853e",
+      "created_at": "2026-09-09T14:25:33+00:00",
+      "updated_at": "2026-09-09T14:25:33+00:00"
+    },
+    {
+      "name": "천호 F1 → 천호대교 중간지점",
+      "from": "fato:VP011:F1",
+      "to": "WP010",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-d0949772",
+      "created_at": "2026-09-09T14:25:38+00:00",
+      "updated_at": "2026-09-09T14:25:38+00:00"
+    },
+    {
+      "name": "지점 11 → 여의도 F2",
+      "from": "rn-b7239877",
+      "to": "fato:VP001:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-be927a28",
+      "created_at": "2026-09-09T14:25:41+00:00",
+      "updated_at": "2026-09-09T14:25:41+00:00"
+    },
+    {
+      "name": "지점 11 → 양평동",
+      "from": "rn-b7239877",
+      "to": "rn-2d3f34a0",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-65c897f9",
+      "created_at": "2026-09-09T14:26:07+00:00",
+      "updated_at": "2026-09-09T14:26:07+00:00"
+    },
+    {
+      "name": "영등포 → 신림동 2",
+      "from": "WP030",
+      "to": "rn-1240a71b",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-c03bdd09",
+      "created_at": "2026-09-09T14:26:35+00:00",
+      "updated_at": "2026-09-09T14:26:35+00:00"
+    },
+    {
+      "name": "용산 F1 → 한강로3가",
+      "from": "fato:VP004:F1",
+      "to": "rn-f8159be6",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-8c5c6248",
+      "created_at": "2026-09-09T14:28:18+00:00",
+      "updated_at": "2026-09-09T14:28:18+00:00"
+    },
+    {
+      "name": "한강로3가 → 용산 F2",
+      "from": "rn-f8159be6",
+      "to": "fato:VP004:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-88c8f49b",
+      "created_at": "2026-09-09T14:28:21+00:00",
+      "updated_at": "2026-09-09T14:28:21+00:00"
+    },
+    {
+      "name": "용산 F1 → 한강로2가",
+      "from": "fato:VP004:F1",
+      "to": "rn-03a106aa",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-098531bb",
+      "created_at": "2026-09-09T14:28:42+00:00",
+      "updated_at": "2026-09-09T14:28:42+00:00"
+    },
+    {
+      "name": "한강로2가 → 용산 F2",
+      "from": "rn-03a106aa",
+      "to": "fato:VP004:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-a3a01560",
+      "created_at": "2026-09-09T14:28:45+00:00",
+      "updated_at": "2026-09-09T14:28:45+00:00"
+    },
+    {
+      "name": "하야동 2 → 하야동",
+      "from": "rn-c7b920c0",
+      "to": "rn-2787697d",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-b04918ab",
+      "created_at": "2026-09-09T14:29:50+00:00",
+      "updated_at": "2026-09-09T14:29:50+00:00"
+    },
+    {
+      "name": "하야동 → 마곡 F2",
+      "from": "rn-2787697d",
+      "to": "fato:VP015:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-68d4eb26",
+      "created_at": "2026-09-09T14:30:16+00:00",
+      "updated_at": "2026-09-09T14:30:16+00:00"
+    },
+    {
+      "name": "마곡 F1 → 하야동 2",
+      "from": "fato:VP015:F1",
+      "to": "rn-c7b920c0",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-5791fd18",
+      "created_at": "2026-09-09T14:30:25+00:00",
+      "updated_at": "2026-09-09T14:30:25+00:00"
+    },
+    {
+      "name": "회현동2가 → 후암동",
+      "from": "rn-0019e9a4",
+      "to": "rn-52f16b34",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-370ca59d",
+      "created_at": "2026-09-09T14:31:54+00:00",
+      "updated_at": "2026-09-09T14:31:54+00:00"
+    },
+    {
+      "name": "후암동 → 지점 39",
+      "from": "rn-52f16b34",
+      "to": "rn-b28ebef5",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-19f41450",
+      "created_at": "2026-09-09T14:31:56+00:00",
+      "updated_at": "2026-09-09T14:31:56+00:00"
+    },
+    {
+      "name": "지점 39 → 약수동",
+      "from": "rn-b28ebef5",
+      "to": "rn-4d7c5c1f",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-7ee62957",
+      "created_at": "2026-09-09T14:31:59+00:00",
+      "updated_at": "2026-09-09T14:31:59+00:00"
+    },
+    {
+      "name": "약수동 → 신사동",
+      "from": "rn-4d7c5c1f",
+      "to": "rn-9af4c639",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-a69e8fbc",
+      "created_at": "2026-09-09T14:32:03+00:00",
+      "updated_at": "2026-09-09T14:32:03+00:00"
+    },
+    {
+      "name": "광화문 F1 → 회현동2가",
+      "from": "fato:VP012:F1",
+      "to": "rn-0019e9a4",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-7023de87",
+      "created_at": "2026-09-09T14:32:15+00:00",
+      "updated_at": "2026-09-09T14:32:15+00:00"
+    },
+    {
+      "name": "회현동2가 → 광화문 F2",
+      "from": "rn-0019e9a4",
+      "to": "fato:VP012:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-23fcad06",
+      "created_at": "2026-09-09T14:32:18+00:00",
+      "updated_at": "2026-09-09T14:32:18+00:00"
+    },
+    {
+      "name": "가산동 → 지점 9",
+      "from": "rn-e0295b80",
+      "to": "rn-ab1bc572",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-a76fee2d",
+      "created_at": "2026-09-09T14:32:55+00:00",
+      "updated_at": "2026-09-09T14:32:55+00:00"
+    },
+    {
+      "name": "남영동 → 회현동2가",
+      "from": "rn-39cf1e9f",
+      "to": "rn-0019e9a4",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-8baae57d",
+      "created_at": "2026-09-09T15:40:04+00:00",
+      "updated_at": "2026-09-09T15:40:04+00:00"
+    },
+    {
+      "name": "목1동 → 목동 F2",
+      "from": "rn-0cc6ee0b",
+      "to": "fato:VP005:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-f162287c",
+      "created_at": "2026-09-10T04:35:08+00:00",
+      "updated_at": "2026-09-10T04:35:08+00:00"
+    },
+    {
+      "name": "목동 F1 → 목1동",
+      "from": "fato:VP005:F1",
+      "to": "rn-0cc6ee0b",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-0d750dd0",
+      "created_at": "2026-09-10T04:35:11+00:00",
+      "updated_at": "2026-09-10T04:35:11+00:00"
+    },
+    {
+      "name": "목동 F1 → 신정6동",
+      "from": "fato:VP005:F1",
+      "to": "rn-412d3a58",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-c34667ae",
+      "created_at": "2026-09-10T04:35:31+00:00",
+      "updated_at": "2026-09-10T04:35:31+00:00"
+    },
+    {
+      "name": "신정6동 → 목동 F2",
+      "from": "rn-412d3a58",
+      "to": "fato:VP005:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-6e4783da",
+      "created_at": "2026-09-10T04:35:33+00:00",
+      "updated_at": "2026-09-10T04:35:33+00:00"
+    },
+    {
+      "name": "목동 F1 → 문래동5가",
+      "from": "fato:VP005:F1",
+      "to": "rn-c66c1443",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-6aa6bc41",
+      "created_at": "2026-09-10T04:35:38+00:00",
+      "updated_at": "2026-09-10T04:35:38+00:00"
+    },
+    {
+      "name": "문래동5가 → 목동 F2",
+      "from": "rn-c66c1443",
+      "to": "fato:VP005:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-93776c39",
+      "created_at": "2026-09-10T04:35:41+00:00",
+      "updated_at": "2026-09-10T04:35:41+00:00"
+    },
+    {
+      "name": "지점 3 → 잠실 F2",
+      "from": "rn-4d195459",
+      "to": "fato:VP002:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-dd93f098",
+      "created_at": "2026-09-10T04:39:03+00:00",
+      "updated_at": "2026-09-10T04:39:03+00:00"
+    },
+    {
+      "name": "잠실7동 → 잠실 F2",
+      "from": "rn-6edb1160",
+      "to": "fato:VP002:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-8f1b90b9",
+      "created_at": "2026-09-10T04:39:06+00:00",
+      "updated_at": "2026-09-10T04:39:06+00:00"
+    },
+    {
+      "name": "잠원동 2 → 반포동",
+      "from": "rn-c94d9798",
+      "to": "rn-404962bf",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-f4a30b64",
+      "created_at": "2026-09-10T04:43:29+00:00",
+      "updated_at": "2026-09-10T04:43:29+00:00"
+    },
+    {
+      "name": "잠원동 2 → 신사동 2",
+      "from": "rn-c94d9798",
+      "to": "rn-e29f9c27",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-2294d5ee",
+      "created_at": "2026-09-10T04:43:35+00:00",
+      "updated_at": "2026-09-10T04:43:35+00:00"
+    },
+    {
+      "name": "잠원동 2 → 잠원동",
+      "from": "rn-c94d9798",
+      "to": "rn-7c2dc244",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-752ffafe",
+      "created_at": "2026-09-10T04:43:39+00:00",
+      "updated_at": "2026-09-10T04:43:39+00:00"
+    },
+    {
+      "name": "여의도 F1 → 영등포",
+      "from": "fato:VP001:F1",
+      "to": "WP030",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-ddf6b583",
+      "created_at": "2026-09-10T08:50:37+00:00",
+      "updated_at": "2026-09-10T08:50:37+00:00"
+    },
+    {
+      "name": "망우 F3 → 중화동",
+      "from": "fato:VP016:F3",
+      "to": "rn-f0872511",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-21386381",
+      "created_at": "2026-09-15T04:57:46+00:00",
+      "updated_at": "2026-09-15T04:57:46+00:00"
+    },
+    {
+      "name": "중랑철교 → 망우 F4",
+      "from": "WP027",
+      "to": "fato:VP016:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-1f43e9b6",
+      "created_at": "2026-09-15T05:16:41+00:00",
+      "updated_at": "2026-09-15T05:16:41+00:00"
+    },
+    {
+      "name": "수서 F3 → 개포3동",
+      "from": "fato:VP017:F3",
+      "to": "rn-6816fd4c",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-0c238b74",
+      "created_at": "2026-09-15T05:29:39+00:00",
+      "updated_at": "2026-09-15T05:29:39+00:00"
+    },
+    {
+      "name": "개포3동 → 수서 F4",
+      "from": "rn-6816fd4c",
+      "to": "fato:VP017:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-aa477ebc",
+      "created_at": "2026-09-15T05:29:42+00:00",
+      "updated_at": "2026-09-15T05:29:42+00:00"
+    },
+    {
+      "name": "연신내 F3 → 지점 23",
+      "from": "fato:VP010:F3",
+      "to": "rn-1bca0b93",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-59fa4f6f",
+      "created_at": "2026-09-15T05:32:27+00:00",
+      "updated_at": "2026-09-15T05:32:27+00:00"
+    },
+    {
+      "name": "지점 23 → 연신내 F4",
+      "from": "rn-1bca0b93",
+      "to": "fato:VP010:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-91dd8bda",
+      "created_at": "2026-09-15T05:32:52+00:00",
+      "updated_at": "2026-09-15T05:32:52+00:00"
+    },
+    {
+      "name": "지점 32 → 여의도 F4",
+      "from": "rn-d39bb3a6",
+      "to": "fato:VP001:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-e9bd8790",
+      "created_at": "2026-09-15T05:36:00+00:00",
+      "updated_at": "2026-09-15T05:36:00+00:00"
+    },
+    {
+      "name": "여의도 F3 → 지점 32",
+      "from": "fato:VP001:F3",
+      "to": "rn-d39bb3a6",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-f14fa976",
+      "created_at": "2026-09-15T05:36:13+00:00",
+      "updated_at": "2026-09-15T05:36:13+00:00"
+    },
+    {
+      "name": "여의도 F3 → 지점 11",
+      "from": "fato:VP001:F3",
+      "to": "rn-b7239877",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-a5476e04",
+      "created_at": "2026-09-15T05:36:35+00:00",
+      "updated_at": "2026-09-15T05:36:35+00:00"
+    },
+    {
+      "name": "여의도 F3 → 영등포",
+      "from": "fato:VP001:F3",
+      "to": "WP030",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-d9a275ed",
+      "created_at": "2026-09-15T05:36:44+00:00",
+      "updated_at": "2026-09-15T05:36:44+00:00"
+    },
+    {
+      "name": "영등포 → 여의도 F4",
+      "from": "WP030",
+      "to": "fato:VP001:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-840ec148",
+      "created_at": "2026-09-15T05:36:53+00:00",
+      "updated_at": "2026-09-15T05:36:53+00:00"
+    },
+    {
+      "name": "지점 11 → 여의도 F4",
+      "from": "rn-b7239877",
+      "to": "fato:VP001:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-12c53cb4",
+      "created_at": "2026-09-15T05:37:19+00:00",
+      "updated_at": "2026-09-15T05:37:19+00:00"
+    },
+    {
+      "name": "잠실 F3 → 잠실7동",
+      "from": "fato:VP002:F3",
+      "to": "rn-6edb1160",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-88c887f8",
+      "created_at": "2026-09-15T05:57:38+00:00",
+      "updated_at": "2026-09-15T05:57:38+00:00"
+    },
+    {
+      "name": "잠실 F3 → 지점 3",
+      "from": "fato:VP002:F3",
+      "to": "rn-4d195459",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-5d62dac7",
+      "created_at": "2026-09-15T05:57:58+00:00",
+      "updated_at": "2026-09-15T05:57:58+00:00"
+    },
+    {
+      "name": "지점 3 → 잠실 F4",
+      "from": "rn-4d195459",
+      "to": "fato:VP002:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-c7f4ea81",
+      "created_at": "2026-09-15T05:58:22+00:00",
+      "updated_at": "2026-09-15T05:58:22+00:00"
+    },
+    {
+      "name": "잠실7동 → 잠실 F4",
+      "from": "rn-6edb1160",
+      "to": "fato:VP002:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-56725d06",
+      "created_at": "2026-09-15T05:58:34+00:00",
+      "updated_at": "2026-09-15T05:58:34+00:00"
+    },
+    {
+      "name": "강남 F3 → 서초2동 2",
+      "from": "fato:VP013:F3",
+      "to": "rn-d5da2e77",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-6fee56a9",
+      "created_at": "2026-09-15T07:10:20+00:00",
+      "updated_at": "2026-09-15T07:10:20+00:00"
+    },
+    {
+      "name": "강남 F3 → 반포1동",
+      "from": "fato:VP013:F3",
+      "to": "rn-b38bb01e",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-5d4171f9",
+      "created_at": "2026-09-15T07:10:36+00:00",
+      "updated_at": "2026-09-15T07:10:36+00:00"
+    },
+    {
+      "name": "반포1동 → 강남 F4",
+      "from": "rn-b38bb01e",
+      "to": "fato:VP013:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-551c9cd0",
+      "created_at": "2026-09-15T07:10:47+00:00",
+      "updated_at": "2026-09-15T07:10:47+00:00"
+    },
+    {
+      "name": "서초2동 2 → 강남 F4",
+      "from": "rn-d5da2e77",
+      "to": "fato:VP013:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-e617995a",
+      "created_at": "2026-09-15T07:11:04+00:00",
+      "updated_at": "2026-09-15T07:11:04+00:00"
+    },
+    {
+      "name": "목동 F3 → 신정6동",
+      "from": "fato:VP005:F3",
+      "to": "rn-412d3a58",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-d9103b8b",
+      "created_at": "2026-09-15T07:27:19+00:00",
+      "updated_at": "2026-09-15T07:27:19+00:00"
+    },
+    {
+      "name": "목동 F3 → 목1동",
+      "from": "fato:VP005:F3",
+      "to": "rn-0cc6ee0b",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-072096af",
+      "created_at": "2026-09-15T07:27:27+00:00",
+      "updated_at": "2026-09-15T07:27:27+00:00"
+    },
+    {
+      "name": "목동 F3 → 문래동5가",
+      "from": "fato:VP005:F3",
+      "to": "rn-c66c1443",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-722cc233",
+      "created_at": "2026-09-15T07:27:32+00:00",
+      "updated_at": "2026-09-15T07:27:32+00:00"
+    },
+    {
+      "name": "문래동5가 → 목동 F4",
+      "from": "rn-c66c1443",
+      "to": "fato:VP005:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-db46342f",
+      "created_at": "2026-09-15T07:27:39+00:00",
+      "updated_at": "2026-09-15T07:27:39+00:00"
+    },
+    {
+      "name": "목1동 → 목동 F4",
+      "from": "rn-0cc6ee0b",
+      "to": "fato:VP005:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-3e43024a",
+      "created_at": "2026-09-15T07:27:47+00:00",
+      "updated_at": "2026-09-15T07:28:07+00:00"
+    },
+    {
+      "name": "신정6동 → 목동 F4",
+      "from": "rn-412d3a58",
+      "to": "fato:VP005:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-c9bb7425",
+      "created_at": "2026-09-15T07:28:24+00:00",
+      "updated_at": "2026-09-15T07:28:24+00:00"
+    },
+    {
+      "name": "성수 F3 → 지점 2",
+      "from": "fato:VP009:F3",
+      "to": "rn-2fd2b992",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-3d3bbaef",
+      "created_at": "2026-09-16T05:22:33+00:00",
+      "updated_at": "2026-09-16T05:22:33+00:00"
+    },
+    {
+      "name": "성수대교 남단 → 성수 F4",
+      "from": "WP020",
+      "to": "fato:VP009:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-8cc8b540",
+      "created_at": "2026-09-16T05:22:49+00:00",
+      "updated_at": "2026-09-16T05:22:49+00:00"
+    },
+    {
+      "name": "지점 2 → 성수 F4",
+      "from": "rn-2fd2b992",
+      "to": "fato:VP009:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-b6aea0e2",
+      "created_at": "2026-09-16T05:22:56+00:00",
+      "updated_at": "2026-09-16T05:22:56+00:00"
+    },
+    {
+      "name": "성수 F3 → 성수대교 남단",
+      "from": "fato:VP009:F3",
+      "to": "WP020",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-dafb2272",
+      "created_at": "2026-09-16T05:23:16+00:00",
+      "updated_at": "2026-09-16T05:23:16+00:00"
+    },
+    {
+      "name": "사당 F3 → 인헌동",
+      "from": "fato:VP008:F3",
+      "to": "rn-7591c808",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-9991287b",
+      "created_at": "2026-09-16T05:25:14+00:00",
+      "updated_at": "2026-09-16T05:25:14+00:00"
+    },
+    {
+      "name": "사당 F3 → 방배동",
+      "from": "fato:VP008:F3",
+      "to": "rn-9928083e",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-d02401a2",
+      "created_at": "2026-09-16T05:25:25+00:00",
+      "updated_at": "2026-09-16T05:25:25+00:00"
+    },
+    {
+      "name": "방배동 → 사당 F4",
+      "from": "rn-9928083e",
+      "to": "fato:VP008:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-f3865e30",
+      "created_at": "2026-09-16T05:26:47+00:00",
+      "updated_at": "2026-09-16T05:26:47+00:00"
+    },
+    {
+      "name": "인헌동 → 사당 F4",
+      "from": "rn-7591c808",
+      "to": "fato:VP008:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-0e7bd001",
+      "created_at": "2026-09-16T05:27:05+00:00",
+      "updated_at": "2026-09-16T05:27:05+00:00"
+    },
+    {
+      "name": "하야동 → 마곡 F1",
+      "from": "rn-2787697d",
+      "to": "fato:VP015:F1",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-8b82e8c2",
+      "created_at": "2026-09-16T05:30:27+00:00",
+      "updated_at": "2026-09-16T05:30:27+00:00"
+    },
+    {
+      "name": "하야동 2 → 마곡 F1",
+      "from": "rn-c7b920c0",
+      "to": "fato:VP015:F1",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-35e2c3d8",
+      "created_at": "2026-09-16T05:30:56+00:00",
+      "updated_at": "2026-09-16T05:30:56+00:00"
+    },
+    {
+      "name": "마곡 F2 → 하야동",
+      "from": "fato:VP015:F2",
+      "to": "rn-2787697d",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-e2260384",
+      "created_at": "2026-09-16T05:31:30+00:00",
+      "updated_at": "2026-09-16T05:31:30+00:00"
+    },
+    {
+      "name": "마곡 F2 → 하야동 2",
+      "from": "fato:VP015:F2",
+      "to": "rn-c7b920c0",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-ee85e6d9",
+      "created_at": "2026-09-16T05:32:01+00:00",
+      "updated_at": "2026-09-16T05:32:01+00:00"
+    },
+    {
+      "name": "마곡 F4 → 하야동",
+      "from": "fato:VP015:F4",
+      "to": "rn-2787697d",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-ee443a45",
+      "created_at": "2026-09-16T05:32:27+00:00",
+      "updated_at": "2026-09-16T05:32:27+00:00"
+    },
+    {
+      "name": "하야동 → 마곡 F4",
+      "from": "rn-2787697d",
+      "to": "fato:VP015:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-6ca165c4",
+      "created_at": "2026-09-16T05:32:43+00:00",
+      "updated_at": "2026-09-16T05:32:43+00:00"
+    },
+    {
+      "name": "마곡 F4 → 하야동 2",
+      "from": "fato:VP015:F4",
+      "to": "rn-c7b920c0",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-4c7c159d",
+      "created_at": "2026-09-16T05:33:11+00:00",
+      "updated_at": "2026-09-16T05:33:11+00:00"
+    },
+    {
+      "name": "하야동 2 → 마곡 F4",
+      "from": "rn-c7b920c0",
+      "to": "fato:VP015:F4",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-85a525df",
+      "created_at": "2026-09-16T05:33:23+00:00",
+      "updated_at": "2026-09-16T05:33:23+00:00"
+    },
+    {
+      "name": "마곡 F3 → 하야동 2",
+      "from": "fato:VP015:F3",
+      "to": "rn-c7b920c0",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-c98685ec",
+      "created_at": "2026-09-16T05:33:41+00:00",
+      "updated_at": "2026-09-16T05:33:41+00:00"
+    },
+    {
+      "name": "하야동 2 → 마곡 F3",
+      "from": "rn-c7b920c0",
+      "to": "fato:VP015:F3",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-981fd3a5",
+      "created_at": "2026-09-16T05:34:06+00:00",
+      "updated_at": "2026-09-16T05:34:06+00:00"
+    },
+    {
+      "name": "마곡 F3 → 하야동",
+      "from": "fato:VP015:F3",
+      "to": "rn-2787697d",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-cd16cbcb",
+      "created_at": "2026-09-16T05:34:17+00:00",
+      "updated_at": "2026-09-16T05:34:17+00:00"
+    },
+    {
+      "name": "하야동 → 마곡 F3",
+      "from": "rn-2787697d",
+      "to": "fato:VP015:F3",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-8185382f",
+      "created_at": "2026-09-16T05:34:30+00:00",
+      "updated_at": "2026-09-16T05:34:30+00:00"
+    },
+    {
+      "name": "명촌동 2 → 삼산동",
+      "from": "WP042",
+      "to": "WP043",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-cf425142",
+      "created_at": "2026-09-18T06:31:05+00:00",
+      "updated_at": "2026-09-18T06:31:05+00:00"
+    },
+    {
+      "name": "명촌동 2 → 명촌동",
+      "from": "WP042",
+      "to": "WP041",
+      "width_m": 300.0,
+      "segment": "F",
+      "id": "rl-c5a753a4",
+      "created_at": "2026-09-18T06:31:25+00:00",
+      "updated_at": "2026-09-18T06:31:25+00:00"
+    },
+    {
+      "name": "울산 테스트 F1 → 명촌동",
+      "from": "fato:VP019:F1",
+      "to": "WP041",
+      "width_m": null,
+      "segment": "C",
+      "id": "rl-e256555c",
+      "created_at": "2026-09-18T06:31:44+00:00",
+      "updated_at": "2026-09-18T06:31:44+00:00"
+    },
+    {
+      "name": "명촌동 → 울산 테스트 F2",
+      "from": "WP041",
+      "to": "fato:VP019:F2",
+      "width_m": null,
+      "segment": "G",
+      "id": "rl-1f198ae7",
+      "created_at": "2026-09-18T06:32:10+00:00",
+      "updated_at": "2026-09-18T06:32:10+00:00"
+    }
+  ]
+}

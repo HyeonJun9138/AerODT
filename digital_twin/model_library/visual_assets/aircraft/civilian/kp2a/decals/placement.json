@@ -1,0 +1,161 @@
+{
+  "source": "KP2A_Blueprint / UE 5.5 component templates; authored relative transforms composed through parents",
+  "decals": [
+    {
+      "name": "KP2A_LogoDecal_2_GEN_VARIABLE",
+      "translation_cm": [
+        -123.65270862336284,
+        -73.03038549773194,
+        -94.99999800422589
+      ],
+      "rotation_xyzw": [
+        -0.5416752201124474,
+        -0.45451947144712823,
+        0.45451947803821413,
+        0.541675225643027
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "size_cm": [
+        5.0,
+        20.0,
+        20.0
+      ],
+      "material": "Mat_KP2A_Logo"
+    },
+    {
+      "name": "KP2A_LogoDecal_1_GEN_VARIABLE",
+      "translation_cm": [
+        -135.0000048185159,
+        73.99999825998057,
+        -94.9999981991421
+      ],
+      "rotation_xyzw": [
+        -0.5416752278780634,
+        0.45451946762132706,
+        -0.45451946209074895,
+        0.5416752344691511
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "size_cm": [
+        5.0,
+        40.0,
+        40.0
+      ],
+      "material": "Mat_KP2A_Logo1"
+    }
+  ],
+  "hierarchy": [
+    {
+      "name": "DefaultSceneRoot_GEN_VARIABLE",
+      "parent": "Default__KP2A_Blueprint_C",
+      "translation_cm": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_xyzw": [
+        0.0,
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "KP2A_FlightSurface_GEN_VARIABLE",
+      "parent": "DefaultSceneRoot_GEN_VARIABLE",
+      "translation_cm": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_xyzw": [
+        0.0,
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "KP2A_LogoDecal_1_GEN_VARIABLE",
+      "parent": "KP2A_Parts_KP2A_Wing_GEN_VARIABLE",
+      "translation_cm": [
+        -135.0000048185159,
+        73.99999825998057,
+        -94.9999981991421
+      ],
+      "rotation_xyzw": [
+        -0.5416752278780634,
+        0.45451946762132706,
+        -0.45451946209074895,
+        0.5416752344691511
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "KP2A_LogoDecal_2_GEN_VARIABLE",
+      "parent": "KP2A_Parts_KP2A_Wing_GEN_VARIABLE",
+      "translation_cm": [
+        -123.65270862336284,
+        -73.03038549773194,
+        -94.99999800422589
+      ],
+      "rotation_xyzw": [
+        -0.5416752201124474,
+        -0.45451947144712823,
+        0.45451947803821413,
+        0.541675225643027
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "KP2A_Parts_KP2A_Wing_GEN_VARIABLE",
+      "parent": "KP2A_FlightSurface_GEN_VARIABLE",
+      "translation_cm": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_xyzw": [
+        0.0,
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  ],
+  "textures": {
+    "KADA_Logo.png": "a2074b99d3491a0b7b8c58fb45f6c02ae68d77d051ffb8e0a05885c3526bd773",
+    "VIBUM_Logo.png": "65480b3cbc5c18acfa2178fc66072874fce721bfb83ed89f54e354fae0e42b9a"
+  }
+}

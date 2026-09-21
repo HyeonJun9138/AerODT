@@ -1,0 +1,39 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>비행 단계 회귀 확인</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>html,body,#view{height:100%;width:100%;margin:0}nav{position:absolute;top:10px;left:10px;z-index:2;background:#d1dadee8;padding:12px;border-radius:12px;font:13px sans-serif}button{padding:7px}input{width:380px}pre{font-size:12px}</style>
+<div id="view"></div><nav><b>저장된 물리 실행 재생 · 실서버와 독립</b><br>
+<button id="spool">시동</button><button id="lift">이륙</button><button id="approach">접근</button><button id="land">착륙</button><button id="touch">접지</button><button id="taxi">지상이동</button><button id="off">종료</button><br>
+<button id="play">재생 / 정지</button><input id="time" type="range" min="0" step="0.02"><pre id="report">준비 중</pre></nav>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {FlightLayer} from '/visualization/flight_layer.js';
+import {resolvePlan,readRun,sampleRun} from '/flight-plan.js';
+import {rateOf} from '/visualization/rotor_spin.js';
+const C=Cesium,v=new C.Viewer('view',{baseLayer:false,globe:false,skyBox:false,skyAtmosphere:false,animation:false,timeline:false,baseLayerPicker:false,geocoder:false,homeButton:false,sceneModePicker:false,navigationHelpButton:false,selectionIndicator:false,infoBox:false});
+v.scene.backgroundColor=C.Color.fromCssColorString('#8cabbc');
+const run=await fetch('/flight-run.json').then(r=>r.json());
+const plan=await resolvePlan(run.plan,{deckTop:()=>100,groundHeights:async p=>p.map(()=>100)});
+const samples=readRun(plan,run.states);
+const layer=new FlightLayer(C,v,{assets:()=>({uri:'/airtaxi.glb',metadata_uri:'/airtaxi.json'})});
+layer.show(plan);
+const land=plan.legs.find(l=>l.stage==='landing').path[0];
+const takeoff=plan.legs.find(l=>l.stage==='takeoff').path[0];
+for(const p of [land,takeoff]){
+  v.entities.add({position:C.Cartesian3.fromDegrees(p[0],p[1],99.8),box:{dimensions:new C.Cartesian3(60,60,.4),material:C.Color.SLATEGRAY}});
+  v.entities.add({position:C.Cartesian3.fromDegrees(p[0],p[1],100.01),ellipse:{semiMajorAxis:7,semiMinorAxis:7,height:100.01,material:C.Color.fromCssColorString('#ade8b7')}});
+}
+const first=stage=>samples.find(s=>s.stage===stage).time_s;
+const last=stage=>samples.filter(s=>s.stage===stage).at(-1).time_s;
+const times={spool:first('takeoff')+3,lift:first('takeoff')+14,approach:last('descent')-5,land:first('landing')+20,touch:last('landing'),taxi:first('gate_in')+3,off:first('charge')};
+const slider=document.querySelector('#time');slider.max=samples.at(-1).time_s;slider.value=times.spool;
+let playing=false,prior=performance.now();
+for(const [id,t] of Object.entries(times))document.getElementById(id).onclick=()=>{playing=false;slider.value=t;};
+document.getElementById('play').onclick=()=>{playing=!playing;};
+v.scene.preRender.addEventListener(()=>{
+ const now=performance.now();if(playing)slider.value=Math.min(+slider.max,+slider.value+(now-prior)/1000);prior=now;
+ const sample=sampleRun(samples,+slider.value);layer.moveTo(sample);
+ const p=sample.position,frame=C.Transforms.eastNorthUpToFixedFrame(C.Cartesian3.fromDegrees(p.longitude,p.latitude,p.altitude_m));
+ v.camera.lookAtTransform(frame,new C.Cartesian3(15,-25,10));
+ document.getElementById('report').textContent=JSON.stringify({modelReady:layer.model?.ready,time_s:sample.time_s,stage:sample.stage,altitude_above_test_deck:p.altitude_m-100,speed_mps:sample.speed_mps,heading_deg:sample.heading_deg,tilt_deg:sample.tilt_deg,rotor_radps:rateOf(sample),motor_state:sample.motor_state,rotor_source:sample.rotor_source},null,2);
+});
+</script></html>

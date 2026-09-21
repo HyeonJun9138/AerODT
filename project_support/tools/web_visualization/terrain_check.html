@@ -1,0 +1,23 @@
+<!doctype html><html><meta charset="utf-8"><title>AeroDT terrain verification</title><link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css"><style>html,body,#globe{margin:0;width:100%;height:100%;overflow:hidden;background:#07111d}pre{position:absolute;top:8px;left:8px;max-width:540px;color:white;background:#091522bb;padding:8px;font-size:11px;white-space:pre-wrap;pointer-events:none}nav{position:absolute;right:8px;top:8px;display:grid;gap:8px}</style><div id="globe"></div><pre id="stats">loading</pre><nav><button id="sf">San Francisco</button><button id="seoul">Seoul</button><button id="ground">Ground clearance</button><button id="aircraft">Aircraft model</button><button id="sample">Sample DEM</button><button id="reset">Reset globe</button><button id="toggle">Toggle aircraft layer</button></nav><script>window.CESIUM_BASE_URL='https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/';</script><script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script><script type="module">
+import {LiveGlobe} from '/visualization/globe.js';
+import {WorkerTrackingClient} from '/communication/worker_tracking_client.js';
+const state={warnings:[],terrain:'loading',buildings:'distant'};
+const globe=new LiveGlobe(Cesium,'globe',{onTerrain:s=>state.terrain=s,onBuildings:s=>state.buildings=s,onWarning:s=>state.warnings.push(s)});globe.setSunEnabled(false);
+await globe.imagery();globe.setAssets(await (await fetch('/api/visual-assets')).json());
+let snapshot;const client=new WorkerTrackingClient({url:'ws://'+location.host+'/ws/live',onStatus:(s,m)=>state.connection=s,onSnapshot:s=>{snapshot=s;globe.replace(s);}});client.start();
+function view(lon,lat,height,pitch){globe.motion.cancel();globe.stopTracking();globe.viewer.camera.setView({destination:Cesium.Cartesian3.fromDegrees(lon,lat,height),orientation:{heading:0,pitch:Cesium.Math.toRadians(pitch),roll:0}});}
+document.querySelector('#sf').onclick=()=>view(-122.412,37.788,450,-22);
+document.querySelector('#seoul').onclick=()=>view(126.978,37.564,500,-25);
+document.querySelector('#ground').onclick=()=>view(-122.414,37.812,1,-10);
+document.querySelector('#sample').onclick=async()=>{const p=globe.viewer.camera.positionCartographic;const sampled=await Cesium.sampleTerrainMostDetailed(globe.terrain.provider,[new Cesium.Cartographic(p.longitude,p.latitude)]);state.preciseHeight=sampled[0].height;state.sameProvider=globe.viewer.scene.globe.terrainProvider===globe.terrain.provider;};
+document.querySelector('#reset').onclick=()=>globe.reset();
+document.querySelector('#aircraft').onclick=()=>{const e=snapshot?.entities.find(x=>x.kind==='aircraft' && x.altitude_m>3000);if(e){globe.select(e.entity_id);globe.focus(true);state.selected=e.entity_id;}};
+document.querySelector('#toggle').onclick=()=>globe.setLayerVisible('aircraft',!globe.entityScene.layers.aircraft.visible);
+const interval=setInterval(()=>{
+ const v=globe.viewer,p=v.camera.positionCartographic;
+ const ground=v.scene.globe.getHeight(p);
+ document.querySelector('#stats').textContent=JSON.stringify({...state,transport:client.transportMode,decode:client.metrics,render:globe.timing.summary(),lod:globe.entityScene.stats,cameraHeight:p.height,terrainHeight:ground,clearance:ground===undefined?null:p.height-ground,terrainReady:globe.terrain.ready,tilesLoaded:v.scene.globe.tilesLoaded,buildingVisible:globe.buildings.tileset?.show,buildingBytes:globe.buildings.tileset?.totalMemoryUsageInBytes,loadedModels:[...globe.items.values()].filter(x=>x.model?.show).length},null,2);
+},1000);
+const visibility=()=>client.setPaused(document.hidden);document.addEventListener('visibilitychange',visibility);
+window.addEventListener('pagehide',()=>{clearInterval(interval);client.stop();globe.destroy();},{once:true});
+</script></html>

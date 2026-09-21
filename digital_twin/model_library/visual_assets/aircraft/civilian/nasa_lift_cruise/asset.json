@@ -1,0 +1,430 @@
+{
+  "schema_version": 1,
+  "asset_id": "nasa_lift_cruise",
+  "title": "NASA Lift+Cruise 6인승 기준기체",
+  "category": "aircraft/civilian",
+  "purpose": "visual_only",
+  "representation": "specific",
+  "aliases": [
+    "nasa_lift_cruise",
+    "liftpcruise"
+  ],
+  "source": {
+    "provider": "NASA",
+    "url": "https://www.nasa.gov/reference/uam-refs/",
+    "revision": "downloaded 2026-09-14",
+    "original_file": "liftpcruise.vsp3",
+    "note": "Six-passenger lift-plus-cruise reference vehicle: eight lifting rotors and a tail pusher propeller. Published as an OpenVSP parametric model, not as a mesh."
+  },
+  "rights": {
+    "label": "public domain (US Government work)",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "credit": "NASA",
+    "public_export": true,
+    "note": "Produced by the NASA Revolutionary Vertical Lift Technology project and the Aeronautics Systems Analysis Branch. NASA material is generally not subject to copyright and may be used. The NASA insignia and logos are not included here and are separately restricted. Nothing in this dashboard implies NASA endorsement of AeroDT. The airframe is a published concept for analysis, not a certified or manufactured aircraft."
+  },
+  "display": {
+    "reference_extent_m": 15.392162,
+    "extent": {
+      "x": 10.08471063821411,
+      "y": 4.278131018829346,
+      "z": 15.392161642456056
+    },
+    "cabin_m": {
+      "width": 1.875,
+      "length": 3.658,
+      "height": 1.886
+    },
+    "scale_basis": "Source feet converted once by the GLB root scale 0.3048. NASA reference convention, not certified physical measurements.",
+    "forward_axis": "+X",
+    "up_axis": "+Y",
+    "origin": "Visual footprint centre at ground level; not a mass-property or CG definition"
+  },
+  "geometry": {
+    "meshes": 40,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [],
+    "native_coordinates": "glTF metre scene, +X nose, +Y up; original feet mesh under the canonical root",
+    "physical_dimensions_verified": false
+  },
+  "conversion": {
+    "operation": "openvsp_geom_export",
+    "tool": "project_support/tools/visual_assets/openvsp_parts.py + openvsp_cabin.py",
+    "note": "Each OpenVSP Geom exported on its own and assembled into one glTF, so the rotors are separate nodes rather than welded into the airframe. Analysis surfaces (actuator disks, mass and CG markers) are not shape and were left out. The window band reuses the fuselage's own triangles and changes only their material: no vertex was moved, added or removed, so the outer shape is the shape NASA published. Cabin, seats and instrument panel are new geometry added inside.",
+    "repairs": [
+      "feet_to_meters_root",
+      "canonical_forward_axis",
+      "measured_rotor_shaft_basis",
+      "airframe_specific_tilt",
+      "nasa_reference_blue_pbr",
+      "cockpit_frame_conversion"
+    ],
+    "repair_tool": "project_support/tools/visual_assets/repair_nasa_assets.py"
+  },
+  "model": {
+    "path": "model.glb",
+    "bytes": 1394788,
+    "sha256": "b24f22f0b08e657413a3e12896a44ebedb6ddaf47b17fb0b12ad78d446a34277"
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser": "passed",
+    "browser_sha256": "b24f22f0b08e657413a3e12896a44ebedb6ddaf47b17fb0b12ad78d446a34277",
+    "browser_scope": "Manual Three.js exterior inspection of 9 models; Cesium 1.143 using production loadVisualModel and RotorSpin loaded 9 models with no missing rig nodes. Hover/cruise inspected for multi-tiltrotor, tiltduct and tiltwing. Not an actual flight mission or all-seat cockpit acceptance.",
+    "http_model_and_thumbnail_sha256": "passed",
+    "physical_dimensions_verified": false
+  },
+  "rotors": {
+    "axis": "y",
+    "turn_sign": "1 turns the way a right hand turns about +Y, counter-clock-wise from above.",
+    "direction_basis": "Inferred from the airframe, not declared by the source. OpenVSP records no rotation direction for these models, so each mirrored pair turns in opposite directions.",
+    "note": "Each rotor is re-based to its measured blade-plane normal with local +Y as its shaft. The rest geometry and hub are preserved.",
+    "nodes": [
+      {
+        "name": "AeroDT_Rotor_11",
+        "turn": 1,
+        "hub": [
+          3.3564086808929443,
+          2.089404,
+          -5.715
+        ],
+        "side": "left",
+        "blades": 2,
+        "declared_diameter": 3.048,
+        "measured_diameter": 3.1958462880000003,
+        "source_shaft_axis": [
+          6.125119255107889e-16,
+          0.9999999999999999,
+          -0.0
+        ],
+        "axis": "y"
+      },
+      {
+        "name": "AeroDT_Rotor_50",
+        "turn": 1,
+        "hub": [
+          -0.9504153191070555,
+          2.784348,
+          -5.715
+        ],
+        "side": "left",
+        "blades": 2,
+        "declared_diameter": 3.048,
+        "measured_diameter": 3.1958462880000003,
+        "source_shaft_axis": [
+          6.125119255107889e-16,
+          0.9999999999999999,
+          0.0
+        ],
+        "axis": "y"
+      },
+      {
+        "name": "AeroDT_Rotor_56",
+        "turn": 1,
+        "hub": [
+          3.490520680892945,
+          2.183892,
+          -2.4780240000000004
+        ],
+        "side": "left",
+        "blades": 2,
+        "declared_diameter": 3.048,
+        "measured_diameter": 3.1958462880000003,
+        "source_shaft_axis": [
+          -0.13917310115306042,
+          0.9902680687144468,
+          2.4727331293661337e-11
+        ],
+        "axis": "y"
+      },
+      {
+        "name": "AeroDT_Rotor_62",
+        "turn": 1,
+        "hub": [
+          -0.8163033191070559,
+          2.8727400000000003,
+          -2.57556
+        ],
+        "side": "left",
+        "blades": 2,
+        "declared_diameter": 3.048,
+        "measured_diameter": 3.1958462880000003,
+        "source_shaft_axis": [
+          -0.13917310115306042,
+          0.9902680687144468,
+          -2.4727331293661337e-11
+        ],
+        "axis": "y"
+      },
+      {
+        "name": "AeroDT_Rotor_68",
+        "turn": -1,
+        "hub": [
+          3.490520680892945,
+          2.183892,
+          2.57556
+        ],
+        "side": "right",
+        "blades": 2,
+        "declared_diameter": 3.048,
+        "measured_diameter": 3.1958462880000003,
+        "source_shaft_axis": [
+          0.13917310115306028,
+          0.9902680687144467,
+          2.472755333826626e-11
+        ],
+        "axis": "y"
+      },
+      {
+        "name": "AeroDT_Rotor_74",
+        "turn": -1,
+        "hub": [
+          -0.8163033191070557,
+          2.8727400000000003,
+          2.57556
+        ],
+        "side": "right",
+        "blades": 2,
+        "declared_diameter": 3.048,
+        "measured_diameter": 3.1958462880000003,
+        "source_shaft_axis": [
+          0.13917310115306028,
+          0.9902680687144467,
+          -2.472755333826626e-11
+        ],
+        "axis": "y"
+      },
+      {
+        "name": "AeroDT_Rotor_80",
+        "turn": -1,
+        "hub": [
+          3.356408680892945,
+          2.089404,
+          5.715
+        ],
+        "side": "right",
+        "blades": 2,
+        "declared_diameter": 3.048,
+        "measured_diameter": 3.1958462880000003,
+        "source_shaft_axis": [
+          6.125119255107889e-16,
+          0.9999999999999999,
+          0.0
+        ],
+        "axis": "y"
+      },
+      {
+        "name": "AeroDT_Rotor_86",
+        "turn": -1,
+        "hub": [
+          -0.9504153191070547,
+          2.784348,
+          5.715
+        ],
+        "side": "right",
+        "blades": 2,
+        "declared_diameter": 3.048,
+        "measured_diameter": 3.1958462880000003,
+        "source_shaft_axis": [
+          6.125119255107889e-16,
+          0.9999999999999999,
+          -0.0
+        ],
+        "axis": "y"
+      },
+      {
+        "name": "AeroDT_Rotor_92",
+        "turn": -1,
+        "hub": [
+          -4.833567319107056,
+          2.4124920000000003,
+          2.9597063729038545e-16
+        ],
+        "side": "centre",
+        "blades": 6,
+        "declared_diameter": 2.7432000000000003,
+        "measured_diameter": 2.854805568,
+        "source_shaft_axis": [
+          1.857564626846863e-18,
+          -1.0720551621857483e-11,
+          -1.0
+        ],
+        "axis": "y"
+      }
+    ]
+  },
+  "cockpit": {
+    "schema_version": 1,
+    "viewpoints": [
+      {
+        "id": "seat_01",
+        "label": "승객석 1",
+        "eye": [
+          2.6070274008929446,
+          2.19590112,
+          -0.32000952000000016
+        ],
+        "occupant_node": "Cabin_occupant_01"
+      },
+      {
+        "id": "seat_02",
+        "label": "승객석 2",
+        "eye": [
+          2.6070274008929446,
+          2.19590112,
+          0.3200095199999999
+        ],
+        "occupant_node": "Cabin_occupant_02"
+      },
+      {
+        "id": "seat_03",
+        "label": "승객석 3",
+        "eye": [
+          1.8670034808929448,
+          2.19590112,
+          -0.32000952000000016
+        ],
+        "occupant_node": "Cabin_occupant_03"
+      },
+      {
+        "id": "seat_04",
+        "label": "승객석 4",
+        "eye": [
+          1.8670034808929448,
+          2.19590112,
+          0.3200095199999999
+        ],
+        "occupant_node": "Cabin_occupant_04"
+      },
+      {
+        "id": "seat_05",
+        "label": "승객석 5",
+        "eye": [
+          1.1270100408929449,
+          2.19590112,
+          -0.3200095200000001
+        ],
+        "occupant_node": "Cabin_occupant_05"
+      },
+      {
+        "id": "seat_06",
+        "label": "승객석 6",
+        "eye": [
+          1.1270100408929449,
+          2.19590112,
+          0.32000952
+        ],
+        "occupant_node": "Cabin_occupant_06"
+      }
+    ],
+    "occupant_nodes": [
+      "Cabin_occupant_01",
+      "Cabin_occupant_02",
+      "Cabin_occupant_03",
+      "Cabin_occupant_04",
+      "Cabin_occupant_05",
+      "Cabin_occupant_06"
+    ],
+    "occupant_default_scale": 0.0001,
+    "eye": [
+      2.6070274008929446,
+      2.19590112,
+      -0.32000952000000016
+    ],
+    "forward": [
+      1.0,
+      0.0,
+      -6.123233995736766e-17
+    ],
+    "up": [
+      0.0,
+      1.0,
+      0.0
+    ],
+    "passenger_seats": 6,
+    "screens": [
+      {
+        "id": "pfd",
+        "center": [
+          3.246680680892945,
+          1.9158813600000002,
+          -0.23500080000000023
+        ],
+        "width": 0.20000976,
+        "height": 0.15998952000000002,
+        "right": [
+          6.123233995736766e-17,
+          0.0,
+          1.0
+        ],
+        "up": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "id": "nav",
+        "center": [
+          3.246680680892945,
+          1.9158813600000002,
+          -1.9880185518545472e-16
+        ],
+        "width": 0.20000976,
+        "height": 0.15998952000000002,
+        "right": [
+          6.123233995736766e-17,
+          0.0,
+          1.0
+        ],
+        "up": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "id": "system",
+        "center": [
+          3.246680680892945,
+          1.9158813600000002,
+          0.23500079999999982
+        ],
+        "width": 0.20000976,
+        "height": 0.15998952000000002,
+        "right": [
+          6.123233995736766e-17,
+          0.0,
+          1.0
+        ],
+        "up": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      }
+    ],
+    "seat_nodes": [
+      "Cabin_passenger_01",
+      "Cabin_passenger_02",
+      "Cabin_passenger_03",
+      "Cabin_passenger_04",
+      "Cabin_passenger_05",
+      "Cabin_passenger_06"
+    ],
+    "interior": "AeroDT_Cabin: illustrative geometry fitted to the measured fuselage envelope, not certified cabin dimensions",
+    "coordinate_frame": "gltf_model_meters"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 48969,
+    "sha256": "647eb3699e67be8b2c207c7a963653f1d7746e7d377258fdc43012e422671bbd",
+    "width": 760,
+    "height": 428,
+    "view": "Repaired model, manual browser studio render; no GLB loaded by the library shelf"
+  }
+}

@@ -1,0 +1,29 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>기체 표시 진단</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>body{margin:0;background:#132734;color:white;font:12px sans-serif}#view{height:75vh}pre{white-space:pre-wrap}</style><div id="view"></div><button id="select">첫 기체 추적</button><button id="connect">실시간 수신 검증 (조회 전용)</button><pre id="status">준비 중</pre>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+const {LiveGlobe}=await import('/visualization/globe.js');
+const {WorkerTrackingClient}=await import('/communication/worker_tracking_client.js?v=20260911-epoch');
+const C=Cesium,errors=[],g=new LiveGlobe(C,'view',{terrainEnabled:false,loadTrajectory:async()=>null,loadFlightTrack:async()=>null,onWarning:message=>errors.push(message)});
+window.addEventListener('error',e=>errors.push(e.message));g.setBuildingsEnabled(false);
+// Fixture mode works with navigation_performance_check.py. For live QA serve
+// this page from the app's own origin with ?live; never bypass its WS origin guard.
+const live=new URLSearchParams(location.search).has('live');
+const inputs=live?['/api/live/snapshot','/api/visual-assets']:['/bench/model_snapshot.json','/bench/model_assets.json'];
+const [snapshot,assets]=await Promise.all(inputs.map(url=>fetch(url).then(r=>r.json())));
+g.setAssets(assets);g.replace(snapshot);g.reset(true);
+let client,received=0,acceptedEpoch=null,acceptedTime=null;
+document.getElementById('connect').disabled=!live;
+document.getElementById('connect').title=live?'서버 상태 조회만 수행':'실시간 검증은 앱과 같은 origin에서 ?live로 실행';
+document.getElementById('connect').onclick=()=>{
+  client?.stop();received=0;
+  client=new WorkerTrackingClient({url:`${location.protocol==='https:'?'wss:':'ws:'}//${location.host}/ws/live`,onStatus:(status,message)=>{document.body.dataset.transportStatus=status+': '+message;},onSnapshot:s=>{received++;acceptedEpoch=s.epoch;acceptedTime=s.state_time;g.replace(s);}});
+  // Reproduce a preceding live clock one day later than the active simulation.
+  client.accept({...snapshot,epoch:Math.max(0,(snapshot.epoch??1)-1),state_time:snapshot.state_time+86400,entities:[]});
+  client.start();
+};
+document.getElementById('select').onclick=()=>{g.select(snapshot.entities[0].entity_id);g.focus(true);};
+const timer=setInterval(()=>{const e=g.entityScene,items=[...e.items.values()],first=items[0];document.getElementById('status').textContent=JSON.stringify({received,acceptedEpoch,acceptedTime,transport:client?.transportMode,stats:e.stats,models:e.modelStats(),layers:Object.fromEntries(Object.entries(e.layers).map(([k,l])=>[k,{visible:l.visible,models:l.models.show,points:l.points.show,labels:l.labels.show}])),first:first?{lod:first.lod,failed:first.failed,loading:first.loading,model:!!first.model,ready:first.model?.ready,position:first.position,projection:first.projection}:null,errors},null,2);},500);
+window.addEventListener('pagehide',()=>{clearInterval(timer);client?.stop();g.destroy();},{once:true});
+</script>

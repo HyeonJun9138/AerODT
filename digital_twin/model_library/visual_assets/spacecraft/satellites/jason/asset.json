@@ -1,0 +1,108 @@
+{
+  "title": "Jason 계열 해양고도계 위성",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Jason 1/Jason 1.glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "jason.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "jason",
+      "label": "Jason 계열 해양고도계 위성",
+      "exact": {
+        "norad": [
+          26997
+        ],
+        "names": [
+          "^JASON(-| )?1$"
+        ]
+      },
+      "series": {
+        "norad": [
+          33105,
+          41240
+        ],
+        "names": [
+          "^JASON"
+        ]
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 9.5,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 634.111306
+    }
+  ],
+  "display": {
+    "native_extent": 634.111306,
+    "reference_extent_m": 9.5,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 634.1113058971267
+  },
+  "conversion": {
+    "operation": "web_compatibility_repair",
+    "tool": "asset_library.py",
+    "source_sha256": "22139020d17a118aeedfa95b8295712b60f1ed992dcd6770b7a59bac57ea225b",
+    "removed_uris": [],
+    "changes": [
+      "mesh 2 primitive 0: no UV; copied base-colour material without ['baseColorTexture']"
+    ],
+    "note": "Vertex positions preserved. Missing texture/UV surfaces use base colours; undefined normals use a lighting fallback. Appearance is not guaranteed identical. mesh 2 primitive 0: no UV; copied base-colour material without ['baseColorTexture']"
+  },
+  "schema_version": 1,
+  "asset_id": "jason",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 592952,
+    "sha256": "11196765008ba79b4ed5f034a2858aae5d3c5615d6ad6f2ce20710e010ca263c"
+  },
+  "geometry": {
+    "meshes": 11,
+    "materials": 39,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 83260
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "11196765008ba79b4ed5f034a2858aae5d3c5615d6ad6f2ce20710e010ca263c"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 6711,
+    "sha256": "600b2d890271d16c3bc0d3f9d88b16457354a8834ae494b69b5220bb08b8b8d7"
+  }
+}

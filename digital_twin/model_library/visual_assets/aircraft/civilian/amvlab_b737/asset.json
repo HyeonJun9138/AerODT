@@ -1,0 +1,63 @@
+{
+  "title": "B737 (logo-free)",
+  "source": {
+    "provider": "amvlab",
+    "url": "https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/B737_nologo.glb",
+    "revision": "91d835e8e851b2317fe79af291c9fed6153fd525",
+    "original_file": "models/B737_nologo.glb"
+  },
+  "rights": {
+    "label": "CC-BY-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "credit": "amvlab / aircraft-models",
+    "public_export": true,
+    "note": "Retain attribution, license link and modification notice. No manufacturer endorsement or accuracy certification."
+  },
+  "representation": "type_visualization",
+  "aliases": [],
+  "display": {
+    "native_extent": null,
+    "reference_extent_m": null,
+    "scale_basis": "unverified; preview auto-fit only",
+    "forward_axis": "unverified",
+    "browser_measured_extent": 37.8717489343586
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "amvlab_b737",
+  "category": "aircraft/civilian",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 174108,
+    "sha256": "fa1f96261ac9e29d0c7c9ce239fde72f1109029527e1540794e237d581435d2d"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 1,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 2670
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 1,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "fa1f96261ac9e29d0c7c9ce239fde72f1109029527e1540794e237d581435d2d"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 7462,
+    "sha256": "3c7754224c2b240751ddbf6871e036ec14508274252a85ff29f976ddccc024aa"
+  }
+}

@@ -1,0 +1,517 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "id": "aircraft",
+      "label": "항공기",
+      "group": "asset_states",
+      "provider": "OpenSky Network",
+      "fields": [
+        {
+          "name": "enabled",
+          "kind": "toggle",
+          "label": "수집"
+        },
+        {
+          "name": "poll_seconds",
+          "kind": "number",
+          "label": "수신 주기",
+          "unit": "초",
+          "min": 30,
+          "max": 3600,
+          "step": 5
+        },
+        {
+          "name": "retention_seconds",
+          "kind": "number",
+          "label": "상태 보관",
+          "unit": "초",
+          "min": 60,
+          "max": 3600,
+          "step": 10
+        },
+        {
+          "name": "follow_view",
+          "kind": "toggle",
+          "label": "지도 화면 따라가기"
+        },
+        {
+          "name": "bounds",
+          "kind": "bounds",
+          "label": "수신 범위",
+          "span": {
+            "min": 0.05,
+            "max": 25.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "clouds",
+      "label": "구름 영상",
+      "group": "environment",
+      "provider": "NASA EOSDIS GIBS",
+      "fields": [
+        {
+          "name": "enabled",
+          "kind": "toggle",
+          "label": "표시"
+        },
+        {
+          "name": "product",
+          "kind": "choice",
+          "label": "자료",
+          "choices": [
+            {
+              "id": "himawari_infrared",
+              "label": "Himawari 적외 (동아시아 · 10분 · 주야)",
+              "note": "밤에도 구름이 보입니다. 위성이 보는 반구만 덮습니다."
+            },
+            {
+              "id": "himawari_visible",
+              "label": "Himawari 가시 (동아시아 · 10분 · 주간)",
+              "note": "낮에는 더 또렷하지만 해가 진 쪽은 보이지 않습니다."
+            },
+            {
+              "id": "modis",
+              "label": "MODIS 구름량 (전 지구 · 일별)",
+              "note": "극궤도 위성이 하루에 만든 전 지구 합성이라 실시간은 아닙니다."
+            }
+          ]
+        },
+        {
+          "name": "opacity",
+          "kind": "number",
+          "label": "진하기",
+          "unit": "0~1",
+          "min": 0.1,
+          "max": 1.0,
+          "step": 0.05
+        },
+        {
+          "name": "refresh_seconds",
+          "kind": "number",
+          "label": "갱신 주기",
+          "unit": "초",
+          "min": 300,
+          "max": 21600,
+          "step": 60
+        }
+      ]
+    },
+    {
+      "id": "uam",
+      "label": "UAM Physical 센서",
+      "group": "asset_states",
+      "provider": "외부 Physical 모사 API",
+      "fields": [
+        {
+          "name": "enabled",
+          "kind": "toggle",
+          "label": "실시간 UAM 센서 수신"
+        }
+      ]
+    },
+    {
+      "id": "state_estimation",
+      "label": "상태 추정",
+      "group": "ai_models",
+      "provider": "등속 외삽",
+      "fields": [
+        {
+          "name": "enabled",
+          "kind": "toggle",
+          "label": "상태 추정"
+        },
+        {
+          "name": "model",
+          "kind": "model",
+          "label": "추정 모델",
+          "job": "estimation"
+        }
+      ]
+    },
+    {
+      "id": "uam_prediction",
+      "label": "UAM 예측정보 생성",
+      "group": "ai_models",
+      "provider": "UAM 3개 모델 동시 비교",
+      "fields": [
+        {
+          "name": "enabled",
+          "kind": "toggle",
+          "label": "예측정보 표시"
+        },
+        {
+          "name": "model",
+          "kind": "model",
+          "label": "예측 모델",
+          "job": "uam_prediction"
+        },
+        {
+          "name": "short_enabled",
+          "kind": "toggle",
+          "label": "비교 표시: 단기 10초 (청록 실선)"
+        },
+        {
+          "name": "mid_enabled",
+          "kind": "toggle",
+          "label": "비교 표시: 중기 90초 (주황 파선)"
+        },
+        {
+          "name": "long_enabled",
+          "kind": "toggle",
+          "label": "비교 표시: 장기 240초 (보라 점선)"
+        },
+        {
+          "name": "seconds",
+          "kind": "number",
+          "label": "예상 구간",
+          "unit": "초",
+          "min": 10,
+          "max": 240,
+          "step": 10
+        }
+      ]
+    },
+    {
+      "id": "terrain",
+      "label": "지형",
+      "group": "display",
+      "provider": "Cesium World Terrain",
+      "fields": [
+        {
+          "name": "enabled",
+          "kind": "toggle",
+          "label": "표시"
+        },
+        {
+          "name": "provider",
+          "kind": "choice",
+          "label": "지형 자료",
+          "choices": [
+            {
+              "id": "world_terrain",
+              "label": "Cesium World Terrain",
+              "note": "기존 전 세계 지형"
+            },
+            {
+              "id": "local_dem",
+              "label": "로컬 DEM 우선 + 범위 밖 Cesium",
+              "note": "사용자 30m급 DEM. EGM96 높이 기준 가정으로 보정하며 범위 경계는 혼합합니다. 원자료 정확도 개선을 보장하지 않습니다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "buildings",
+      "label": "건물",
+      "group": "display",
+      "provider": "브이월드 건물 (국토교통부 · 국내)",
+      "fields": [
+        {
+          "name": "enabled",
+          "kind": "toggle",
+          "label": "표시"
+        },
+        {
+          "name": "provider",
+          "kind": "choice",
+          "label": "자료",
+          "choices": [
+            {
+              "id": "osm",
+              "label": "Cesium OSM Buildings (전 세계)",
+              "note": "OpenStreetMap 건물을 3D 타일로 받습니다. Cesium ion 인증이 필요합니다."
+            },
+            {
+              "id": "vworld",
+              "label": "브이월드 건물 (국토교통부 · 국내)",
+              "note": "건축물 도형과 층수·높이로 세웁니다. 브이월드 키가 필요하며 국내만 덮습니다."
+            },
+            {
+              "id": "vworld_3d",
+              "label": "브이월드 정밀 3D (실사 텍스처)",
+              "note": "외벽 사진이 있는 정밀 건물과 교량입니다. 사진 해상도와 표시 범위를 제한하며 지역별 구축 범위와 촬영 시점이 다릅니다."
+            },
+            {
+              "id": "vworld_hybrid",
+              "label": "브이월드 혼합 (가까이 실사 · 멀리 단순)",
+              "note": "가까운 곳은 공개 실사 3D로, 먼 곳과 실사 미구축 지역은 도형·높이 기반 단순 건물로 표시합니다. 단순 건물에는 브이월드 키가 필요합니다."
+            }
+          ]
+        },
+        {
+          "name": "quality",
+          "kind": "choice",
+          "label": "건물 상세도",
+          "choices": [
+            {
+              "id": "compact",
+              "label": "가볍게 (96 MB)",
+              "note": "표시 거리는 유지하고 원거리 상세도와 타일 캐시를 줄입니다."
+            },
+            {
+              "id": "balanced",
+              "label": "균형 (192 MB)",
+              "note": "가까운 건물은 선명하게, 먼 건물은 낮은 상세도로 표시합니다. 권장 설정입니다."
+            },
+            {
+              "id": "wide",
+              "label": "정밀 (256 MB)",
+              "note": "더 선명한 모델과 큰 타일 캐시를 사용합니다. 표시 거리는 따로 선택합니다."
+            }
+          ]
+        },
+        {
+          "name": "distance",
+          "kind": "choice",
+          "label": "건물 표시 거리",
+          "choices": [
+            {
+              "id": "auto",
+              "label": "자동 (높이·시야에 맞춤)",
+              "note": "확대하면 8 km, 축소하면 최대 40 km 반경으로 점진적으로 넓어집니다."
+            },
+            {
+              "id": "near",
+              "label": "주변 8 km",
+              "note": "화면이 향하는 지표 주변의 최대 반경입니다."
+            },
+            {
+              "id": "city",
+              "label": "도시 20 km",
+              "note": "도시 전체를 낮은 상세도와 거리 안개로 표시합니다."
+            },
+            {
+              "id": "metro",
+              "label": "광역 40 km",
+              "note": "넓은 시야용입니다. 먼 곳은 단순화하며 최초 로딩이 길어질 수 있습니다."
+            }
+          ]
+        },
+        {
+          "name": "opacity",
+          "kind": "number",
+          "label": "건물 진하기",
+          "unit": "0~1",
+          "min": 0.1,
+          "max": 1.0,
+          "step": 0.05
+        },
+        {
+          "name": "tint",
+          "kind": "choice",
+          "label": "건물 색조",
+          "choices": [
+            {
+              "id": "neutral",
+              "label": "중립 회색"
+            },
+            {
+              "id": "slate",
+              "label": "푸른 회색"
+            },
+            {
+              "id": "sand",
+              "label": "모래"
+            },
+            {
+              "id": "warm",
+              "label": "따뜻한 석재"
+            },
+            {
+              "id": "teal",
+              "label": "청록"
+            },
+            {
+              "id": "violet",
+              "label": "보라"
+            },
+            {
+              "id": "ink",
+              "label": "짙은 청색"
+            }
+          ]
+        },
+        {
+          "name": "brightness",
+          "kind": "number",
+          "label": "건물 밝기",
+          "unit": "0~1",
+          "min": 0.35,
+          "max": 1.6,
+          "step": 0.05
+        }
+      ]
+    },
+    {
+      "id": "imagery",
+      "label": "지도 영상",
+      "group": "display",
+      "provider": "브이월드 위성영상 (국내)",
+      "fields": [
+        {
+          "name": "provider",
+          "kind": "choice",
+          "label": "자료",
+          "choices": [
+            {
+              "id": "world_imagery",
+              "label": "Esri World Imagery (전 세계)",
+              "note": "지금까지의 위성 영상입니다."
+            },
+            {
+              "id": "vworld_satellite",
+              "label": "브이월드 위성영상 (국내)",
+              "note": "국내는 브이월드 항공·위성 영상, 밖은 World Imagery입니다."
+            },
+            {
+              "id": "vworld_hybrid",
+              "label": "브이월드 위성 + 지명 (국내)",
+              "note": "위성영상 위에 브이월드의 도로·지명을 겹칩니다."
+            },
+            {
+              "id": "vworld_base",
+              "label": "브이월드 일반지도 (국내)",
+              "note": "도로·지명 중심의 지도입니다."
+            },
+            {
+              "id": "vworld_midnight",
+              "label": "브이월드 야간지도 (국내)",
+              "note": "어두운 배경의 지도라 항로와 기체가 잘 보입니다."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "values": {
+    "aircraft": {
+      "enabled": true,
+      "poll_seconds": 45,
+      "retention_seconds": 300,
+      "follow_view": true,
+      "bounds": {
+        "lamin": 33.0,
+        "lamax": 38.6,
+        "lomin": 126.0,
+        "lomax": 130.0
+      }
+    },
+    "clouds": {
+      "enabled": false,
+      "product": "himawari_infrared",
+      "opacity": 0.9,
+      "refresh_seconds": 300
+    },
+    "uam": {
+      "enabled": true
+    },
+    "state_estimation": {
+      "enabled": true,
+      "model": "constant_velocity_v1"
+    },
+    "uam_prediction": {
+      "enabled": false,
+      "model": "uam_route_mlp_comparison",
+      "seconds": 60,
+      "short_enabled": true,
+      "mid_enabled": true,
+      "long_enabled": true
+    },
+    "terrain": {
+      "enabled": true,
+      "provider": "world_terrain"
+    },
+    "buildings": {
+      "enabled": true,
+      "provider": "vworld",
+      "quality": "compact",
+      "opacity": 0.25,
+      "distance": "auto",
+      "tint": "neutral",
+      "brightness": 1.6
+    },
+    "imagery": {
+      "provider": "vworld_satellite"
+    }
+  },
+  "groups": [
+    {
+      "id": "asset_states",
+      "kind": "sources",
+      "label": "자산 상태",
+      "section": "live"
+    },
+    {
+      "id": "environment",
+      "kind": "sources",
+      "label": "환경",
+      "section": "live"
+    },
+    {
+      "id": "ai_models",
+      "kind": "sources",
+      "label": "AI 모델 · 추정과 예측",
+      "section": "live"
+    },
+    {
+      "id": "display",
+      "kind": "sources",
+      "label": "지도 표시",
+      "section": "library"
+    }
+  ],
+  "state": [
+    {
+      "id": "terrain",
+      "status": "ready",
+      "message": "test source",
+      "updated_at": null
+    },
+    {
+      "id": "buildings",
+      "status": "ready",
+      "message": "test source",
+      "updated_at": null
+    },
+    {
+      "id": "imagery",
+      "status": "ready",
+      "message": "test source",
+      "updated_at": null
+    },
+    {
+      "id": "clouds",
+      "status": "ready",
+      "message": "test source",
+      "updated_at": null
+    },
+    {
+      "id": "uam",
+      "status": "ready",
+      "message": "test source",
+      "updated_at": null
+    },
+    {
+      "id": "aircraft",
+      "status": "ready",
+      "message": "test source",
+      "updated_at": null
+    },
+    {
+      "id": "state_estimation",
+      "status": "ready",
+      "message": "test source",
+      "updated_at": null
+    },
+    {
+      "id": "uam_prediction",
+      "status": "ready",
+      "message": "test source",
+      "updated_at": null
+    }
+  ]
+}

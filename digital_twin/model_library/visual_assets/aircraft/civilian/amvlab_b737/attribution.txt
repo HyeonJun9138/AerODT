@@ -1,0 +1,5 @@
+amvlab / aircraft-models
+https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/B737_nologo.glb
+https://creativecommons.org/licenses/by/4.0/
+Retain attribution, license link and modification notice. No manufacturer endorsement or accuracy certification.
+Changes: Original GLB bytes preserved.

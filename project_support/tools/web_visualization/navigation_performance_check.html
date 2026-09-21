@@ -1,0 +1,95 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>카메라 탐색 성능 검증</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>body{margin:0;font:12px sans-serif}#view{height:82vh}aside{padding:10px}pre{white-space:pre-wrap}</style>
+<a href="about:blank">검증 종료</a>
+<div id="view"></div><aside><button id="measure" disabled>CPU 비교 측정</button><button id="approach" disabled>선택 접근 확인</button><button id="satellite" disabled>위성 접근 확인</button><button id="uam" disabled>UAM 접근 확인</button><button id="orbit" disabled>추적 중 회전 확인</button><pre id="result">준비 중 — 고정 스냅샷과 항로, 지형/건물 제외</pre></aside>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+// The local QA server accepts a version prefix for a cold ES module graph.
+// Changing only the page URL does not invalidate browsers' nested imports.
+const {LiveGlobe}=await import('/nav5/visualization/globe.js');
+const {ModelPreview}=await import('/nav5/visualization/model_preview.js');
+const C=Cesium,g=new LiveGlobe(C,'view',{terrainEnabled:false,loadTrajectory:async()=>null,loadFlightTrack:async()=>null});
+g.setBuildingsEnabled(false);g.viewer.scene.globe.baseColor=C.Color.fromCssColorString('#294956');
+const [snapshot,assets,routes]=await Promise.all(['snapshot','assets','routes'].map(n=>fetch('/bench/'+n+'.json').then(r=>r.json())));
+g.setAssets(assets);for(const kind of ['aircraft','satellite','uam'])g.setEntityDisplay(kind,{all:true,models:false,labels:true});
+g.replace(snapshot);await g.showRoutes(routes);g.reset(true);
+const result=document.getElementById('result'),measure=document.getElementById('measure'),approach=document.getElementById('approach'),orbit=document.getElementById('orbit');
+const summary=a=>{a.sort((a,b)=>a-b);return {samples:a.length,mean:a.reduce((a,b)=>a+b,0)/a.length,p95:a[Math.ceil(a.length*.95)-1],max:a.at(-1)};};
+measure.disabled=approach.disabled=document.getElementById('satellite').disabled=document.getElementById('uam').disabled=false;
+measure.onclick=()=>{
+  const scale=[],lod=[];let restyles=0;const original=g.routeLayer.restyle.bind(g.routeLayer);
+  g.routeLayer.restyle=(...args)=>{restyles++;return original(...args);};
+  g.viewer.camera.setView({destination:C.Cartesian3.fromDegrees(127,37.55,500000)});
+  for(let i=0;i<150;i++){
+    let start=performance.now();g.routeLayer.setPixelScale(10+i*12);if(i>=20)scale.push(performance.now()-start);
+    start=performance.now();g.entityScene.updateLod(null,start,{moving:true});if(i>=20)lod.push(performance.now()-start);
+  }
+  g.routeLayer.restyle=original;
+  result.textContent=JSON.stringify({kind:'CPU component timings, NOT FPS',entities:snapshot.entities.length,routeEntities:g.routeLayer.owned.length,
+    scaleMs:summary(scale),lodMs:summary(lod),restyles},null,2);
+};
+let probe=null;
+const observe=()=>{
+ const now=performance.now();if(!probe)return;
+ const p=g.viewer.camera.positionWC;probe.finite&&=[p.x,p.y,p.z].every(Number.isFinite);
+ probe.frames++;probe.scales.add(g.viewer.resolutionScale);
+ if(probe.previous)probe.maxFrameGapMs=Math.max(probe.maxFrameGapMs,now-probe.previous);probe.previous=now;
+ const item=g.items.get(g.selected);
+ if(probe.kind==='orbit' && now-probe.started<1800){
+  const t=(now-probe.started)/1800;
+  g.viewer.camera.lookAt(item.position,new C.HeadingPitchRange(probe.heading+t*1.2,-.5,600));
+ }
+ if(g.renderBudget.moving)probe.motionDetected=true;
+ if(!g.approach&&g.tracking)probe.landed??=now;
+ const done=probe.kind==='orbit'?now-probe.started>3000:probe.landed&&now-probe.landed>1200;
+ if(done || now-probe.started>90000){
+  result.textContent=JSON.stringify({kind:probe.kind,frames:probe.frames,finite:probe.finite,
+   elapsedMs:now-probe.started,largestFrameGapMs:probe.maxFrameGapMs,
+   tracking:g.tracking,approaching:Boolean(g.approach),motionDetected:probe.motionDetected,timedOut:!done,visibility:document.visibilityState,
+   modelReady:item?.model?.ready===true,modelFailed:item?.failed??false,scales:[...probe.scales],restoredScale:g.viewer.resolutionScale,
+   note:'고정 스냅샷 + 실제 GLB / 지형·건물 제외. 전체 앱 FPS 측정 아님.'},null,2);
+  probe=null;orbit.disabled=!g.tracking;
+ }
+};
+const removeProbe=g.viewer.scene.postRender.addEventListener(observe);
+// Isolate the optional second WebGL canvas from the main-map rendering load.
+const previewButton=document.createElement('button');previewButton.textContent='미리보기 정지 렌더 확인';document.querySelector('aside').prepend(previewButton);
+const previewBox=document.createElement('div');previewBox.style.cssText='width:280px;height:180px';document.querySelector('aside').append(previewBox);
+let preview=null,previewTimer=null;
+previewButton.onclick=()=>{
+ probe=null;g.stopTracking();g.viewer.useDefaultRenderLoop=false;preview?.close();clearTimeout(previewTimer);
+ for(const button of [measure,approach,orbit,document.getElementById('satellite'),document.getElementById('uam')])button.disabled=true;
+ preview=new ModelPreview(C,previewBox,status=>{
+  result.textContent='미리보기: '+status;
+  if(status!=='ready')return;
+  let frames=0;const scene=preview.widget.scene,remove=scene.postRender.addEventListener(()=>frames++);
+  previewTimer=setTimeout(()=>{
+   const warmup=frames;
+   previewTimer=setTimeout(()=>{
+    const beforeInput=frames,idle=frames-warmup;preview.handleKey({key:'ArrowRight',preventDefault(){}});
+    previewTimer=setTimeout(()=>{result.textContent=JSON.stringify({kind:'preview demand rendering',ready:preview.ready,
+     requestRenderMode:scene.requestRenderMode,warmupFrames:warmup,idleFrames:idle,inputFrames:frames-beforeInput,
+     note:'첫 준비 1.5초 제외, 정지/입력 각각 1.2초. 전체 앱 FPS 아님.'},null,2);remove();},1200);
+   },1200);
+  },1500);
+ });
+ void preview.show(assets.assets.find(a=>a.asset_id===snapshot.entities.find(e=>e.kind==='aircraft').visual_asset_id));
+};
+const beginApproach=kind=>{g.reset(true);
+ if(kind==='uam'&&![...g.items.values()].some(i=>i.entity.kind==='uam')){
+  const position=C.Cartesian3.fromDegrees(126.978,37.55,1000),source=snapshot.entities.find(e=>e.kind==='aircraft');
+  g.replace({...snapshot,sequence:snapshot.sequence+1,entities:[...snapshot.entities,{...source,entity_id:'qa-uam',kind:'uam',name:'QA AirTaxi',
+   visual_asset_id:'projectairsim_airtaxi',position_ecef_m:[position.x,position.y,position.z],longitude_deg:126.978,latitude_deg:37.55,altitude_m:1000,velocity_ecef_mps:[0,0,0]}]});
+ }
+ const item=[...g.items.values()].find(i=>i.entity.kind===kind);
+ if(item){g.setEntityDisplay(item.entity.kind,{models:true});g.select(item.entity.entity_id,{focus:true});
+  probe={kind:kind+' approach',started:performance.now(),frames:0,scales:new Set(),finite:true,maxFrameGapMs:0};result.textContent='선택 기체 우선 준비 후 접근 중';}};
+approach.onclick=()=>beginApproach('aircraft');
+document.getElementById('satellite').onclick=()=>beginApproach('satellite');
+document.getElementById('uam').onclick=()=>beginApproach('uam');
+orbit.onclick=()=>{probe={kind:'orbit',started:performance.now(),heading:g.viewer.camera.heading,frames:0,scales:new Set(),finite:true,maxFrameGapMs:0};result.textContent='추적 대상 주위 회전 중';};
+window.addEventListener('pagehide',removeProbe,{once:true});
+window.addEventListener('pagehide',()=>{clearTimeout(previewTimer);preview?.close();},{once:true});
+window.addEventListener('pagehide',()=>g.destroy(),{once:true});
+</script></html>

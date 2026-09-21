@@ -1,8 +1,12 @@
 {
-  "cmake.buildDirectory": "${workspaceFolder}/build/${variant:platform}/${variant:buildType}",
-  "cmake.generator": "Ninja",
-  "python.formatting.provider": "black",
-  "python.analysis.extraPaths": [
-    "client/python/projectairsim/src"
-  ]
+  "files.exclude": {
+    "**/.codeboarding": true,
+    "**/.vscode": true,
+    "legacy": true,
+    "project_support/build": true,
+    "project_support/environment": true,
+    "project_support/reference/research": true,
+    "data/workspace/logs": true,
+    "**/__pycache__": true
+  }
 }

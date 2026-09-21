@@ -1,0 +1,25 @@
+<!doctype html><html><meta charset="utf-8"><title>AeroDT render benchmark</title><link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css"><style>html,body,#globe{margin:0;width:100%;height:100%;overflow:hidden}pre{position:absolute;top:5px;left:10px;max-width:650px;color:white;background:#091522d9;padding:8px;font-size:11px;white-space:pre-wrap}button{position:absolute;right:20px;top:20px}</style><div id="globe"></div><pre id="stats">loading</pre><button id="start">Run benchmark</button><script>window.CESIUM_BASE_URL='https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/';</script><script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script><script type="module">
+import {LiveGlobe} from '/visualization/globe.js';
+const stats=document.querySelector('#stats');
+const globe=new LiveGlobe(Cesium,'globe',{onWarning:s=>console.warn(s),terrainEnabled:false});globe.viewer.targetFrameRate=60;
+globe.setSunEnabled(false);globe.setBuildingsEnabled(false);
+const compressed=await fetch('/static/performance_snapshot.json.gz');
+const snapshot=await new Response(compressed.body.pipeThrough(new DecompressionStream('gzip'))).json();
+globe.setAssets(await (await fetch('/api/visual-assets')).json());await globe.imagery();globe.setPlaceNamesEnabled?.(false);
+let frames=[],cpu=[],lod=[],replace=[],last=0,measure=false;
+for(const [name,values] of [['updatePositions',cpu],['updateLod',lod]]){const original=globe.entityScene[name].bind(globe.entityScene);globe.entityScene[name]=(...args)=>{const t=performance.now(),result=original(...args);if(measure)values.push(performance.now()-t);return result;};}
+globe.viewer.scene.postRender.addEventListener(()=>{const t=performance.now();if(measure && last)frames.push(t-last);last=t;});
+function feed(){snapshot.sequence++;snapshot.state_time++;const t=performance.now();globe.replace(snapshot);if(measure)replace.push(performance.now()-t);}
+feed();setInterval(feed,1000);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function summary(values){if(!values.length)return {};const sorted=[...values].sort((a,b)=>a-b);return {n:values.length,mean:values.reduce((a,b)=>a+b,0)/values.length,p95:sorted[Math.ceil(values.length*.95)-1],max:sorted.at(-1)};}
+document.querySelector('#start').onclick=async()=>{
+ const out=[];
+ for(const [name,lon,lat,height] of [['global',127,26,23000000],['regional',127,37.5,500000],['city',-74.009,40.706,3000]]){
+  measure=false;globe.motion.cancel();globe.stopTracking();globe.viewer.camera.setView({destination:Cesium.Cartesian3.fromDegrees(lon,lat,height),orientation:{heading:0,pitch:-Math.PI/2,roll:0}});
+  stats.textContent='Warming '+name;await sleep(4500);frames.length=cpu.length=lod.length=replace.length=0;last=0;measure=true;stats.textContent='Measuring '+name;await sleep(14000);measure=false;
+  out.push({name,entities:snapshot.entities.length,frames:summary(frames),positionCpu:summary(cpu),lodCpu:summary(lod),replaceCpu:summary(replace),visible:[...globe.items.values()].filter(x=>x.point.show||x.model?.show).length,models:[...globe.items.values()].filter(x=>x.model?.show).length});
+ }
+ stats.textContent=JSON.stringify(out,null,2);document.title='Benchmark complete';
+};stats.textContent='Ready '+snapshot.entities.length+' fixed entities';
+</script></html>

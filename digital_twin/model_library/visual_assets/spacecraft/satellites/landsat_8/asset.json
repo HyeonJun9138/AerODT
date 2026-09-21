@@ -1,0 +1,101 @@
+{
+  "title": "Landsat 8",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Landsat 8/Landsat 8.glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "landsat_8.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "landsat_8",
+      "label": "Landsat 8",
+      "exact": {
+        "norad": [
+          39084
+        ],
+        "names": [
+          "^LANDSAT 8$"
+        ]
+      },
+      "series": {
+        "norad": [
+          49260
+        ],
+        "names": [
+          "^LANDSAT 9$"
+        ]
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 11,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 12.259474
+    }
+  ],
+  "display": {
+    "native_extent": 12.259474,
+    "reference_extent_m": 11,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 12.259473788765291
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "landsat_8",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 780280,
+    "sha256": "8b599e867be20589cd35e55ed1d46da104299b430b1827b548a25d3fad0a314d"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 33,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 85364
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "8b599e867be20589cd35e55ed1d46da104299b430b1827b548a25d3fad0a314d"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 9181,
+    "sha256": "6a993584743414a0d8feb5db17795e1c62b7ee8c5ce7d5000da25d9496fd6b29"
+  }
+}

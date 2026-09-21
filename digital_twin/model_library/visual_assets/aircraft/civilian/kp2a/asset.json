@@ -1,0 +1,449 @@
+{
+  "title": "KP-2A UAM airframe",
+  "source": {
+    "provider": "operator/DTAM project",
+    "url": "",
+    "revision": "local working copy, 2026-09-09",
+    "original_file": "Content/KP2A/KP2A_Blueprint.uasset, the blueprint that composes the vehicle from its fuselage, wing, booms, tilt rotors, gear and lights (UE 5.2 copy; the DTAMFramework copy is saved by UE 5.5)",
+    "note": "The operator's own airframe, exported from the blueprint they fly rather than from KP2StaticMesh. That static copy carries 101 placeholder Automotive Materials slots and renders blue, and the KP2A skeletal mesh on its own is only the control surfaces and gear."
+  },
+  "rights": {
+    "label": "operator-owned",
+    "url": "",
+    "credit": "AeroDT operator / DTAM project (materials carry KADA and VIBUM logos)",
+    "public_export": true,
+    "note": "Confirmed by the operator as their own asset on 2026-09-09, so AeroDT may publish it. Third-party marks inside the liveries (KADA, VIBUM) belong to their owners."
+  },
+  "representation": "specific",
+  "aliases": [
+    "kp2",
+    "kp2a"
+  ],
+  "display": {
+    "native_extent": 10.17715502,
+    "reference_extent_m": 10.18,
+    "scale_basis": "export bounding box 7.75 (X, longitudinal) x 4.12 (Y, vertical) x 10.18 (Z, span), treated as metres because the source is the operator's own model and the proportions match a UAM of this class; not checked against a drawing",
+    "forward_axis": "unverified (longitudinal axis is X; nose direction not established)",
+    "up_axis": "+Y",
+    "extent": {
+      "x": 7.747795284458045,
+      "y": 4.12299752,
+      "z": 10.17715502
+    },
+    "part_count": 1,
+    "browser_measured_extent": 10.17715502
+  },
+  "conversion": {
+    "operation": "unreal_gltf_export",
+    "tool": "project_support/tools/visual_assets/export_unreal_asset_gltf.py",
+    "note": "Unreal glTF exporter output, unmodified. Textures written as JPEG quality 85 by the exporter. Exported part by part from the blueprint, each mesh component replaced by an actor at the same world transform with the same material overrides, because exporting the blueprint actor itself writes the node tree without geometry. The body carries MI_CarPaint_White and the canopy MI_Glass_Windshield_Tinted, so the livery is the operator's own rather than a placeholder. Six internal battery components were left out: they are 85% of the source triangles and are never seen from outside. The remaining static meshes were reduced to 30% and exported from that level of detail; materials were baked to 512 px sets. Geometry was reduced to 30% of the source triangle count by the Unreal mesh reducer and exported from that level of detail. Repairs after export, none of which move a vertex: dropped 1 primitives that the reducer emptied; repaired 42 degenerate tangents; removed 4 unreferenced accessors and 4 buffer views.",
+    "material_slots": [
+      "AircraftLight_Green",
+      "AircraftLight_Red",
+      "AircraftLight_White",
+      "BasicShapeMaterial",
+      "MI_CarPaint_Blue",
+      "MI_CarPaint_KP2_Black_Inst",
+      "MI_CarPaint_Silver",
+      "MI_CarPaint_White",
+      "MI_Glass_Windshield_Tinted",
+      "MI_Metal_Frosted",
+      "MI_Metal_Painted",
+      "MI_Metal_Painted_Blue",
+      "MI_Metal_Painted_Red",
+      "MI_Metal_Steel",
+      "MI_Plastic_Clean",
+      "MI_Plastic_Rough",
+      "MI_Plastic_Satin",
+      "MI_Rubber_Rough"
+    ],
+    "repairs": [
+      "dropped 1 primitives that the reducer emptied",
+      "repaired 42 degenerate tangents",
+      "removed 4 unreferenced accessors and 4 buffer views"
+    ]
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 920,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "86ed3f279648204da03017b02f9907ec45f994052434b5ffe122f6b665814c90"
+  },
+  "schema_version": 1,
+  "asset_id": "kp2a",
+  "category": "aircraft/civilian",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 8343600,
+    "sha256": "86ed3f279648204da03017b02f9907ec45f994052434b5ffe122f6b665814c90"
+  },
+  "geometry": {
+    "meshes": 22,
+    "materials": 18,
+    "animations": 0,
+    "skins": 4,
+    "required_extensions": [],
+    "native_coordinates": "glTF right-handed +Y up; forward unverified (longitudinal axis is X; nose direction not established), up +Y (declared by the intake spec)",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 241974
+  },
+  "thumbnail": {
+    "path": "thumbnail_flight_8b67cfe01cdd.jpg",
+    "bytes": 40663,
+    "sha256": "8b67cfe01cdd7556c898569e7a9435a21f22a4d95474e0cb22b9b6d3889509ed",
+    "source_model_sha256": "0e5d6189d5dec545f16184941885e7d989173ff0472a8cc855d8b81d89e6fec4",
+    "variant": "flight",
+    "width": 960,
+    "height": 640,
+    "view": "neutral VTOL front three-quarter, model-specific framing, grey studio background"
+  },
+  "rotors": {
+    "note": "The four propellers of the operator's own airframe, named CW and CCW in the blueprint they were exported from. Each disc is thin along its own Y (propeller meshes about 2.10 x 0.30-0.61 x 2.19 m), so the spin is a rotation about that axis inside the node; the front pair's nodes carry a quarter turn of their own for the tilt, which applying the spin inside the node leaves untouched.",
+    "axis": "y",
+    "turn_sign": "1 turns the way a right hand turns about +Y, which reads counter-clock-wise from above; -1 is clock-wise.",
+    "nodes": [
+      {
+        "name": "AeroDTExport_kari_kp2a_23_KP2A_PublicParts_PropellerA_CW_L",
+        "turn": -1,
+        "declared": "clock-wise (named in the blueprint)"
+      },
+      {
+        "name": "AeroDTExport_kari_kp2a_24_KP2A_PublicParts_PropellerA_CCW_R",
+        "turn": 1,
+        "declared": "counter-clock-wise (named in the blueprint)"
+      },
+      {
+        "name": "AeroDTExport_kari_kp2a_25_KP2A_PublicParts_PropellerB_CCW_L",
+        "turn": 1,
+        "stop_at_tilt_deg": 85,
+        "declared": "counter-clock-wise (named in the blueprint)"
+      },
+      {
+        "name": "AeroDTExport_kari_kp2a_26_KP2A_PublicParts_PropellerB_CW_R",
+        "turn": -1,
+        "stop_at_tilt_deg": 85,
+        "declared": "clock-wise (named in the blueprint)"
+      }
+    ],
+    "tilt": {
+      "note": "Only the forward pair tilts. The blueprint this was exported from carries TiltServoMain and TiltServoSub bones for the CW_L and CCW_R rotors alone, with the TiltRotor and TiltRotorCover meshes beside them; the rear PropellerB rotors have no servo and stay lifting, which is how a KP-2A is arranged. The hinge is the airframe's lateral axis, which is glTF Z, turning negatively so the discs face the nose.",
+      "axis": "z",
+      "sign": -1,
+      "frame": "parent",
+      "zero": "0 is rotors up; 90 is fully forward.",
+      "range_deg": [
+        0,
+        90
+      ],
+      "nodes": [
+        "AeroDTExport_kari_kp2a_01_KP2A_TiltRotor_L",
+        "AeroDTExport_kari_kp2a_02_KP2A_TiltRotor_R",
+        "AeroDTExport_kari_kp2a_09_KP2A_Parts_KP2A_TiltRotorCover_R",
+        "AeroDTExport_kari_kp2a_10_KP2A_Parts_KP2A_TiltRotorCover_L",
+        "AeroDTExport_kari_kp2a_23_KP2A_PublicParts_PropellerA_CW_L",
+        "AeroDTExport_kari_kp2a_24_KP2A_PublicParts_PropellerA_CCW_R"
+      ]
+    }
+  },
+  "flight_visual": {
+    "path": "cabin_section_fitted_model.glb",
+    "sha256": "7c4a762bc6ccfd6994080481d84549a7ded057b29811d7d3671291800cc4dd66",
+    "source_sha256": "86ed3f279648204da03017b02f9907ec45f994052434b5ffe122f6b665814c90",
+    "rotors": {
+      "axis": "y",
+      "nodes": [
+        {
+          "name": "AeroDTExport_kari_kp2a_23_KP2A_PublicParts_PropellerA_CW_L",
+          "turn": -1,
+          "declared": "clock-wise (named in the blueprint)"
+        },
+        {
+          "name": "AeroDTExport_kari_kp2a_24_KP2A_PublicParts_PropellerA_CCW_R",
+          "turn": 1,
+          "declared": "counter-clock-wise (named in the blueprint)"
+        },
+        {
+          "name": "AeroDTExport_kari_kp2a_25_KP2A_PublicParts_PropellerB_CCW_L",
+          "turn": 1,
+          "stop_at_tilt_deg": 85,
+          "declared": "counter-clock-wise (named in the blueprint)"
+        },
+        {
+          "name": "AeroDTExport_kari_kp2a_26_KP2A_PublicParts_PropellerB_CW_R",
+          "turn": -1,
+          "stop_at_tilt_deg": 85,
+          "declared": "clock-wise (named in the blueprint)"
+        }
+      ],
+      "tilt": {
+        "axis": "z",
+        "sign": -1,
+        "frame": "parent",
+        "nodes": [
+          {
+            "name": "KP2_front_L",
+            "axis": "z",
+            "sign": -1,
+            "offset_deg": 90
+          },
+          {
+            "name": "KP2_front_R",
+            "axis": "z",
+            "sign": -1,
+            "offset_deg": 90
+          }
+        ]
+      },
+      "control_surfaces": {
+        "source": "native_actuator_with_visual_yaw",
+        "nodes": [
+          {
+            "name": "KP2_control_surface_0",
+            "axis": [
+              0.1761444686460227,
+              -0.0070757247100724395,
+              0.9843388950383081
+            ],
+            "mix": {
+              "roll": 1
+            },
+            "limit_deg": 20,
+            "geometry_basis": "Inspected livery/panel edges and trailing-edge geometry; fitted visual hinge, not manufacturer data"
+          },
+          {
+            "name": "KP2_control_surface_1",
+            "axis": [
+              -0.38290201246172756,
+              0.7077444094131488,
+              0.5937035453803452
+            ],
+            "mix": {
+              "pitch": -1,
+              "yaw": 0.7
+            },
+            "limit_deg": 20,
+            "geometry_basis": "Inspected livery/panel edges and trailing-edge geometry; fitted visual hinge, not manufacturer data"
+          },
+          {
+            "name": "KP2_control_surface_2",
+            "axis": [
+              0.382901970292764,
+              -0.7077443419097267,
+              0.59370365304644
+            ],
+            "mix": {
+              "pitch": -1,
+              "yaw": -0.7
+            },
+            "limit_deg": 20,
+            "geometry_basis": "Inspected livery/panel edges and trailing-edge geometry; fitted visual hinge, not manufacturer data"
+          },
+          {
+            "name": "KP2_control_surface_3",
+            "axis": [
+              -0.1761443122148748,
+              0.007075723940948361,
+              0.9843389230367048
+            ],
+            "mix": {
+              "roll": -1
+            },
+            "limit_deg": 20,
+            "geometry_basis": "Inspected livery/panel edges and trailing-edge geometry; fitted visual hinge, not manufacturer data"
+          }
+        ],
+        "telemetry": "control_surface_deg: left/right aileron and elevator runtime angles; yaw is visual demand, not a measured rudder actuator. Older samples use attitude proxy."
+      }
+    },
+    "note": "Front assemblies authored horizontal: +90 deg at VTOL, 0 deg at cruise. Pivot from source TiltServoMain; AirTaxi-matched display extent. Rear rotors remain vertical. Original KADA/VIBUM PNGs retained; enlarged side marks below canopy and two horizontal top rows use the user display layout. Cabin and KP2-reference glazing: build_uam_cabins.py; exterior vertex positions and rig nodes retained. Clear cockpit glazing: clear_uam_glazing.py; pale cool tint, alpha 0.12, nonmetal. Rounded cabin supports; optional seated illustration and passenger viewpoints. Exterior and rig retained.",
+    "purpose": "AirTaxi dynamics visual substitute; not manufacturer simulation",
+    "validation": "gltf-passed",
+    "display_extent_m": 13.2,
+    "bytes": 7689976,
+    "measured_extent_m": 7.351877379,
+    "seats": 6,
+    "size_basis": "6인승 운항용 대표 크기: 길이 10.049 m, 높이 5.348 m, 스팬 13.2 m. GLB 실측 최대 변 7.351877379 m에 균일 배율 1.795460 적용. 단일/수동/다중/Physical 화면 공통. 제조사 확정 제원이나 실기체 좌석 배치를 뜻하지 않는다. 탑승객 키 1.65~1.85 m를 기준으로 비교; 카메라 거리에 따라 기체를 확대하지 않는다.",
+    "control_surface_geometry": "20260917 recut: fixed supports, narrow hinge rails, swept/dihedral axes; existing cabin retained",
+    "cabin_envelope_fit": "20260917-v2: inset local transverse sections from indexed shell triangles; static interior only; original inner plastic liner inset to resolve exterior intersections"
+  },
+  "cockpit": {
+    "schema_version": 1,
+    "viewpoints": [
+      {
+        "id": "seat_01",
+        "label": "승객석 1",
+        "eye": [
+          1.1692,
+          1.0844,
+          -0.24840000000000004
+        ],
+        "occupant_node": "Cabin_occupant_01"
+      },
+      {
+        "id": "seat_02",
+        "label": "승객석 2",
+        "eye": [
+          1.1692,
+          1.0844,
+          0.24840000000000004
+        ],
+        "occupant_node": "Cabin_occupant_02"
+      },
+      {
+        "id": "seat_03",
+        "label": "승객석 3",
+        "eye": [
+          0.5892,
+          1.0844,
+          -0.24840000000000004
+        ],
+        "occupant_node": "Cabin_occupant_03"
+      },
+      {
+        "id": "seat_04",
+        "label": "승객석 4",
+        "eye": [
+          0.5892,
+          1.0844,
+          0.24840000000000004
+        ],
+        "occupant_node": "Cabin_occupant_04"
+      },
+      {
+        "id": "seat_05",
+        "label": "승객석 5",
+        "eye": [
+          0.009199999999999998,
+          1.0844,
+          -0.24840000000000004
+        ],
+        "occupant_node": "Cabin_occupant_05"
+      },
+      {
+        "id": "seat_06",
+        "label": "승객석 6",
+        "eye": [
+          0.009199999999999998,
+          1.0844,
+          0.24840000000000004
+        ],
+        "occupant_node": "Cabin_occupant_06"
+      }
+    ],
+    "occupant_nodes": [
+      "Cabin_occupant_01",
+      "Cabin_occupant_02",
+      "Cabin_occupant_03",
+      "Cabin_occupant_04",
+      "Cabin_occupant_05",
+      "Cabin_occupant_06"
+    ],
+    "occupant_default_scale": 0.0001,
+    "eye": [
+      1.8,
+      1.14,
+      0
+    ],
+    "forward": [
+      1,
+      0,
+      0
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ],
+    "passenger_seats": 6,
+    "screens": [
+      {
+        "id": "pfd",
+        "center": [
+          2.3012000000000006,
+          0.9319999999999999,
+          -0.20700000000000002
+        ],
+        "width": 0.18400000000000002,
+        "height": 0.14400000000000002,
+        "right": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "id": "nav",
+        "center": [
+          2.3012000000000006,
+          0.9319999999999999,
+          0
+        ],
+        "width": 0.18400000000000002,
+        "height": 0.14400000000000002,
+        "right": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "id": "system",
+        "center": [
+          2.3012000000000006,
+          0.9319999999999999,
+          0.20700000000000002
+        ],
+        "width": 0.18400000000000002,
+        "height": 0.14400000000000002,
+        "right": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ]
+      }
+    ],
+    "interior": "flight_model.glb: AeroDT_Cabin; illustrative geometry fitted to glazing envelope, not certified dimensions",
+    "coordinate_frame": "flight_glb_scene_before_display_scale",
+    "seat_nodes": [
+      "Cabin_passenger_01",
+      "Cabin_passenger_02",
+      "Cabin_passenger_03",
+      "Cabin_passenger_04",
+      "Cabin_passenger_05",
+      "Cabin_passenger_06"
+    ],
+    "interior_refinement": "premium_cabin_20260917; contoured seats, matte trim, shallow bins, emissive light strips; display-only",
+    "ground_door": {
+      "nodes": {
+        "right": "Ground_door_left",
+        "left": "Ground_door_right"
+      },
+      "nodes_note": "The glTF node names are inverted against the airframe: every node the original author named L sits at negative z and every R at positive z (the position lights settle it), while build_ground_doors.py named the negative-z hatch \"right\". These keys are the side of the aircraft, so they are mapped across the names rather than to them. Rebuilding with the corrected tool names the nodes properly and this mapping becomes name-for-name.",
+      "forward_m": 0.7361385019095813,
+      "right_m": 1.1123152022687055,
+      "height_m": 1.0054574660228428,
+      "open_deg": 78,
+      "purpose": "illustrative side hatch; not certified geometry"
+    }
+  }
+}

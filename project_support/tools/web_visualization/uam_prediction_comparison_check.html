@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UAM 예측 비교 표시 검증</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>
+*{box-sizing:border-box}body{margin:0;font:14px system-ui;color:#ecf5fa;background:#0e1b29}#globe{position:fixed;inset:0}
+#panel{position:absolute;top:14px;left:14px;width:min(430px,calc(100% - 28px));max-height:calc(100% - 28px);overflow:auto;background:#0b1925ed;padding:18px;border:1px solid #718b9c65;border-radius:12px}
+h1{font-size:18px;margin:0 0 10px}p{font-size:12px;line-height:1.6;color:#c8d7e1}button{font:inherit;background:#254458;color:#eefaff;border:1px solid #6496b0;border-radius:5px;padding:6px 9px;cursor:pointer}.buttons{display:flex;gap:6px;flex-wrap:wrap}
+.checks{display:flex;gap:14px;margin:14px 0}label{display:flex;gap:5px;align-items:center}input{accent-color:#7dd3fc}table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:7px 3px;text-align:left;border-bottom:1px solid #68819245}#note{overflow-wrap:anywhere}#error{white-space:pre-wrap;color:#ffada6}
+.cesium-viewer-bottom{right:10px;left:auto}#snapshot{white-space:pre-wrap;font-size:11px;color:#b9d4e1}
+</style></head><body><div id="globe"></div><section id="panel">
+<h1>UAM 단기 / 중기 / 장기 표시 확인</h1>
+<p>이 화면은 <b>합성 QA 데이터</b>입니다. 실제 모델 추론이나 정확도 검증이 아닙니다. 운항 상태, 공유 설정과 기존 사용자 탭을 변경하지 않습니다.</p>
+<div class="buttons"><button id="ready">세 모델 준비 완료</button><button id="partial">단기만 준비</button><button id="warmup">모두 이력 준비 중</button><button id="invalid">중기 좌표 오류</button><button id="epoch">재생 epoch 전환</button><button id="move">기체만 이동</button></div>
+<div class="checks"><label style="color:#2dd4bf"><input id="short_enabled" type="checkbox" checked>단기 실선</label><label style="color:#fb923c"><input id="mid_enabled" type="checkbox" checked>중기 파선</label><label style="color:#c084fc"><input id="long_enabled" type="checkbox" checked>장기 점선</label></div>
+<button id="actual">실제 모델 계산값 (간이 임무 입력)</button>
+<table><thead><tr><th>모델</th><th>현재 상태</th></tr></thead><tbody id="legend"></tbody></table><p id="note"></p><pre id="snapshot"></pre><pre id="error"></pre></section>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {TrajectoryLayer} from '/visualization/trajectory_layer.js';
+import {describeTrajectory} from '/static/entity_details.js';
+const C=globalThis.Cesium,$=id=>document.getElementById(id),time=Date.UTC(2026,8,11)/1000;
+const viewer=new C.Viewer('globe',{baseLayer:false,baseLayerPicker:false,geocoder:false,homeButton:false,
+  sceneModePicker:true,selectionIndicator:false,infoBox:false,timeline:false,animation:false,navigationHelpButton:false,
+  terrainProvider:new C.EllipsoidTerrainProvider(),skyBox:false,skyAtmosphere:false});
+viewer.scene.globe.baseColor=C.Color.fromCssColorString('#233f53');
+viewer.scene.globe.enableLighting=false;viewer.scene.backgroundColor=C.Color.fromCssColorString('#07121e');
+const origin=C.Cartesian3.fromDegrees(126.94,37.5,600),at={time,epoch:1,continuity_id:1,phase:'cruise',position:[origin.x,origin.y,origin.z]};
+const aircraft=viewer.entities.add({position:origin,point:{pixelSize:11,color:C.Color.WHITE,outlineColor:C.Color.BLACK,outlineWidth:2},
+  label:{text:'QA UAM',font:'14px sans-serif',pixelOffset:new C.Cartesian2(-40,-20)}});
+function fixture(mode='ready') {
+  const context={entity_id:'qa:u',epoch:at.epoch,continuity_id:at.continuity_id,flight_phase:at.phase};
+  return {kind:'uam_prediction_comparison',schema_version:2,...context,name:'QA UAM',generated_at:time,
+    input_quality:'합성 입력이며 실제 추론이 아닙니다. 화면의 세 구간과 토글, 정리 및 원래 좌표 유지만 확인합니다.',
+    predictions:[['short',10,'#2dd4bf'],['mid',90,'#fb923c'],['long',240,'#c084fc']].map(([key,seconds,color],i)=>{
+      const warming=mode==='warmup'||(mode==='partial'&&i>0);
+      const points=Array.from({length:26},(_,n)=>{
+        const u=n/25,lon=126.94+seconds*.000075*u,lat=37.5+(i===0?0:(i===1?.004:-.006))*Math.sin(u*Math.PI*.8);
+        const p=C.Cartesian3.fromDegrees(lon,lat,600+50*i*u*u);return [time+seconds*u,p.x,p.y,p.z];
+      });
+      if(mode==='invalid'&&i===1)points[8][1]=NaN;
+      return {model_id:`uam_route_mlp_${key}`,label:['단기','중기','장기'][i],horizon_seconds:seconds,color,
+        status:warming?'warming_up':'ready',reason:warming?'실제 수신 이력이 아직 부족합니다.':null,
+        history_seconds:i?28.8:9.6,available_history_seconds:warming?4:30,
+        path:warming?null:{kind:'aircraft',...context,generated_at:time,reference_frame:'ecef_m',points,
+          summary:{seconds,model:`uam_route_mlp_${key}`}}};
+    })};
+}
+let mode='ready',actualResponse=null;const errors=[];
+const layer=new TrajectoryLayer(C,viewer,{load:async()=>actualResponse??fixture(mode),supports:e=>e?.kind==='uam',anchor:()=>at,
+  onSummary:path=>{
+    const view=describeTrajectory(path);$('legend').replaceChildren();$('note').textContent=view?.note??'표시 경로 없음';
+    for(const field of view?.fields??[]){const row=document.createElement('tr'),label=document.createElement('td'),value=document.createElement('td');
+      label.textContent=field.label;label.style.color=field.color??'';value.textContent=field.value;row.append(label,value);$('legend').append(row);}
+  },onWarning:message=>{$('error').textContent=message;}});
+const snapshot=()=>({mode,epoch:at.epoch,primitiveCount:layer.polylines.length,
+  predictions:layer.path?.predictions.map(p=>({id:p.model_id,status:p.status,visible:p.visible,expired:p.expired})),
+  paths:[...layer.comparison.records].map(([id,p])=>({id,visible:p.current[1].show,first:p.current[1].positions[0],
+    last:p.current[1].positions.at(-1),label:p.label.text,labelVisible:p.label.show,color:p.current[1].material.uniforms.color})),errors});
+async function show(next){mode=next;actualResponse=null;at.time=time;at.epoch=1;at.phase='cruise';at.continuity_id=1;await layer.show({entity_id:'qa:u',kind:'uam'});viewer.scene.requestRender();}
+for(const key of ['ready','partial','warmup','invalid'])$(key).onclick=()=>void show(key);
+$('epoch').onclick=()=>{at.epoch++;layer.follow();viewer.scene.requestRender();};
+$('move').onclick=()=>{const p=C.Cartesian3.fromDegrees(126.934,37.502,600);aircraft.position=p;at.position=[p.x,p.y,p.z];layer.follow();viewer.scene.requestRender();};
+$('actual').onclick=async()=>{
+  try {
+    const response=await fetch('/static/uam_prediction_comparison_actual.json');if(!response.ok)throw new Error('verify_uam_prediction_integration.py 출력 JSON을 static QA 경로에 준비하세요.');
+    actualResponse=await response.json();mode='actual';
+    Object.assign(at,{time:actualResponse.generated_at,epoch:actualResponse.epoch,continuity_id:actualResponse.continuity_id,phase:actualResponse.flight_phase});
+    const points=actualResponse.predictions.flatMap(p=>p.path?.points??[]).map(p=>C.Cartesian3.fromArray(p.slice(1)));
+    aircraft.position=points[0];at.position=[points[0].x,points[0].y,points[0].z];
+    await layer.show({entity_id:actualResponse.entity_id,kind:'uam'});
+    viewer.camera.flyToBoundingSphere(C.BoundingSphere.fromPoints(points),{duration:0,offset:new C.HeadingPitchRange(0,-Math.PI/2,Math.max(2000,C.BoundingSphere.fromPoints(points).radius*3))});
+    viewer.scene.requestRender();
+  } catch(error){$('error').textContent=String(error);errors.push(String(error));}
+};
+for(const key of ['short_enabled','mid_enabled','long_enabled'])$(key).onchange=()=>{
+  layer.setComparisonVisibility({model:'uam_route_mlp_comparison',short_enabled:$('short_enabled').checked,
+    mid_enabled:$('mid_enabled').checked,long_enabled:$('long_enabled').checked});viewer.scene.requestRender();};
+viewer.scene.preRender.addEventListener(()=>{layer.follow();$('snapshot').textContent=JSON.stringify({epoch:at.epoch,
+  visiblePaths:[...layer.comparison.records.values()].filter(p=>p.current[1].show).length,
+  visibleLabels:[...layer.comparison.records.values()].filter(p=>p.label.show).length,primitiveCount:layer.polylines.length},null,2);});
+viewer.scene.renderError.addEventListener((_scene,error)=>{errors.push(String(error));$('error').textContent=String(error);});
+window.addEventListener('error',event=>errors.push(event.message));
+viewer.camera.setView({destination:C.Cartesian3.fromDegrees(126.945,37.5,4100),orientation:{heading:0,pitch:-Math.PI/2,roll:0}});
+globalThis.uamComparisonQa={viewer,layer,at,fixture,show,snapshot};await show('ready');
+window.addEventListener('pagehide',()=>{layer.destroy();viewer.destroy();},{once:true});
+</script></body></html>

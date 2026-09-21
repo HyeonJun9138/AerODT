@@ -1,0 +1,49 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AeroDT 하단 비행 컨트롤 QA</title><link rel="stylesheet" href="/app/styles.css">
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>
+#view{position:fixed;inset:0}#qa-toolbar{position:fixed;z-index:9;top:14px;right:20px;padding:10px;background:#17313be8;border-radius:9px;max-width:calc(100% - 40px)}
+#qa-toolbar button{margin:2px}#qa-report{font:11px monospace;color:#cee5eb;white-space:pre-wrap;margin:6px 0 0}
+#fixture-editor{position:fixed;top:0;bottom:0;left:76px;width:330px;background:#455965ed;padding:16px;overflow:auto;font-size:12px}
+.qa-narrow .flight-console{left:auto;right:20px;width:560px}.qa-small .flight-console{left:auto;right:20px;width:340px}
+</style></head><body data-drawer="open"><div id="view"></div><aside id="fixture-editor"><h2>비행 계획</h2><div id="panel"></div></aside>
+<div id="qa-toolbar"><b>기록 재생 / 독립 검증</b>
+<button id="qa-editor">계획 창 닫기</button><button id="qa-wide">기본 폭</button><button id="qa-narrow">560px</button><button id="qa-small">340px</button>
+<div><label>검증 시각(초) <input id="qa-time" type="number" min="0" step="0.1" value="0" style="width:85px"></label>
+<label>거리(m) <input id="qa-distance" type="number" min="10" value="250" style="width:65px"></label><button id="qa-seek">기록 위치 확인</button></div>
+<pre id="qa-report">준비 중</pre></div>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {PlanPanel} from '/app/plan_panel.js';
+import {readRun,resolvePlan} from '/app/flight_plan.js';
+import {FlightLayer} from '/visualization/flight_layer.js';
+import {LiveGlobe} from '/visualization/globe.js';
+const C=Cesium,viewer=new C.Viewer('view',{baseLayer:false,animation:false,timeline:false,baseLayerPicker:false,
+  geocoder:false,homeButton:false,sceneModePicker:false,navigationHelpButton:false,selectionIndicator:false,infoBox:false});
+try{viewer.imageryLayers.addImageryProvider(await C.ArcGisMapServerImageryProvider.fromUrl('https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'));}catch{}
+const data=await fetch('/fixture').then(r=>r.json()),report=document.querySelector('#qa-report');
+const layer=new FlightLayer(C,viewer,{assets:id=>data.assets.find(a=>a.asset_id===id)});
+const cameraHost={C,viewer,scratch:new C.Cartesian3(),flightAnchor:null};
+let lastSample=null;
+function stateReport(){report.textContent=JSON.stringify({time_s:lastSample?.time_s??null,stage:lastSample?.stage??null,
+  map_altitude_m:lastSample?.position.altitude_m??null,map_speed_kph:lastSample?lastSample.speed_mps*3.6:null,
+  heading_deg:lastSample?.heading_deg??null,tilt_deg:lastSample?.tilt_deg??null,
+  camera_attached:!C.Matrix4.equals(viewer.camera.transform,C.Matrix4.IDENTITY),flight_entities:layer.owned.length},null,1);}
+function follow(s){if(s)LiveGlobe.prototype.followFlight.call(cameraHost,s);else LiveGlobe.prototype.releaseFlight.call(cameraHost);stateReport();}
+function focus(s){if(s)viewer.camera.lookAt(C.Cartesian3.fromDegrees(s.position.longitude,s.position.latitude,s.position.altitude_m),new C.HeadingPitchRange(.8,-.35,Math.max(10,Number(document.querySelector('#qa-distance').value)||250)));}
+// ?actions exercises real UI handlers using a read-only recorded response,
+// not another physics run or any production plan/history writes.
+const panel=new PlanPanel({api:{options:async()=>data.options,
+  prepare:async()=>({plan_id:'qa-recorded-plan',plan:data.plan}),fly:async()=>data},groundHeights:async p=>p.map(()=>0),deckTop:()=>20,
+  onPlan:p=>{layer.show(p);stateReport();},onSample:s=>{lastSample=s;layer.moveTo(s);stateReport();},onFocus:focus,onFollow:follow});
+await panel.render(document.querySelector('#panel'));
+if(!new URLSearchParams(location.search).has('actions')){
+panel.plan=await resolvePlan(data.plan,{groundHeights:async p=>p.map(()=>0),deckTop:()=>20});
+panel.run=data.run;panel.recorded=readRun(panel.plan,data.states);panel.onPlan(panel.plan);panel.drawMonitor();
+panel.seek(panel.plan.legs.find(l=>l.stage==='cruise').start_s+30);focus(panel.emit());
+}else{document.querySelector('#qa-toolbar b').textContent='버튼 검증 / 저장·실행은 기존 기록 읽기';stateReport();}
+document.querySelector('#qa-seek').onclick=()=>{panel.seek(Number(document.querySelector('#qa-time').value)||0);focus(panel.emit());};
+let opened=true;document.querySelector('#qa-editor').onclick=async()=>{opened=!opened;document.querySelector('#fixture-editor').hidden=!opened;document.body.dataset.drawer=opened?'open':'closed';document.querySelector('#qa-editor').textContent=opened?'계획 창 닫기':'계획 창 열기';if(opened)await panel.render(document.querySelector('#panel'));else panel.deactivate();};
+for(const name of ['wide','narrow','small'])document.querySelector('#qa-'+name).onclick=()=>{document.body.className=name==='wide'?'':'qa-'+name;};
+window.addEventListener('pagehide',()=>{panel.destroy();layer.destroy();viewer.destroy();},{once:true});
+</script></body></html>

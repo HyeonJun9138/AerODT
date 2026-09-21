@@ -1,0 +1,16 @@
+/* Browser text stays native and is never transformed with the WebGL buffer. */
+.display-calibration{margin:6px 0 12px;padding:8px 10px;background:#24333c70;border:1px solid #a9c0cf35;border-radius:10px}
+.display-profile{display:block;white-space:pre-line;margin:4px 0 9px;color:#d8e8ef;font-size:11px;line-height:1.65;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.display-calibration-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#b7cdd7;font-size:10px}
+.display-calibration-foot button{min-height:28px;padding:0 9px;font-size:11px;white-space:nowrap}
+.display-calibration-foot button:disabled{cursor:wait;opacity:.6}
+/* Only large CSS workspaces gain a little type size. DPR / browser zoom is not
+   used here: their text is already enlarged by the browser. Never shrink it. */
+.display-profile{font-size:calc(11px * var(--display-text-scale,1))}
+.performance-settings{margin:6px 0 12px;padding:8px 10px;border:1px solid #76cbd54d;border-radius:10px;background:#142a3290}
+.performance-note{margin:4px 0;color:#b7cdd7;font-size:10px;line-height:1.6}
+.performance-readout{display:block;margin:6px 0;color:#b6f1dc;font-size:11px;line-height:1.6;font-variant-numeric:tabular-nums}
+.performance-detail summary{cursor:pointer;padding:7px 0;color:#d8e8ef;font-size:11px}
+.performance-detail .setting-row{gap:8px}
+.performance-detail .setting-row>span{max-width:112px;line-height:1.4}
+.performance-detail .setting-value{min-width:42px}

@@ -1,0 +1,47 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>AerODT 실제 렌더 크기 검증</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>html,body,#scene{margin:0;width:100%;height:100%;overflow:hidden;font:15px sans-serif}header{position:absolute;top:0;left:0;right:0;padding:16px 24px;background:#152733;color:white;z-index:5}button,select{font:inherit;padding:7px 12px;margin-left:8px}#report{position:absolute;bottom:18px;left:24px;right:24px;background:#152733ee;color:#e7f7ff;z-index:5;padding:15px;white-space:pre-wrap;line-height:1.6}h1{font-size:18px;display:inline;margin-right:20px}.cesium-viewer-bottom{display:none}</style>
+<div id="scene"></div><header><h1>기체·탑승객 크기 검증 · 1 m 격자</h1><select id="aircraft" aria-label="기체"><option value="projectairsim_airtaxi">4인승 AirTaxi</option><option value="joby_s4">2인승 대표</option><option value="kp2a">6인승 대표</option><option value="amvlab_evtol">8인승 대표</option></select><select id="mode" aria-label="기존 화면"><option value="single">기존 단일/수동 ↔ 수정</option><option value="multi" selected>기존 다중 ↔ 수정</option></select><button id="side">측면</button><button id="angle">입체</button><button id="top">위에서</button></header><div id="report">준비 중…</div>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {FlightLayer} from '/visualization/flight_layer.js';
+const C=Cesium,viewer=new C.Viewer('scene',{baseLayer:false,globe:false,skyAtmosphere:false,skyBox:false,animation:false,timeline:false,baseLayerPicker:false,geocoder:false,homeButton:false,sceneModePicker:false,navigationHelpButton:false,fullscreenButton:false,infoBox:false,selectionIndicator:false});
+viewer.scene.backgroundColor=C.Color.fromCssColorString('#cad6db');if(viewer.scene.sun)viewer.scene.sun.show=false;if(viewer.scene.moon)viewer.scene.moon.show=false;
+const origin=C.Cartesian3.fromDegrees(127,37,100),frame=C.Transforms.eastNorthUpToFixedFrame(origin);
+const world=(x,y,z=0)=>C.Matrix4.multiplyByPoint(frame,new C.Cartesian3(x,y,z),new C.Cartesian3());
+const geo=(x,y,z=0)=>{const p=C.Cartographic.fromCartesian(world(x,y,z));return [C.Math.toDegrees(p.longitude),C.Math.toDegrees(p.latitude),p.height];};
+viewer.entities.add({polygon:{hierarchy:[world(-15,-15,-.015),world(43,-15,-.015),world(43,15,-.015),world(-15,15,-.015)],perPositionHeight:true,material:C.Color.fromCssColorString('#bac6ca')}});
+for(let x=-15;x<=43;x++)viewer.entities.add({polyline:{positions:[world(x,-15),world(x,15)],width:x%5?1:2,arcType:C.ArcType.NONE,material:C.Color.fromCssColorString(x%5?'#afbbc0':'#98a8b0')}});
+for(let y=-15;y<=15;y++)viewer.entities.add({polyline:{positions:[world(-15,y),world(43,y)],width:y%5?1:2,arcType:C.ArcType.NONE,material:C.Color.fromCssColorString(y%5?'#afbbc0':'#98a8b0')}});
+const assets=new Map((await(await fetch('/api/visual-assets')).json()).assets.map(a=>[a.asset_id,a]));
+const previous={joby_s4:9.6,projectairsim_airtaxi:10.6,kp2a:12.2,amvlab_evtol:14};
+let layers=[],generation=0;
+function camera(kind='angle'){
+ const target=world(14,0,1.4),p=kind==='side'?world(14,-60,6.5):kind==='top'?world(14,-.1,62):world(29,-47,30);
+ const direction=C.Cartesian3.normalize(C.Cartesian3.subtract(target,p,new C.Cartesian3()),new C.Cartesian3());
+ const up=C.Cartesian3.normalize(C.Cartesian3.subtract(world(0,0,1),origin,new C.Cartesian3()),new C.Cartesian3());
+ viewer.camera.setView({destination:p,orientation:{direction,up}});
+}
+async function draw(){
+ const version=++generation;document.querySelector('#report').textContent='모델 로드 중…';for(const l of layers)l.destroy();layers=[];
+ const id=document.querySelector('#aircraft').value,mode=document.querySelector('#mode').value,base=assets.get(id);
+ for(let side=0;side<2;side++){
+  const x=side*28,p=geo(x,0),a=geo(x-1,-6),b=geo(x+1,-6);
+  const old={...base,flight_visual:{...base.flight_visual,size_m:mode==='multi'?previous[id]:base.flight_visual.measured_m}};
+  const getter=aid=>{if(aid===id)return side?base:old;const value=assets.get(aid);return !side&&value?{...value,uri:value.uri.replace('boarding_model.glb','model.glb')}:value;};
+  const layer=new FlightLayer(C,viewer,{assets:getter,onWarning:s=>document.querySelector('#report').textContent=s});layers.push(layer);
+  const plan={vehicle:{id:side?'수정 후':'수정 전'},aircraft:{asset_id:id},legs:[{stage:'gate_out',path:[p,p]}],boarding:{asset_id:'kenney_blocky_person_a',height_m:1.75,count:2,path:[a,b],distances_m:[0,2],walk_mps:1,walk_s:2,enter_s:1000,release_s:[0,1],duration_s:1000}};
+  layer.show(plan);layer.moveTo({position:{longitude:p[0],latitude:p[1],altitude_m:p[2]},heading_deg:90,pitch_deg:0,roll_deg:0,time_s:1.5,stage:'gate_out',rotor_radps:0});
+  layer.vehicle.marker.label.show=false;layer.vehicle.drop.show=false;
+ }
+ const update=()=>{
+  if(version!==generation)return;
+  if(layers.every(l=>l.model?.ready&&l.passengers?.slots.length===2&&l.passengers.slots.every(s=>s.model.ready))){
+   document.querySelector('#report').textContent=`렌더 완료 · 왼쪽 수정 전 / 오른쪽 수정 후\n기체 실제 로드 배율: ${layers[0].model.scale.toFixed(4)} → ${layers[1].model.scale.toFixed(4)} · 전체 폭 ${(base.flight_visual.measured_m*layers[0].model.scale).toFixed(2)} → ${(base.flight_visual.measured_m*layers[1].model.scale).toFixed(2)} m\n사람 양쪽 키 1.75 m 유지 · 오른쪽은 성인 비율의 탑승객 · 대표 운항 모델(제작사 확정 제원 아님)`;
+  }else requestAnimationFrame(update);
+ };update();camera();
+}
+document.querySelector('#aircraft').onchange=draw;document.querySelector('#mode').onchange=draw;
+for(const id of ['side','angle','top'])document.getElementById(id).onclick=()=>camera(id);
+await draw();
+</script></html>

@@ -1,0 +1,29 @@
+{
+  "model_id": "aerodt_representative_energy_v1",
+  "basis": "Engineering estimate, not manufacturer-calibrated. Seat classes are representative, not specifications of their visual assets.",
+  "sources": [
+    "https://www.ti.com/document-viewer/lit/html/SSZTA38/GUID-C54412B5-F5CE-4A85-A58C-61F29F501C0C",
+    "https://ntrs.nasa.gov/citations/20230011630"
+  ],
+  "limitations": "SOC-domain CC/CV-like approximation; no cell voltage, thermal, aging or rotor electrical power measurements. Record-only, never flightworthy endurance evidence.",
+  "capacity_kwh_by_seats": {"2": 70.0, "4": 110.0, "6": 150.0, "8": 200.0},
+  "reference_capacity_kwh": 110.0,
+  "reference_mass_kg": 1600.0,
+  "passenger_mass_kg": 90.0,
+  "reference_passengers": 2,
+  "reference_cruise_mps": 45.0,
+  "power_kw": {"gate_out": 12.0, "gate_in": 12.0, "takeoff": 320.0, "climb": 240.0, "cruise": 130.0, "descent": 110.0, "landing": 300.0, "hold": 320.0},
+  "auxiliary_kw": 1.5,
+  "charger_kw": 150.0,
+  "max_charge_c": 1.5,
+  "charge_efficiency": 0.92,
+  "taper_start_pct": 80.0,
+  "taper_end_fraction": 0.1,
+  "charge_target_pct": 95.0,
+  "connect_delay_s": 30.0,
+  "low_pct": 20.0,
+  "critical_pct": 10.0,
+  "sample_interval_s": 60.0,
+  "connector_right_m": 0.9,
+  "connector_height_m": 1.25
+}

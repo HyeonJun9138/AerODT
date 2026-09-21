@@ -1,0 +1,65 @@
+{
+  "title": "Nancy Grace Roman Space Telescope (A)",
+  "source": {
+    "provider": "nasa",
+    "url": "https://raw.githubusercontent.com/nasa/NASA-3D-Resources/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Nancy%20Grace%20Roman%20Space%20Telescope%20%28A%29/Nancy%20Grace%20Roman%20Space%20Telescope%20%28A%29.glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "original_file": "3D Models/Nancy Grace Roman Space Telescope (A)/Nancy Grace Roman Space Telescope (A).glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "credit": "NASA 3D Resources; individual contributor credit should be retained where supplied",
+    "public_export": true,
+    "note": "NASA repository asset declaration applies; no endorsement. Logos and third-party rights remain separate. Repository meta.json also names NOSA 1.3; retained for review."
+  },
+  "representation": "mission_visualization",
+  "display": {
+    "native_extent": null,
+    "reference_extent_m": null,
+    "scale_basis": "unverified; preview auto-fit only",
+    "forward_axis": "unverified",
+    "browser_measured_extent": 344.2981872558594
+  },
+  "aliases": [],
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "roman",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 2672000,
+    "sha256": "f92b52b780eb0754a9ccefcec394194361fca59396b409e510beb7226326b471"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 36,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 301586
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "f92b52b780eb0754a9ccefcec394194361fca59396b409e510beb7226326b471"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 11441,
+    "sha256": "16d246ce0829746c1c360c7da9a90bb27f5787efd8428dad93ff77192b36d6ee"
+  }
+}

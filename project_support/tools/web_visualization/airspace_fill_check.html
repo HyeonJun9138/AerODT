@@ -1,0 +1,67 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>TEST — 공역 빗금과 경계 정보</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>body{margin:0;background:#10212b;color:white;font:13px sans-serif}#view{position:fixed;inset:0}aside{position:fixed;right:12px;top:12px;padding:14px;background:#10212bee;border-radius:10px;max-width:85vw}button{padding:8px;margin:6px}pre{white-space:pre-wrap;max-width:390px}</style>
+<div id="view"></div><aside>TEST — 실제 공역/비행체가 아닌 선택 통과 시험<br><button id="check">3D / 2D 클릭·단계 검증</button><button id="near">10 km</button><button id="closer">9 km</button><button id="wide">넓게 · 각도 비교</button><div id="hover-status">옅은 면·테두리에 공역 정보 / 기체 우선</div><pre id="result">준비 중</pre></aside>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {AirspaceLayer,airspaceBoundaryOf,pickThroughAirspace} from '/visualization/airspace_layer.js';
+const C=Cesium,v=new C.Viewer('view',{baseLayer:false,baseLayerPicker:false,animation:false,timeline:false,geocoder:false,homeButton:false,sceneModePicker:false,navigationHelpButton:false});
+v.scene.globe.baseColor=C.Color.fromCssColorString('#1f3541');
+const layer=new AirspaceLayer(C,v),result=document.getElementById('result'),button=document.getElementById('check');
+const origin=[126.97,37.56],coords=[[126.95,37.54],[126.99,37.54],[126.99,37.58],[126.95,37.58],[126.95,37.54]];
+const hole=[[126.973,37.563],[126.983,37.563],[126.983,37.573],[126.973,37.573],[126.973,37.563]];
+layer.show({features:[{id:'TEST',properties:{kind:'prohibited',name:'TEST ONLY'},geometry:{type:'Polygon',coordinates:[coords,hole]}},
+ {id:'TEST-B',properties:{kind:'restricted',name:'TEST RESTRICTED'},geometry:{type:'Polygon',coordinates:[coords.map(([x,y])=>[x+.05,y])]}}]});
+const points=v.scene.primitives.add(new C.PointPrimitiveCollection());
+const targets={inside:C.Cartesian3.fromDegrees(...origin,20),boundary:C.Cartesian3.fromDegrees(126.95,37.56,20)};
+for(const [id,position] of Object.entries(targets))points.add({id,position,pixelSize:12,color:C.Color.WHITE});
+const frame=()=>new Promise(resolve=>{const remove=v.scene.postRender.addEventListener(()=>{remove();resolve();});v.scene.requestRender();});
+const pixelSize=new C.Cartesian2();
+function scale(){const canvas=v.canvas;if(canvas.clientWidth&&canvas.clientHeight){
+ const pixels=v.camera.frustum.getPixelDimensions(canvas.clientWidth,canvas.clientHeight,Math.max(1,v.camera.positionCartographic.height),1,pixelSize);
+ layer.setPixelScale(pixels.y);
+}}
+function view(height=10000,longitude=origin[0]){v.camera.setView({destination:C.Cartesian3.fromDegrees(longitude,origin[1],height),orientation:{heading:0,pitch:-Math.PI/2,roll:0}});scale();}
+const removeScale=v.camera.changed.addEventListener(scale);
+document.getElementById('near').onclick=()=>view(10000);
+document.getElementById('closer').onclick=()=>view(9000);
+document.getElementById('wide').onclick=()=>view(25000,127);
+function pick(position){const p=C.SceneTransforms.worldToWindowCoordinates(v.scene,position);return p?pickThroughAirspace(v.scene,p)?.id??null:'offscreen';}
+function rawBoundary(position){const p=C.SceneTransforms.worldToWindowCoordinates(v.scene,position);return p?airspaceBoundaryOf(v.scene.pick(p,3,3)):null;}
+view();layer.setEnabled(true);result.textContent='지도에 고정된 빗금, 단계별 간격, 구역별 고정 각도.';
+v.screenSpaceEventHandler.setInputAction(e=>{
+ const raw=v.scene.pick(e.endPosition,7,7),target=pickThroughAirspace(v.scene,e.endPosition,raw),zone=!target?airspaceBoundaryOf(raw):null;
+ document.getElementById('hover-status').textContent=target?`객체 우선: ${target.id}`:zone?`${zone.name} — ${zone.kindLabel}`:'옅은 면·테두리에 공역 정보 / 기체 우선';
+},C.ScreenSpaceEventType.MOUSE_MOVE);
+button.onclick=async()=>{
+ button.disabled=true;const checks=[];let error=null;
+ try{
+  for(const mode of ['3d','2d']){
+   if(mode==='2d')v.scene.morphTo2D(0);view();await frame();
+   layer.setEnabled(false);await frame();
+   const before=Object.fromEntries(Object.entries(targets).map(([id,p])=>[id,pick(p)]));
+   layer.setEnabled(true);const start=performance.now();
+   while(!layer.fill.ready || !layer.outline.ready || layer.hatches.some(h=>!h.ready)){if(performance.now()-start>20000)throw new Error('airspace readiness timeout');await frame();}
+   await frame();await frame();
+   const after=Object.fromEntries(Object.entries(targets).map(([id,p])=>[id,pick(p)]));
+   const interiorInfo=rawBoundary(C.Cartesian3.fromDegrees(126.96,37.555));
+   const emptyInterior=pick(C.Cartesian3.fromDegrees(126.96,37.555));
+   const emptyHole=pick(C.Cartesian3.fromDegrees(126.978,37.568));
+   const emptyBoundary=pick(C.Cartesian3.fromDegrees(126.95,37.568));
+   const boundaryInfo=rawBoundary(C.Cartesian3.fromDegrees(126.95,37.568)),hatchCount=layer.hatches.length,hatchNonPickable=layer.hatches.every(h=>!h.allowPicking);
+   const original=[...layer.hatches],directions=layer.hatches.map(h=>JSON.stringify(h.appearance.material.uniforms.direction)),levels=[];
+   for(const height of [10000,9000,8500,200000]){view(height);await frame();levels.push(layer.hatchSpacing);}
+   const stableBand=levels[0]===levels[1]&&levels[1]===levels[2],stepped=levels[3]>levels[2];
+   const noRebuild=layer.hatches.every((h,i)=>h===original[i]);
+   const fixedAngles=directions.every((d,i)=>d===JSON.stringify(layer.hatches[i].appearance.material.uniforms.direction));
+   const variedAngles=new Set(directions).size===2;
+   checks.push({interiorInfo,mode,before,after,emptyInterior,emptyHole,emptyBoundary,boundaryInfo,hatchCount,hatchNonPickable,levels,stableBand,stepped,noRebuild,fixedAngles,variedAngles,
+    pass:interiorInfo?.name==='TEST ONLY'&&before.inside==='inside'&&before.boundary==='boundary'&&after.inside==='inside'&&after.boundary==='boundary'&&emptyInterior===null&&emptyHole===null&&emptyBoundary===null&&boundaryInfo?.name==='TEST ONLY'&&hatchCount===2&&hatchNonPickable&&stableBand&&stepped&&noRebuild&&fixedAngles&&variedAngles});
+  }
+ }catch(e){error=e.stack || e.message;}
+ v.scene.morphTo3D(0);view();
+ result.textContent=JSON.stringify({pass:!error&&checks.length===2&&checks.every(c=>c.pass),checks,error},null,2);button.disabled=false;
+};
+window.addEventListener('pagehide',()=>{removeScale();layer.destroy();v.destroy();},{once:true});
+</script></html>
+

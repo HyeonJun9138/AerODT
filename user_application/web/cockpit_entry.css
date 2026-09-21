@@ -1,0 +1,62 @@
+/* The screen shown while a cockpit is being prepared.
+   Deliberately in the cockpit's own palette rather than the silver boot screen's:
+   this is not the application starting, it is the aircraft being made ready, and
+   the frame that appears behind it when it lifts is this same dark interior. So
+   the hand-over is a fade of one dark surface into another with nothing to
+   flinch at -- which is the whole point of removing the camera journey.
+   Only the rule and the fade move. */
+#cockpit-entry {
+  --entry-ink:#edf6fc;--entry-dim:#9cb9ca;--entry-line:#334753;--entry-live:#80e6d0;
+  position:fixed;inset:0;z-index:95;display:grid;place-items:center;
+  padding:40px 24px;isolation:isolate;color-scheme:dark;color:var(--entry-ink);
+  background:
+    radial-gradient(ellipse at 50% 40%,#173341cc 0%,#0d1a2200 62%),
+    linear-gradient(160deg,#0b1720,#10212c 48%,#0a141c);
+  opacity:1;transition:opacity 260ms cubic-bezier(.4,0,.2,1);
+}
+/* The same faint grid the boot screen rules its surface with, so the two read
+   as one family even though the palettes are opposites. */
+#cockpit-entry::before {
+  content:"";position:absolute;inset:24px;z-index:-1;pointer-events:none;
+  border:1px solid #ffffff12;border-radius:2px;
+  background:
+    linear-gradient(90deg,transparent 49.95%,#7fb6cc0a 50%,transparent 50.05%),
+    linear-gradient(0deg,transparent 49.9%,#7fb6cc08 50%,transparent 50.1%);
+}
+#cockpit-entry[data-phase=leaving]{opacity:0;pointer-events:none}
+#cockpit-entry[hidden]{display:none!important}
+
+.cockpit-entry-frame{width:min(560px,100%);text-align:center;margin:auto}
+.cockpit-entry-eyebrow{
+  display:flex;align-items:center;justify-content:center;gap:18px;margin:0 0 26px;
+  font:500 10px/1.7 Arial,'Noto Sans KR',sans-serif;letter-spacing:.3em;color:var(--entry-dim);
+}
+.cockpit-entry-eyebrow::before,.cockpit-entry-eyebrow::after{content:"";width:38px;height:1px;background:#7fb6cc4d}
+.cockpit-entry-callsign{
+  margin:0;font:700 46px/1.1 Consolas,monospace;letter-spacing:.06em;
+  font-variant-numeric:tabular-nums;color:var(--entry-ink);
+}
+.cockpit-entry-route{
+  margin:10px 0 0;min-height:19px;
+  font:14px/1.35 Consolas,monospace;letter-spacing:.08em;color:#bdd2df;
+}
+.cockpit-entry-rule{position:relative;height:2px;margin:34px 0 0;background:#2a3f4d;overflow:hidden}
+.cockpit-entry-fill{
+  display:block;width:0;height:100%;background:var(--entry-live);
+  transition:width 420ms cubic-bezier(.4,0,.2,1);
+}
+.cockpit-entry-step{
+  margin:16px 0 0;min-height:21px;
+  font:500 13px/1.6 Arial,'Noto Sans KR',sans-serif;letter-spacing:.035em;color:#cfdeea;
+  overflow-wrap:anywhere;
+}
+.cockpit-entry-note{
+  margin:14px 0 0;font:10px/1.8 Arial,'Noto Sans KR',sans-serif;letter-spacing:.23em;color:#7d97a6;
+}
+#cockpit-entry[data-phase=error] .cockpit-entry-fill{background:#ffb16b}
+#cockpit-entry[data-phase=error] .cockpit-entry-step{color:#ffb16b}
+
+@media (prefers-reduced-motion:reduce){
+  #cockpit-entry{transition:none}
+  .cockpit-entry-fill{transition:none}
+}

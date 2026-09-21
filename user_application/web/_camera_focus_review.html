@@ -1,0 +1,37 @@
+<!doctype html><meta charset="utf-8"><title>Camera context regression check</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<link rel="stylesheet" href="/static/styles.css"><style>body{margin:0;background:#152733;color:white;font:18px monospace}#globe{height:65vh}canvas#video{width:40vw}pre{white-space:pre-wrap}</style>
+<div id="globe"></div><canvas id="video" width="576" height="288"></canvas><pre id="report">Loading Cesium...</pre>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {AirframeCamera} from '/visualization/airframe_camera.js';
+const report=document.getElementById('report');
+try{
+const C=Cesium,viewer=new C.Viewer('globe',{baseLayer:false,terrainProvider:new C.EllipsoidTerrainProvider(),animation:false,timeline:false,baseLayerPicker:false,geocoder:false,homeButton:false,sceneModePicker:false,navigationHelpButton:false,fullscreenButton:false,infoBox:false,selectionIndicator:false});
+const globe={C,viewer,items:new Map(),entityScene:{assets:new Map()},buildingsEnabled:false};
+const assets=(await (await fetch("/api/visual-assets")).json()).assets;
+const asset=assets.find(a=>a.flight_visual?.uri);globe.entityScene.assets.set(asset.asset_id,asset);
+let failures=[],frames=0,checks=0,cycles=0,glErrors=[];
+viewer.scene.renderError.addEventListener((s,e)=>failures.push(String(e)));
+const camera=new AirframeCamera(globe,document.getElementById('video'),s=>{if(s.age==='NO VIDEO'||s.age==='RECONNECTING')failures.push(camera.lastError?.message??s.text);});
+const origin=C.Cartesian3.fromDegrees(127,37,150),matrix=C.Transforms.eastNorthUpToFixedFrame(origin);
+const model=await C.Model.fromGltfAsync({url:asset.flight_visual.uri,modelMatrix:matrix,environmentMapOptions:{enabled:false}});viewer.scene.primitives.add(model);
+for(let i=0;i<12;i++)viewer.entities.add({id:'vertiport:test:'+i,position:C.Cartesian3.fromDegrees(127+i*.0001,37.001,100),box:{dimensions:new C.Cartesian3(8,8,20),material:C.Color.ORANGE}});
+viewer.camera.setView({destination:C.Cartesian3.fromDegrees(127,36.999,250),orientation:{heading:0,pitch:-.5,roll:0}});
+camera.set({enabled:true,mode:'front'});
+const started=performance.now(),sync=new URLSearchParams(location.search).has('sync');
+const remove=viewer.scene.postRender.addEventListener(()=>{
+ frames++;
+ const frame={assetId:asset.asset_id,matrix,profile:{forward:[0,0,-1],up:[0,1,0]},radius:5};
+ if(sync)camera.renderFrame(frame,performance.now());else camera.update(frame,performance.now());
+ if(frames%30===0){checks++;for(const scene of [viewer.scene,camera.widget?.scene])if(scene){const error=scene.context._gl.getError();if(error)glErrors.push(error);}}
+ if(performance.now()-started>20000){
+ remove();camera.stop();viewer.useDefaultRenderLoop=false;
+ report.textContent=JSON.stringify({mode:sync?'nested baseline':'deferred render',mainFrames:frames,cameraFrames:camera.frameNumber,checks,cycles,glErrors,failures,result:frames>30&&camera.frameNumber>10&&!glErrors.length&&!failures.length?'PASS':'FAIL'},null,2);
+ clearInterval(cycle);
+ }
+});
+const cycle=setInterval(()=>{document.body.toggleAttribute('data-focus',cycles%2===0);camera.release();camera.set({enabled:true,mode:cycles++%2?'front':'around'});},2500);
+report.textContent='Running real dual-context render for 20 seconds...';
+}catch(error){report.textContent=error.stack;}
+</script>

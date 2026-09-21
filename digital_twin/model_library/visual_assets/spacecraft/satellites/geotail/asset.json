@@ -1,0 +1,97 @@
+{
+  "title": "Geotail",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/GeoTailSAT/GeoTailSAT.glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "geotail.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "geotail",
+      "label": "Geotail",
+      "exact": {
+        "norad": [
+          22049
+        ],
+        "names": [
+          "^GEOTAIL"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 100,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 10510.700289
+    }
+  ],
+  "display": {
+    "native_extent": 10510.700289,
+    "reference_extent_m": 100,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 10510.700288796797
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "geotail",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 91504,
+    "sha256": "3b39a3fc157731421869dab707dd5c4d3d829ab0b727b2a6cc8bc211fd96a8ad"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 12,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 9416
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "3b39a3fc157731421869dab707dd5c4d3d829ab0b727b2a6cc8bc211fd96a8ad"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 3601,
+    "sha256": "1235df7ee65cbd6e5a6a0f5407958da1f2d493c145fb6be4e941413c85d9acef"
+  }
+}

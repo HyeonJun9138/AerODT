@@ -1,0 +1,348 @@
+{
+  "title": "ProjectAirSim AirTaxi (quad tiltrotor UAM)",
+  "source": {
+    "provider": "microsoft/projectairsim",
+    "url": "https://github.com/microsoft/ProjectAirSim",
+    "revision": "097429f56fee32b0edfe508820bf2323ee7f2cb2",
+    "original_file": "unreal/Blocks/Plugins/Drone/Content/AirTaxi/{AirTaxi_Fuselage,AirTaxi_Shroud,AirTaxi_Rotor}.uasset",
+    "note": "Assembled from the AeroDT model package digital_twin/model_library/packages/vehicles/air/tiltrotor_uam/aerodt_airtaxi/model.jsonc and exported with Unreal 5.2.1-26001984+++UE5+Release-5.2 glTF exporter."
+  },
+  "rights": {
+    "label": "MIT",
+    "url": "https://github.com/microsoft/ProjectAirSim/blob/main/LICENSE",
+    "credit": "Microsoft Corporation / ProjectAirSim",
+    "public_export": true,
+    "note": "MIT licence; the copyright and permission notice must travel with the model. Sample content, not a certified vehicle geometry."
+  },
+  "representation": "specific",
+  "aliases": [
+    "aerodt_airtaxi",
+    "uam_tiltrotor"
+  ],
+  "display": {
+    "native_extent": 8.123138783234978,
+    "reference_extent_m": 8.123138783234978,
+    "scale_basis": "metres; measured from the export bounding box (exporter uniform scale 0.01)",
+    "forward_axis": "+X",
+    "up_axis": "+Y",
+    "extent_m": {
+      "length": 6.610897131938576,
+      "height": 2.8817753557000003,
+      "width": 8.123138783234978
+    },
+    "axis_mapping": {
+      "measured_from_link": "Shroud_FL",
+      "unreal_to_gltf": {
+        "X": "+X",
+        "Y": "+Z",
+        "Z": "+Y"
+      }
+    },
+    "part_count": 9,
+    "browser_measured_extent": 8.123138783234978
+  },
+  "conversion": {
+    "operation": "unreal_gltf_export",
+    "tool": "project_support/tools/visual_assets/export_unreal_vehicle_gltf.py",
+    "note": "Unreal glTF exporter output, unmodified. Textures were written as JPEG quality 90 by the exporter; lossless PNG produced a 41 MB file. Geometry and part placement come from the model package and are not edited here."
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "f952934ade8037dd3df433159d531c829a8d5280ac0721ba1788ded6fbb4a1af"
+  },
+  "schema_version": 1,
+  "asset_id": "projectairsim_airtaxi",
+  "category": "aircraft/civilian",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 8154808,
+    "sha256": "f952934ade8037dd3df433159d531c829a8d5280ac0721ba1788ded6fbb4a1af"
+  },
+  "geometry": {
+    "meshes": 3,
+    "materials": 2,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [],
+    "native_coordinates": "glTF right-handed +Y up; forward +X, up +Y (measured from the export)",
+    "physical_dimensions_verified": true,
+    "rendered_triangles": 51744
+  },
+  "thumbnail": {
+    "path": "thumbnail_flight_7673c02f716e.jpg",
+    "bytes": 48080,
+    "sha256": "7673c02f716e9d8f1d3ded0cc00182323d053fb25789f93eb1e36b0f19e3a045",
+    "source_model_sha256": "f952934ade8037dd3df433159d531c829a8d5280ac0721ba1788ded6fbb4a1af",
+    "variant": "flight",
+    "width": 960,
+    "height": 640,
+    "view": "neutral VTOL front three-quarter, model-specific framing, grey studio background"
+  },
+  "rotors": {
+    "note": "The four tilting propellers. Each disc is thin along its own Y (rotor mesh 1.64 x 0.29 x 1.59 m), so a spin is a rotation about that axis applied inside the node, which leaves the node's own placement alone. Directions are the ones declared for the rotor actuators in the vehicle model package this was exported from, digital_twin/model_library/packages/vehicles/air/tiltrotor_uam/aerodt_airtaxi/model.jsonc.",
+    "axis": "y",
+    "turn_sign": "1 turns the way a right hand turns about +Y, which reads counter-clock-wise from above; -1 is clock-wise.",
+    "nodes": [
+      {
+        "name": "AeroDTExport_02_Prop_FL",
+        "turn": -1,
+        "declared": "clock-wise"
+      },
+      {
+        "name": "AeroDTExport_04_Prop_FR",
+        "turn": 1,
+        "declared": "counter-clock-wise"
+      },
+      {
+        "name": "AeroDTExport_06_Prop_RL",
+        "turn": 1,
+        "declared": "counter-clock-wise"
+      },
+      {
+        "name": "AeroDTExport_08_Prop_RR",
+        "turn": -1,
+        "declared": "clock-wise"
+      }
+    ],
+    "tilt": {
+      "note": "The four ducts tilt and their propellers go with them. Taken from the vehicle model package this was exported from, digital_twin/model_library/packages/vehicles/air/tiltrotor_uam/aerodt_airtaxi/model.jsonc: four actuators of type 'tilt', each with child-link Shroud_* and target Prop_*_actuator, axis '0.0 -1.0 0.0' in the frame's coordinates, angle-min 0.0 to angle-max 1.57 rad. The asset's own measured axis mapping (model Y is glTF Z) puts that hinge on glTF Z, turning negatively.",
+      "axis": "z",
+      "sign": -1,
+      "frame": "parent",
+      "zero": "0 is rotors up, flying as a multirotor; 90 is fully forward, flying as a fixed wing -- the same convention the simulation's tilt actuators report.",
+      "range_deg": [
+        0,
+        90
+      ],
+      "nodes": [
+        "AeroDTExport_01_Shroud_FL",
+        "AeroDTExport_02_Prop_FL",
+        "AeroDTExport_03_Shroud_FR",
+        "AeroDTExport_04_Prop_FR",
+        "AeroDTExport_05_Shroud_RL",
+        "AeroDTExport_06_Prop_RL",
+        "AeroDTExport_07_Shroud_RR",
+        "AeroDTExport_08_Prop_RR"
+      ]
+    }
+  },
+  "flight_visual": {
+    "purpose": "visual_only cabin and original AirTaxi rig",
+    "validation": "gltf-passed",
+    "path": "turnaround_model.glb",
+    "sha256": "25766db2fbce62d925454825e9a7210d35f6427a65dd3f4ef8a40cda10a79dc9",
+    "bytes": 10302768,
+    "source_sha256": "f952934ade8037dd3df433159d531c829a8d5280ac0721ba1788ded6fbb4a1af",
+    "rotors": {
+      "note": "The four tilting propellers. Each disc is thin along its own Y (rotor mesh 1.64 x 0.29 x 1.59 m), so a spin is a rotation about that axis applied inside the node, which leaves the node's own placement alone. Directions are the ones declared for the rotor actuators in the vehicle model package this was exported from, digital_twin/model_library/packages/vehicles/air/tiltrotor_uam/aerodt_airtaxi/model.jsonc.",
+      "axis": "y",
+      "turn_sign": "1 turns the way a right hand turns about +Y, which reads counter-clock-wise from above; -1 is clock-wise.",
+      "nodes": [
+        {
+          "name": "AeroDTExport_02_Prop_FL",
+          "turn": -1,
+          "declared": "clock-wise"
+        },
+        {
+          "name": "AeroDTExport_04_Prop_FR",
+          "turn": 1,
+          "declared": "counter-clock-wise"
+        },
+        {
+          "name": "AeroDTExport_06_Prop_RL",
+          "turn": 1,
+          "declared": "counter-clock-wise"
+        },
+        {
+          "name": "AeroDTExport_08_Prop_RR",
+          "turn": -1,
+          "declared": "clock-wise"
+        }
+      ],
+      "tilt": {
+        "note": "The four ducts tilt and their propellers go with them. Taken from the vehicle model package this was exported from, digital_twin/model_library/packages/vehicles/air/tiltrotor_uam/aerodt_airtaxi/model.jsonc: four actuators of type 'tilt', each with child-link Shroud_* and target Prop_*_actuator, axis '0.0 -1.0 0.0' in the frame's coordinates, angle-min 0.0 to angle-max 1.57 rad. The asset's own measured axis mapping (model Y is glTF Z) puts that hinge on glTF Z, turning negatively.",
+        "axis": "z",
+        "sign": -1,
+        "frame": "parent",
+        "zero": "0 is rotors up, flying as a multirotor; 90 is fully forward, flying as a fixed wing -- the same convention the simulation's tilt actuators report.",
+        "range_deg": [
+          0,
+          90
+        ],
+        "nodes": [
+          "AeroDTExport_01_Shroud_FL",
+          "AeroDTExport_02_Prop_FL",
+          "AeroDTExport_03_Shroud_FR",
+          "AeroDTExport_04_Prop_FR",
+          "AeroDTExport_05_Shroud_RL",
+          "AeroDTExport_06_Prop_RL",
+          "AeroDTExport_07_Shroud_RR",
+          "AeroDTExport_08_Prop_RR"
+        ]
+      }
+    },
+    "note": "Cabin and KP2-reference glazing: build_uam_cabins.py; exterior vertex positions and rig nodes retained. Clear cockpit glazing: clear_uam_glazing.py; pale cool tint, alpha 0.12, nonmetal. Rounded cabin supports; optional seated illustration and passenger viewpoints. Exterior and rig retained.",
+    "display_extent_m": 12.0,
+    "measured_extent_m": 8.123138783,
+    "seats": 4,
+    "size_basis": "4인승 운항용 대표 크기: 길이 9.766 m, 높이 4.257 m, 스팬 12.0 m. GLB 실측 최대 변 8.123138783 m에 균일 배율 1.477261 적용. 단일/수동/다중/Physical 화면 공통. 제조사 확정 제원이나 실기체 좌석 배치를 뜻하지 않는다. 탑승객 키 1.65~1.85 m를 기준으로 비교; 카메라 거리에 따라 기체를 확대하지 않는다."
+  },
+  "cockpit": {
+    "schema_version": 1,
+    "viewpoints": [
+      {
+        "id": "seat_01",
+        "label": "승객석 1",
+        "eye": [
+          0.4788,
+          1.5215999999999998,
+          -0.4455
+        ],
+        "occupant_node": "Cabin_occupant_01"
+      },
+      {
+        "id": "seat_02",
+        "label": "승객석 2",
+        "eye": [
+          0.4788,
+          1.5215999999999998,
+          0.4455
+        ],
+        "occupant_node": "Cabin_occupant_02"
+      },
+      {
+        "id": "seat_03",
+        "label": "승객석 3",
+        "eye": [
+          -0.3212,
+          1.5215999999999998,
+          -0.4455
+        ],
+        "occupant_node": "Cabin_occupant_03"
+      },
+      {
+        "id": "seat_04",
+        "label": "승객석 4",
+        "eye": [
+          -0.3212,
+          1.5215999999999998,
+          0.4455
+        ],
+        "occupant_node": "Cabin_occupant_04"
+      }
+    ],
+    "occupant_nodes": [
+      "Cabin_occupant_01",
+      "Cabin_occupant_02",
+      "Cabin_occupant_03",
+      "Cabin_occupant_04"
+    ],
+    "occupant_default_scale": 0.0001,
+    "eye": [
+      1.3,
+      1.7,
+      -0.27
+    ],
+    "forward": [
+      1,
+      0,
+      0
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ],
+    "passenger_seats": 4,
+    "screens": [
+      {
+        "id": "pfd",
+        "center": [
+          2.0548,
+          1.388,
+          -0.5670000000000001
+        ],
+        "width": 0.264,
+        "height": 0.216,
+        "right": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "id": "nav",
+        "center": [
+          2.0548,
+          1.388,
+          -0.27
+        ],
+        "width": 0.264,
+        "height": 0.216,
+        "right": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "id": "system",
+        "center": [
+          2.0548,
+          1.388,
+          0.027000000000000024
+        ],
+        "width": 0.264,
+        "height": 0.216,
+        "right": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ]
+      }
+    ],
+    "interior": "flight_model.glb: AeroDT_Cabin; illustrative geometry fitted to glazing envelope, not certified dimensions",
+    "coordinate_frame": "flight_glb_scene_before_display_scale",
+    "seat_nodes": [
+      "Cabin_passenger_01",
+      "Cabin_passenger_02",
+      "Cabin_passenger_03",
+      "Cabin_passenger_04"
+    ],
+    "interior_refinement": "premium_cabin_20260917; contoured seats, matte trim, shallow bins, emissive light strips; display-only",
+    "ground_door": {
+      "nodes": {
+        "right": "Ground_door_left",
+        "left": "Ground_door_right"
+      },
+      "nodes_note": "The glTF node names are inverted against the airframe: every node the original author named L sits at negative z and every R at positive z (the position lights settle it), while build_ground_doors.py named the negative-z hatch \"right\". These keys are the side of the aircraft, so they are mapped across the names rather than to them. Rebuilding with the corrected tool names the nodes properly and this mapping becomes name-for-name.",
+      "forward_m": -0.07386307387184772,
+      "right_m": 1.8452699261231702,
+      "height_m": 1.0784008785289763,
+      "open_deg": 78,
+      "purpose": "illustrative side hatch; not certified geometry"
+    }
+  }
+}

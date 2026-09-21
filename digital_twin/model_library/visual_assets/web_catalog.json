@@ -1,0 +1,963 @@
+{
+  "schema_version": 1,
+  "scope": "Relative paths under visual_assets; candidate web integration index, not a blanket legal clearance or public deployment.",
+  "assets": [
+    {
+      "asset_id": "amvlab_a320",
+      "title": "A320 (logo-free)",
+      "category": "aircraft/civilian",
+      "metadata": "aircraft/civilian/amvlab_a320/asset.json",
+      "model": "aircraft/civilian/amvlab_a320/model.glb",
+      "thumbnail": "aircraft/civilian/amvlab_a320/thumbnail.jpg",
+      "attribution": "aircraft/civilian/amvlab_a320/attribution.txt",
+      "sha256": "8271176c4aaa423446466cb789f83a7c27210690f1fb44dc03fb66ca9056e3d0"
+    },
+    {
+      "asset_id": "amvlab_a350",
+      "title": "A350 (logo-free)",
+      "category": "aircraft/civilian",
+      "metadata": "aircraft/civilian/amvlab_a350/asset.json",
+      "model": "aircraft/civilian/amvlab_a350/model.glb",
+      "thumbnail": "aircraft/civilian/amvlab_a350/thumbnail.jpg",
+      "attribution": "aircraft/civilian/amvlab_a350/attribution.txt",
+      "sha256": "d91061ecff300c4e8951b571a476d6fcacd4d50dceb8e1d9a80cde7fa86b19f5"
+    },
+    {
+      "asset_id": "amvlab_a380",
+      "title": "A380 (logo-free)",
+      "category": "aircraft/civilian",
+      "metadata": "aircraft/civilian/amvlab_a380/asset.json",
+      "model": "aircraft/civilian/amvlab_a380/model.glb",
+      "thumbnail": "aircraft/civilian/amvlab_a380/thumbnail.jpg",
+      "attribution": "aircraft/civilian/amvlab_a380/attribution.txt",
+      "sha256": "785045c8467e8db10ba3b89a01a2d3c0184669b977964487a3a57825fa7c4619"
+    },
+    {
+      "asset_id": "amvlab_b737",
+      "title": "B737 (logo-free)",
+      "category": "aircraft/civilian",
+      "metadata": "aircraft/civilian/amvlab_b737/asset.json",
+      "model": "aircraft/civilian/amvlab_b737/model.glb",
+      "thumbnail": "aircraft/civilian/amvlab_b737/thumbnail.jpg",
+      "attribution": "aircraft/civilian/amvlab_b737/attribution.txt",
+      "sha256": "fa1f96261ac9e29d0c7c9ce239fde72f1109029527e1540794e237d581435d2d"
+    },
+    {
+      "asset_id": "amvlab_b787",
+      "title": "B787 (logo-free)",
+      "category": "aircraft/civilian",
+      "metadata": "aircraft/civilian/amvlab_b787/asset.json",
+      "model": "aircraft/civilian/amvlab_b787/model.glb",
+      "thumbnail": "aircraft/civilian/amvlab_b787/thumbnail.jpg",
+      "attribution": "aircraft/civilian/amvlab_b787/attribution.txt",
+      "sha256": "3d7e235d73f071fee1c93bd751fc537416cac26540152464bd584133f0afc2d8"
+    },
+    {
+      "asset_id": "amvlab_drone",
+      "title": "drone (logo-free)",
+      "category": "aircraft/civilian",
+      "metadata": "aircraft/civilian/amvlab_drone/asset.json",
+      "model": "aircraft/civilian/amvlab_drone/model.glb",
+      "thumbnail": "aircraft/civilian/amvlab_drone/thumbnail.jpg",
+      "attribution": "aircraft/civilian/amvlab_drone/attribution.txt",
+      "sha256": "b3b1089986443bec395c57852c68e1dbf5bf990e28472656d9b9ad6c377931d1"
+    },
+    {
+      "asset_id": "amvlab_evtol",
+      "title": "EVTOL (logo-free)",
+      "category": "aircraft/civilian",
+      "metadata": "aircraft/civilian/amvlab_evtol/asset.json",
+      "model": "aircraft/civilian/amvlab_evtol/model.glb",
+      "thumbnail": "aircraft/civilian/amvlab_evtol/thumbnail.jpg",
+      "attribution": "aircraft/civilian/amvlab_evtol/attribution.txt",
+      "sha256": "fb6e73357e2b5c68d49c42f2726f7a8b985b91e5fe1680cd438d2ccab77191ba"
+    },
+    {
+      "asset_id": "joby_s4",
+      "title": "Joby S4 eVTOL",
+      "category": "aircraft/civilian",
+      "metadata": "aircraft/civilian/joby_s4/asset.json",
+      "model": "aircraft/civilian/joby_s4/model.glb",
+      "thumbnail": "aircraft/civilian/joby_s4/thumbnail.jpg",
+      "attribution": "aircraft/civilian/joby_s4/attribution.txt",
+      "sha256": "0f73ce4a33c724dd80ee67e40eb8bdb7a1c0907f6b0e53eee470d1e3edd6a682"
+    },
+    {
+      "asset_id": "kp2a",
+      "title": "KP-2A UAM airframe",
+      "category": "aircraft/civilian",
+      "metadata": "aircraft/civilian/kp2a/asset.json",
+      "model": "aircraft/civilian/kp2a/model.glb",
+      "thumbnail": "aircraft/civilian/kp2a/thumbnail.jpg",
+      "attribution": "aircraft/civilian/kp2a/attribution.txt",
+      "sha256": "86ed3f279648204da03017b02f9907ec45f994052434b5ffe122f6b665814c90"
+    },
+    {
+      "asset_id": "projectairsim_airtaxi",
+      "title": "ProjectAirSim AirTaxi (quad tiltrotor UAM)",
+      "category": "aircraft/civilian",
+      "metadata": "aircraft/civilian/projectairsim_airtaxi/asset.json",
+      "model": "aircraft/civilian/projectairsim_airtaxi/model.glb",
+      "thumbnail": "aircraft/civilian/projectairsim_airtaxi/thumbnail.jpg",
+      "attribution": "aircraft/civilian/projectairsim_airtaxi/attribution.txt",
+      "sha256": "f952934ade8037dd3df433159d531c829a8d5280ac0721ba1788ded6fbb4a1af"
+    },
+    {
+      "asset_id": "x_57",
+      "title": "X-57",
+      "category": "aircraft/civilian",
+      "metadata": "aircraft/civilian/x_57/asset.json",
+      "model": "aircraft/civilian/x_57/model.glb",
+      "thumbnail": "aircraft/civilian/x_57/thumbnail.jpg",
+      "attribution": "aircraft/civilian/x_57/attribution.txt",
+      "sha256": "f7e36ef23425ab2aae808a2f19883b8d52a5c8b46fb7d92deb3449431f04333a"
+    },
+    {
+      "asset_id": "global_hawk",
+      "title": "Global Hawk",
+      "category": "aircraft/military",
+      "metadata": "aircraft/military/global_hawk/asset.json",
+      "model": "aircraft/military/global_hawk/model.glb",
+      "thumbnail": "aircraft/military/global_hawk/thumbnail.jpg",
+      "attribution": "aircraft/military/global_hawk/attribution.txt",
+      "sha256": "75b62cc2fa101fc517b8be4ebe79a7cc5206bcce38efbf104dde7414c810b667"
+    },
+    {
+      "asset_id": "ace",
+      "title": "Advanced Composition Explorer",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/ace/asset.json",
+      "model": "spacecraft/satellites/ace/model.glb",
+      "thumbnail": "spacecraft/satellites/ace/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/ace/attribution.txt",
+      "sha256": "b03a394e57b6af3a1f3700f450d94a67dd3eaec8a00e125d2d005bd1359b6e9c"
+    },
+    {
+      "asset_id": "acrimsat",
+      "title": "Active Cavity Irradiance Monitor Satellite (AcrimSAT) (A)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/acrimsat/asset.json",
+      "model": "spacecraft/satellites/acrimsat/model.glb",
+      "thumbnail": "spacecraft/satellites/acrimsat/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/acrimsat/attribution.txt",
+      "sha256": "afa7d056e9415c4fb85dfff0727a71c088f721876fd7b539eaed4c5e5cd18de7"
+    },
+    {
+      "asset_id": "aim",
+      "title": "Aeronomy of Ice in the Mesosphere",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/aim/asset.json",
+      "model": "spacecraft/satellites/aim/model.glb",
+      "thumbnail": "spacecraft/satellites/aim/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/aim/attribution.txt",
+      "sha256": "6e5b3d6bcfc7c75c33eac80b81771d413fcb265e4a3eaebaecabf34e8ff7e614"
+    },
+    {
+      "asset_id": "aqua",
+      "title": "Aqua (EOS PM-1)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/aqua/asset.json",
+      "model": "spacecraft/satellites/aqua/model.glb",
+      "thumbnail": "spacecraft/satellites/aqua/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/aqua/attribution.txt",
+      "sha256": "f0761181a1d378b6b3e270e8eee8bf20c241b7d577933630369b0cffd4b521e1"
+    },
+    {
+      "asset_id": "aquarius",
+      "title": "SAC-D / Aquarius",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/aquarius/asset.json",
+      "model": "spacecraft/satellites/aquarius/model.glb",
+      "thumbnail": "spacecraft/satellites/aquarius/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/aquarius/attribution.txt",
+      "sha256": "dc81055c83e5da56d3ae57f4c967010be64ad5d01cee4cdb0a88c85c2b628116"
+    },
+    {
+      "asset_id": "aura",
+      "title": "Aura (EOS CH-1)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/aura/asset.json",
+      "model": "spacecraft/satellites/aura/model.glb",
+      "thumbnail": "spacecraft/satellites/aura/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/aura/attribution.txt",
+      "sha256": "99d46cd9af551c7511befe47d3f24b9b957da6a9dc35a0e29fc784db9f55b381"
+    },
+    {
+      "asset_id": "calipso",
+      "title": "CALIPSO",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/calipso/asset.json",
+      "model": "spacecraft/satellites/calipso/model.glb",
+      "thumbnail": "spacecraft/satellites/calipso/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/calipso/attribution.txt",
+      "sha256": "4abd7708d0f2629baf3e58e9d5df634c34692365791e58a7795742854e53de1d"
+    },
+    {
+      "asset_id": "chandra",
+      "title": "찬드라 X선 관측위성",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/chandra/asset.json",
+      "model": "spacecraft/satellites/chandra/model.glb",
+      "thumbnail": "spacecraft/satellites/chandra/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/chandra/attribution.txt",
+      "sha256": "9383f44fc4c6eba73c40b0c2cfe33c08c90f1fb5230274bfdaa98e0c9f116a34"
+    },
+    {
+      "asset_id": "cloudsat",
+      "title": "CloudSat",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/cloudsat/asset.json",
+      "model": "spacecraft/satellites/cloudsat/model.glb",
+      "thumbnail": "spacecraft/satellites/cloudsat/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/cloudsat/attribution.txt",
+      "sha256": "293aab60f12decc020fe7e19ddd0837b0643067425a4ad09f01ffd8a380e7423"
+    },
+    {
+      "asset_id": "cluster_ii",
+      "title": "Cluster II",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/cluster_ii/asset.json",
+      "model": "spacecraft/satellites/cluster_ii/model.glb",
+      "thumbnail": "spacecraft/satellites/cluster_ii/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/cluster_ii/attribution.txt",
+      "sha256": "8ae96a980eba8857be28784c30cec61e20becf56ab2f3bfa6c2540607c610893"
+    },
+    {
+      "asset_id": "cnofs",
+      "title": "Communication and Navigation Outage Forecast System (CNOFS)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/cnofs/asset.json",
+      "model": "spacecraft/satellites/cnofs/model.glb",
+      "thumbnail": "spacecraft/satellites/cnofs/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/cnofs/attribution.txt",
+      "sha256": "2d4f6c296b59daa80b668c8d51481771648964bfa41c88fbf232c44f19618fbb"
+    },
+    {
+      "asset_id": "cubesat_1u",
+      "title": "1U 큐브샛 (일반형)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/cubesat_1u/asset.json",
+      "model": "spacecraft/satellites/cubesat_1u/model.glb",
+      "thumbnail": "spacecraft/satellites/cubesat_1u/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/cubesat_1u/attribution.txt",
+      "sha256": "bae308ea2e33778c93675909f7dc2e0d5d6916cd685668a463566c61224b1e85"
+    },
+    {
+      "asset_id": "cubesat_2u",
+      "title": "CubeSat - 2 RU Generic",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/cubesat_2u/asset.json",
+      "model": "spacecraft/satellites/cubesat_2u/model.glb",
+      "thumbnail": "spacecraft/satellites/cubesat_2u/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/cubesat_2u/attribution.txt",
+      "sha256": "30633496ef3aea790ec00782772757c78744ccaf08c9322eca380a6c4ad57ec9"
+    },
+    {
+      "asset_id": "cygnss",
+      "title": "CYGNSS",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/cygnss/asset.json",
+      "model": "spacecraft/satellites/cygnss/model.glb",
+      "thumbnail": "spacecraft/satellites/cygnss/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/cygnss/attribution.txt",
+      "sha256": "830321f2d30099b4355f835d7ae5a2ab1f9f91c292dd01dfc008b8d4bf64c962"
+    },
+    {
+      "asset_id": "dscovr",
+      "title": "Deep Space Climate Observatory (DSCOVR) (Triana)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/dscovr/asset.json",
+      "model": "spacecraft/satellites/dscovr/model.glb",
+      "thumbnail": "spacecraft/satellites/dscovr/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/dscovr/attribution.txt",
+      "sha256": "265b703538b635128ffa32bc9f4d7b528ba6900e9ac1fbcf201dcdd54a5dadae"
+    },
+    {
+      "asset_id": "eo_1",
+      "title": "Earth Observing-1",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/eo_1/asset.json",
+      "model": "spacecraft/satellites/eo_1/model.glb",
+      "thumbnail": "spacecraft/satellites/eo_1/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/eo_1/attribution.txt",
+      "sha256": "2d26422a45147e86c93c535979b1d9ae16d34fc0171f661dec051bca61c14a74"
+    },
+    {
+      "asset_id": "fermi",
+      "title": "Fermi (GLAST)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/fermi/asset.json",
+      "model": "spacecraft/satellites/fermi/model.glb",
+      "thumbnail": "spacecraft/satellites/fermi/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/fermi/attribution.txt",
+      "sha256": "d345f3b0595f7792f699acf33b28d7401cb53cc2a20b735bca00e95644e3813c"
+    },
+    {
+      "asset_id": "fuse",
+      "title": "FUSE",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/fuse/asset.json",
+      "model": "spacecraft/satellites/fuse/model.glb",
+      "thumbnail": "spacecraft/satellites/fuse/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/fuse/attribution.txt",
+      "sha256": "056c26e4f48bc362790ebc42c7c85101037c92b4f50a313bbe2783fc7004cdf8"
+    },
+    {
+      "asset_id": "geotail",
+      "title": "Geotail",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/geotail/asset.json",
+      "model": "spacecraft/satellites/geotail/model.glb",
+      "thumbnail": "spacecraft/satellites/geotail/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/geotail/attribution.txt",
+      "sha256": "3b39a3fc157731421869dab707dd5c4d3d829ab0b727b2a6cc8bc211fd96a8ad"
+    },
+    {
+      "asset_id": "goes",
+      "title": "GOES 계열",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/goes/asset.json",
+      "model": "spacecraft/satellites/goes/model.glb",
+      "thumbnail": "spacecraft/satellites/goes/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/goes/attribution.txt",
+      "sha256": "e2f690d3d59e101d6a75a8b0bdcbe1cf9f58a058d01eaceede8557460a6e9101"
+    },
+    {
+      "asset_id": "gpm",
+      "title": "GPM Core Observatory",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/gpm/asset.json",
+      "model": "spacecraft/satellites/gpm/model.glb",
+      "thumbnail": "spacecraft/satellites/gpm/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/gpm/attribution.txt",
+      "sha256": "7068c880770bb2ac936e804a1af48e564c90b829ff884c405a4759e8da9e693e"
+    },
+    {
+      "asset_id": "grace",
+      "title": "GRACE / GRACE-FO 계열",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/grace/asset.json",
+      "model": "spacecraft/satellites/grace/model.glb",
+      "thumbnail": "spacecraft/satellites/grace/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/grace/attribution.txt",
+      "sha256": "b376141db89a708acac65484b69ffafe36bbed00709f73c1c9d48cc3d5e3e499"
+    },
+    {
+      "asset_id": "hete_2",
+      "title": "HETE-2",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/hete_2/asset.json",
+      "model": "spacecraft/satellites/hete_2/model.glb",
+      "thumbnail": "spacecraft/satellites/hete_2/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/hete_2/attribution.txt",
+      "sha256": "f514f7cff65c0d4d565408b3f6ba113c4a3b97321a3fe770c89f67820e83922c"
+    },
+    {
+      "asset_id": "hinode",
+      "title": "Hinode (Solar-B)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/hinode/asset.json",
+      "model": "spacecraft/satellites/hinode/model.glb",
+      "thumbnail": "spacecraft/satellites/hinode/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/hinode/attribution.txt",
+      "sha256": "104f23212d379541990c28b26999db3bcfb2ef0731285f2366219e5438e125e6"
+    },
+    {
+      "asset_id": "hubble",
+      "title": "허블 우주망원경",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/hubble/asset.json",
+      "model": "spacecraft/satellites/hubble/model.glb",
+      "thumbnail": "spacecraft/satellites/hubble/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/hubble/attribution.txt",
+      "sha256": "e5ba4de15c7d359ac8fa1ab7e286aff42dec09c0fadae3db99252587f39fa384"
+    },
+    {
+      "asset_id": "ibex",
+      "title": "IBEX",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/ibex/asset.json",
+      "model": "spacecraft/satellites/ibex/model.glb",
+      "thumbnail": "spacecraft/satellites/ibex/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/ibex/attribution.txt",
+      "sha256": "6ce15c60467673f599c7085ed5152a07d0335628109741848ce64835e3786406"
+    },
+    {
+      "asset_id": "icecube",
+      "title": "CubeSat - ICECube",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/icecube/asset.json",
+      "model": "spacecraft/satellites/icecube/model.glb",
+      "thumbnail": "spacecraft/satellites/icecube/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/icecube/attribution.txt",
+      "sha256": "7ad1a4be4beb2c1b62b6fc48a9538db6c914d871099681745e188deb1925f31a"
+    },
+    {
+      "asset_id": "icesat",
+      "title": "Ice, Clouds, and Land Elevation Satellite (ICESat) (A)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/icesat/asset.json",
+      "model": "spacecraft/satellites/icesat/model.glb",
+      "thumbnail": "spacecraft/satellites/icesat/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/icesat/attribution.txt",
+      "sha256": "8843f2a22fd0f836b9d2374f60909276d28cb6909ca36f52db82fe01684958b1"
+    },
+    {
+      "asset_id": "icesat_2",
+      "title": "ICESat-2",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/icesat_2/asset.json",
+      "model": "spacecraft/satellites/icesat_2/model.glb",
+      "thumbnail": "spacecraft/satellites/icesat_2/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/icesat_2/attribution.txt",
+      "sha256": "e7d260d69852fcd3367c8e7a3c236f8c0551c591abc5a8e8f42c0356a2eebf38"
+    },
+    {
+      "asset_id": "iss",
+      "title": "국제우주정거장 ISS",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/iss/asset.json",
+      "model": "spacecraft/satellites/iss/model.glb",
+      "thumbnail": "spacecraft/satellites/iss/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/iss/attribution.txt",
+      "sha256": "2ba4427413b0dd89a33d2acaf962dea8a96a3b1d8dceda05cc7aad547ffd3d16"
+    },
+    {
+      "asset_id": "jason",
+      "title": "Jason 계열 해양고도계 위성",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/jason/asset.json",
+      "model": "spacecraft/satellites/jason/model.glb",
+      "thumbnail": "spacecraft/satellites/jason/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/jason/attribution.txt",
+      "sha256": "11196765008ba79b4ed5f034a2858aae5d3c5615d6ad6f2ce20710e010ca263c"
+    },
+    {
+      "asset_id": "jason_2",
+      "title": "Ocean Surface Topography Mission (OSTM Jason-2)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/jason_2/asset.json",
+      "model": "spacecraft/satellites/jason_2/model.glb",
+      "thumbnail": "spacecraft/satellites/jason_2/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/jason_2/attribution.txt",
+      "sha256": "d04c5213ac2a154cc93b1a04f796b568917faf7a9775cbee47f2e026f6f0dd68"
+    },
+    {
+      "asset_id": "kepler",
+      "title": "Kepler (A)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/kepler/asset.json",
+      "model": "spacecraft/satellites/kepler/model.glb",
+      "thumbnail": "spacecraft/satellites/kepler/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/kepler/attribution.txt",
+      "sha256": "382014d90e2cf3e1f23e931d233547e652fe3629fddfb5acb8a99e2ceb72ff19"
+    },
+    {
+      "asset_id": "landsat_1_3",
+      "title": "Landsat 1, 2, and 3",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/landsat_1_3/asset.json",
+      "model": "spacecraft/satellites/landsat_1_3/model.glb",
+      "thumbnail": "spacecraft/satellites/landsat_1_3/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/landsat_1_3/attribution.txt",
+      "sha256": "5f4dc16afe9cfabe09dd8d622b1f4f90aee915794b345523a8c1688c59726626"
+    },
+    {
+      "asset_id": "landsat_4_5",
+      "title": "Landsat 4 and 5",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/landsat_4_5/asset.json",
+      "model": "spacecraft/satellites/landsat_4_5/model.glb",
+      "thumbnail": "spacecraft/satellites/landsat_4_5/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/landsat_4_5/attribution.txt",
+      "sha256": "f3724faa1a110f6d18a1fa1914a96e92b9e67ba84201a9cf2315b24f1b531474"
+    },
+    {
+      "asset_id": "landsat_7",
+      "title": "Landsat 7",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/landsat_7/asset.json",
+      "model": "spacecraft/satellites/landsat_7/model.glb",
+      "thumbnail": "spacecraft/satellites/landsat_7/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/landsat_7/attribution.txt",
+      "sha256": "0ecb0a11a405d6f21a9cca60a65fdbaaaf1d00e026de50ad55e9074279829687"
+    },
+    {
+      "asset_id": "landsat_8",
+      "title": "Landsat 8",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/landsat_8/asset.json",
+      "model": "spacecraft/satellites/landsat_8/model.glb",
+      "thumbnail": "spacecraft/satellites/landsat_8/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/landsat_8/attribution.txt",
+      "sha256": "8b599e867be20589cd35e55ed1d46da104299b430b1827b548a25d3fad0a314d"
+    },
+    {
+      "asset_id": "mir",
+      "title": "Mir",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/mir/asset.json",
+      "model": "spacecraft/satellites/mir/model.glb",
+      "thumbnail": "spacecraft/satellites/mir/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/mir/attribution.txt",
+      "sha256": "afd22638606c5545f6f730f4c663640912b17cedd1f677ca4e8cf01b6d4819e4"
+    },
+    {
+      "asset_id": "mirata",
+      "title": "CubeSat - MiRaTa",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/mirata/asset.json",
+      "model": "spacecraft/satellites/mirata/model.glb",
+      "thumbnail": "spacecraft/satellites/mirata/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/mirata/attribution.txt",
+      "sha256": "a384c73031c6fe2130e5ad0367487f81bf64c5cf56cbe20b1694c373af3baa12"
+    },
+    {
+      "asset_id": "mms",
+      "title": "MMS 자기권 관측위성",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/mms/asset.json",
+      "model": "spacecraft/satellites/mms/model.glb",
+      "thumbnail": "spacecraft/satellites/mms/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/mms/attribution.txt",
+      "sha256": "e3688a8db82f1918c3b4525f4ceed08b614a3a2c5be09ade5711baba30262eef"
+    },
+    {
+      "asset_id": "oco_2",
+      "title": "OCO-2",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/oco_2/asset.json",
+      "model": "spacecraft/satellites/oco_2/model.glb",
+      "thumbnail": "spacecraft/satellites/oco_2/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/oco_2/attribution.txt",
+      "sha256": "5aba302aaf91fe1a915f1121683aca6ef7ad65d7a82dad65f363361e5009b1ef"
+    },
+    {
+      "asset_id": "poes",
+      "title": "NOAA POES 계열",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/poes/asset.json",
+      "model": "spacecraft/satellites/poes/model.glb",
+      "thumbnail": "spacecraft/satellites/poes/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/poes/attribution.txt",
+      "sha256": "30a8bfdb6585bb87e27d8a847046a55f8c299456e3752d1b00786942c59035aa"
+    },
+    {
+      "asset_id": "polar",
+      "title": "Polar",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/polar/asset.json",
+      "model": "spacecraft/satellites/polar/model.glb",
+      "thumbnail": "spacecraft/satellites/polar/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/polar/attribution.txt",
+      "sha256": "0ffe9e41f6686db7dcaf3144f967f0f419e72b6a90218d955b1654cf0478801d"
+    },
+    {
+      "asset_id": "quikscat",
+      "title": "Quick Scatterometer (QuikSCAT)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/quikscat/asset.json",
+      "model": "spacecraft/satellites/quikscat/model.glb",
+      "thumbnail": "spacecraft/satellites/quikscat/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/quikscat/attribution.txt",
+      "sha256": "fb95529d5402f705e4650e66b58c9e02b4ec3eff967d38f0dcbb7b35069cd734"
+    },
+    {
+      "asset_id": "radarsat_1",
+      "title": "RADARSAT-1",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/radarsat_1/asset.json",
+      "model": "spacecraft/satellites/radarsat_1/model.glb",
+      "thumbnail": "spacecraft/satellites/radarsat_1/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/radarsat_1/attribution.txt",
+      "sha256": "db609daaf38354f67d73f412e44d78642383de157f0e2d1de85c3614562cb86f"
+    },
+    {
+      "asset_id": "rhessi",
+      "title": "HESSI-RHESSI",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/rhessi/asset.json",
+      "model": "spacecraft/satellites/rhessi/model.glb",
+      "thumbnail": "spacecraft/satellites/rhessi/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/rhessi/attribution.txt",
+      "sha256": "7760caeeb166179c8aaecb8699a157274090b624c4d0994a751255c2545df894"
+    },
+    {
+      "asset_id": "roman",
+      "title": "Nancy Grace Roman Space Telescope (A)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/roman/asset.json",
+      "model": "spacecraft/satellites/roman/model.glb",
+      "thumbnail": "spacecraft/satellites/roman/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/roman/attribution.txt",
+      "sha256": "f92b52b780eb0754a9ccefcec394194361fca59396b409e510beb7226326b471"
+    },
+    {
+      "asset_id": "sac_c",
+      "title": "SAC-C",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/sac_c/asset.json",
+      "model": "spacecraft/satellites/sac_c/model.glb",
+      "thumbnail": "spacecraft/satellites/sac_c/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/sac_c/attribution.txt",
+      "sha256": "cf1e9ad3923ded6f6157ec06b545de50840b5b7c9526d0a9bda8be1f021ca745"
+    },
+    {
+      "asset_id": "sdo",
+      "title": "Solar Dynamics Observatory",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/sdo/asset.json",
+      "model": "spacecraft/satellites/sdo/model.glb",
+      "thumbnail": "spacecraft/satellites/sdo/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/sdo/attribution.txt",
+      "sha256": "8ce4607bd65f098eee22f02717a182d6721610c940a961511dfbca832a3eda95"
+    },
+    {
+      "asset_id": "seastar",
+      "title": "SeaStar",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/seastar/asset.json",
+      "model": "spacecraft/satellites/seastar/model.glb",
+      "thumbnail": "spacecraft/satellites/seastar/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/seastar/attribution.txt",
+      "sha256": "e737d18316ebdd6d4703cb2b9545e9996fe0e72dc81a805a10ecc84542a85918"
+    },
+    {
+      "asset_id": "sentinel_6",
+      "title": "Sentinel-6 Michael Freilich",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/sentinel_6/asset.json",
+      "model": "spacecraft/satellites/sentinel_6/model.glb",
+      "thumbnail": "spacecraft/satellites/sentinel_6/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/sentinel_6/attribution.txt",
+      "sha256": "cd257b8d63deef018d0227fa6c4bcb29974f257073c4d4f92abd557098b3d580"
+    },
+    {
+      "asset_id": "skylab",
+      "title": "Skylab",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/skylab/asset.json",
+      "model": "spacecraft/satellites/skylab/model.glb",
+      "thumbnail": "spacecraft/satellites/skylab/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/skylab/attribution.txt",
+      "sha256": "6246d3ba63a5950688020609a123c67816b15df1b8b155b43bd8e6a9da8f5b44"
+    },
+    {
+      "asset_id": "soho",
+      "title": "Solar and Heliospheric Observatory",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/soho/asset.json",
+      "model": "spacecraft/satellites/soho/model.glb",
+      "thumbnail": "spacecraft/satellites/soho/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/soho/attribution.txt",
+      "sha256": "fac23d6f1032bf08833b08d81a9c945f81e2883ca974f37ff7d99fb94a320d93"
+    },
+    {
+      "asset_id": "sorce",
+      "title": "SORCE",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/sorce/asset.json",
+      "model": "spacecraft/satellites/sorce/model.glb",
+      "thumbnail": "spacecraft/satellites/sorce/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/sorce/attribution.txt",
+      "sha256": "8ec505080199227d25897f5157f4cd87e60092d69b16079deb3ca32caa2ce10d"
+    },
+    {
+      "asset_id": "spitzer",
+      "title": "Spitzer Space Telescope",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/spitzer/asset.json",
+      "model": "spacecraft/satellites/spitzer/model.glb",
+      "thumbnail": "spacecraft/satellites/spitzer/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/spitzer/attribution.txt",
+      "sha256": "fa0b7c89fd2c8632d981d3a0ad471dc70620dda4e663788409b251e0f6e6f558"
+    },
+    {
+      "asset_id": "ssl_1300",
+      "title": "SSL-1300 정지궤도 통신위성 버스",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/ssl_1300/asset.json",
+      "model": "spacecraft/satellites/ssl_1300/model.glb",
+      "thumbnail": "spacecraft/satellites/ssl_1300/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/ssl_1300/attribution.txt",
+      "sha256": "63cd644d67ee49ab79e313bb6cb0495e9f6072d421a84e116c2c3f9c40bf9c0c"
+    },
+    {
+      "asset_id": "stereo",
+      "title": "Solar TErrestrial RElations Observatory (STEREO)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/stereo/asset.json",
+      "model": "spacecraft/satellites/stereo/model.glb",
+      "thumbnail": "spacecraft/satellites/stereo/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/stereo/attribution.txt",
+      "sha256": "0215f18b40bebb3652398b60e51cb5d8c6a4100a33a6a31768b9087d6239d9bf"
+    },
+    {
+      "asset_id": "suomi_npp",
+      "title": "Suomi NPP / JPSS 계열",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/suomi_npp/asset.json",
+      "model": "spacecraft/satellites/suomi_npp/model.glb",
+      "thumbnail": "spacecraft/satellites/suomi_npp/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/suomi_npp/attribution.txt",
+      "sha256": "885278277ed8fa864368803b7da2046292754bff01033055d56fe86e8b951ee4"
+    },
+    {
+      "asset_id": "suzaku",
+      "title": "Suzaku",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/suzaku/asset.json",
+      "model": "spacecraft/satellites/suzaku/model.glb",
+      "thumbnail": "spacecraft/satellites/suzaku/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/suzaku/attribution.txt",
+      "sha256": "cf8432fb9127b4cb7b4ef72d12ccb8aec76f225d4e6cea96dbe53a72b0b129ac"
+    },
+    {
+      "asset_id": "swas",
+      "title": "SWAS",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/swas/asset.json",
+      "model": "spacecraft/satellites/swas/model.glb",
+      "thumbnail": "spacecraft/satellites/swas/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/swas/attribution.txt",
+      "sha256": "c1d58e66cb2f1185fc98b5941cbfeb3dbdb453b817a87f95e6bf8d176630f5a1"
+    },
+    {
+      "asset_id": "swift",
+      "title": "Swift 감마선 관측위성",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/swift/asset.json",
+      "model": "spacecraft/satellites/swift/model.glb",
+      "thumbnail": "spacecraft/satellites/swift/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/swift/attribution.txt",
+      "sha256": "e7074fe1590550747fbcd6803b0c6086b4f57cafd8e3d93789f0b0b7e59b0372"
+    },
+    {
+      "asset_id": "tdrs",
+      "title": "TDRS 데이터 중계위성",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/tdrs/asset.json",
+      "model": "spacecraft/satellites/tdrs/model.glb",
+      "thumbnail": "spacecraft/satellites/tdrs/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/tdrs/attribution.txt",
+      "sha256": "4508756798d827722608aa9001925f01ce6409b9e0fd910eacfde9c061139b9e"
+    },
+    {
+      "asset_id": "terra",
+      "title": "Terra (EOS AM-1)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/terra/asset.json",
+      "model": "spacecraft/satellites/terra/model.glb",
+      "thumbnail": "spacecraft/satellites/terra/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/terra/attribution.txt",
+      "sha256": "015d7b3b1dd3dc5f5473d7cbf6825f0c8d31cafce4ba3efcc72ba4e5296dafbf"
+    },
+    {
+      "asset_id": "tess",
+      "title": "TESS",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/tess/asset.json",
+      "model": "spacecraft/satellites/tess/model.glb",
+      "thumbnail": "spacecraft/satellites/tess/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/tess/attribution.txt",
+      "sha256": "2b82a0191af6f06081368bb59d6cbb63b13ad8f019cd7ad08229e911e5b9ee6a"
+    },
+    {
+      "asset_id": "themis",
+      "title": "THEMIS",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/themis/asset.json",
+      "model": "spacecraft/satellites/themis/model.glb",
+      "thumbnail": "spacecraft/satellites/themis/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/themis/attribution.txt",
+      "sha256": "2dfe2a2e07de211f6686adbb612c09c5dfac62a397cb88343f119c2124d818e3"
+    },
+    {
+      "asset_id": "toms",
+      "title": "TOMS-EP",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/toms/asset.json",
+      "model": "spacecraft/satellites/toms/model.glb",
+      "thumbnail": "spacecraft/satellites/toms/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/toms/attribution.txt",
+      "sha256": "36578255a65849073c12d596d255a2fc2042730576bfb433bb9073eb66d287d2"
+    },
+    {
+      "asset_id": "topex",
+      "title": "TOPEX/Poseidon",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/topex/asset.json",
+      "model": "spacecraft/satellites/topex/model.glb",
+      "thumbnail": "spacecraft/satellites/topex/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/topex/attribution.txt",
+      "sha256": "e5ff3cae87bbdc59c07a626bea1907aa24678038e1431ff703e85fe9d5c88c0c"
+    },
+    {
+      "asset_id": "trmm",
+      "title": "Tropical Rainfall Measuring Mission (TRMM)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/trmm/asset.json",
+      "model": "spacecraft/satellites/trmm/model.glb",
+      "thumbnail": "spacecraft/satellites/trmm/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/trmm/attribution.txt",
+      "sha256": "2d285eef6c6d16616ef97c0686900f874b08263faae31e8d6bcd6df2c81c6a1d"
+    },
+    {
+      "asset_id": "van_allen",
+      "title": "Van Allen Probes (RBSP)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/van_allen/asset.json",
+      "model": "spacecraft/satellites/van_allen/model.glb",
+      "thumbnail": "spacecraft/satellites/van_allen/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/van_allen/attribution.txt",
+      "sha256": "be9ed53e1452c615750e8d2f977a168eb95216cb82fb698c16d5e08cb4b891f0"
+    },
+    {
+      "asset_id": "wind",
+      "title": "Wind",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/wind/asset.json",
+      "model": "spacecraft/satellites/wind/model.glb",
+      "thumbnail": "spacecraft/satellites/wind/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/wind/attribution.txt",
+      "sha256": "59ddb3072cae38e3c8dc71cea8887f2db51a609251080add6c940241e1e7526f"
+    },
+    {
+      "asset_id": "wire",
+      "title": "WIRE",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/wire/asset.json",
+      "model": "spacecraft/satellites/wire/model.glb",
+      "thumbnail": "spacecraft/satellites/wire/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/wire/attribution.txt",
+      "sha256": "adffb87ebd6d884f47b8d82b0aa8c37f72dc1c72bf532ba4117a94c392f6b2d0"
+    },
+    {
+      "asset_id": "wmap",
+      "title": "Wilkinson Microwave Anisotropy Probe (WMAP)",
+      "category": "spacecraft/satellites",
+      "metadata": "spacecraft/satellites/wmap/asset.json",
+      "model": "spacecraft/satellites/wmap/model.glb",
+      "thumbnail": "spacecraft/satellites/wmap/thumbnail.jpg",
+      "attribution": "spacecraft/satellites/wmap/attribution.txt",
+      "sha256": "e229741cec91e370cbc8be74bf41b66eff4f164ca18b0e08dbd6d6ed4f59aeca"
+    },
+    {
+      "asset_id": "kenney_blocky_person_b",
+      "title": "Kenney Blocky Person B — passenger prototype",
+      "category": "people/civilian",
+      "metadata": "people/civilian/kenney_blocky_person_b/asset.json",
+      "model": "people/civilian/kenney_blocky_person_b/model.glb",
+      "thumbnail": "people/civilian/kenney_blocky_person_b/thumbnail.jpg",
+      "attribution": "people/civilian/kenney_blocky_person_b/attribution.txt",
+      "sha256": "559cc12de19db927d973836aa2dcbb7d131c27b0d33d779036d1a76b13dbca6e"
+    },
+    {
+      "asset_id": "kenney_blocky_person_a",
+      "title": "Kenney Blocky Person A — passenger prototype",
+      "category": "people/civilian",
+      "metadata": "people/civilian/kenney_blocky_person_a/asset.json",
+      "model": "people/civilian/kenney_blocky_person_a/model.glb",
+      "thumbnail": "people/civilian/kenney_blocky_person_a/thumbnail.jpg",
+      "attribution": "people/civilian/kenney_blocky_person_a/attribution.txt",
+      "sha256": "91527c1050a2b55a86b5cc34dec280f85ebd945e0fe6127f6ceea852b495e771"
+    },
+    {
+      "asset_id": "kenney_blocky_person_c",
+      "title": "Kenney Blocky Person C — passenger prototype",
+      "category": "people/civilian",
+      "metadata": "people/civilian/kenney_blocky_person_c/asset.json",
+      "model": "people/civilian/kenney_blocky_person_c/model.glb",
+      "thumbnail": "people/civilian/kenney_blocky_person_c/thumbnail.jpg",
+      "attribution": "people/civilian/kenney_blocky_person_c/attribution.txt",
+      "sha256": "08be52ebb719ae2c0fe5110500843cad0be645f426829ac0c7713fc855a65971"
+    },
+    {
+      "asset_id": "kenney_blocky_person_e",
+      "title": "Kenney Blocky Person E — passenger prototype",
+      "category": "people/civilian",
+      "metadata": "people/civilian/kenney_blocky_person_e/asset.json",
+      "model": "people/civilian/kenney_blocky_person_e/model.glb",
+      "thumbnail": "people/civilian/kenney_blocky_person_e/thumbnail.jpg",
+      "attribution": "people/civilian/kenney_blocky_person_e/attribution.txt",
+      "sha256": "af17bcd58c966f690fb920d85243f8dd7ecb60f7c9431d2800f9555f77e7db08"
+    },
+    {
+      "asset_id": "kenney_blocky_person_f",
+      "title": "Kenney Blocky Person F — passenger prototype",
+      "category": "people/civilian",
+      "metadata": "people/civilian/kenney_blocky_person_f/asset.json",
+      "model": "people/civilian/kenney_blocky_person_f/model.glb",
+      "thumbnail": "people/civilian/kenney_blocky_person_f/thumbnail.jpg",
+      "attribution": "people/civilian/kenney_blocky_person_f/attribution.txt",
+      "sha256": "e680cefefe17ddffefcf2752ca660a83ede494e3ec94f5636e0a1a7af955699f"
+    },
+    {
+      "asset_id": "kenney_blocky_person_i",
+      "title": "Kenney Blocky Person I — passenger prototype",
+      "category": "people/civilian",
+      "metadata": "people/civilian/kenney_blocky_person_i/asset.json",
+      "model": "people/civilian/kenney_blocky_person_i/model.glb",
+      "thumbnail": "people/civilian/kenney_blocky_person_i/thumbnail.jpg",
+      "attribution": "people/civilian/kenney_blocky_person_i/attribution.txt",
+      "sha256": "19ce59ce2b79fb39f0b53224040252660207dd5c01e3e6e3f43da71935fd8953"
+    },
+    {
+      "asset_id": "kenney_blocky_person_j",
+      "title": "Kenney Blocky Person J — passenger prototype",
+      "category": "people/civilian",
+      "metadata": "people/civilian/kenney_blocky_person_j/asset.json",
+      "model": "people/civilian/kenney_blocky_person_j/model.glb",
+      "thumbnail": "people/civilian/kenney_blocky_person_j/thumbnail.jpg",
+      "attribution": "people/civilian/kenney_blocky_person_j/attribution.txt",
+      "sha256": "ed7316ea1689944dbeca50aa1dce197f048ab5aab4031fdfc6edeff735d1468c"
+    },
+    {
+      "asset_id": "kenney_blocky_person_k",
+      "title": "Kenney Blocky Person K — passenger prototype",
+      "category": "people/civilian",
+      "metadata": "people/civilian/kenney_blocky_person_k/asset.json",
+      "model": "people/civilian/kenney_blocky_person_k/model.glb",
+      "thumbnail": "people/civilian/kenney_blocky_person_k/thumbnail.jpg",
+      "attribution": "people/civilian/kenney_blocky_person_k/attribution.txt",
+      "sha256": "757a894093f680dbf1472ab49bc76e0b8b26554198de1b95757df251f9d38213"
+    },
+    {
+      "asset_id": "kenney_blocky_person_m",
+      "title": "Kenney Blocky Person M — passenger prototype",
+      "category": "people/civilian",
+      "metadata": "people/civilian/kenney_blocky_person_m/asset.json",
+      "model": "people/civilian/kenney_blocky_person_m/model.glb",
+      "thumbnail": "people/civilian/kenney_blocky_person_m/thumbnail.jpg",
+      "attribution": "people/civilian/kenney_blocky_person_m/attribution.txt",
+      "sha256": "ef45cda7a2f05d006493bc6b41f981516374eb860cc407809e7f2e6a5a1d9ce6"
+    },
+    {
+      "asset_id": "kenney_blocky_person_p",
+      "title": "Kenney Blocky Person P — passenger prototype",
+      "category": "people/civilian",
+      "metadata": "people/civilian/kenney_blocky_person_p/asset.json",
+      "model": "people/civilian/kenney_blocky_person_p/model.glb",
+      "thumbnail": "people/civilian/kenney_blocky_person_p/thumbnail.jpg",
+      "attribution": "people/civilian/kenney_blocky_person_p/attribution.txt",
+      "sha256": "ca1ff2f84c1b7025abccf60a19f871847da8844346e0d7933a8b2dfdb0cd195f"
+    },
+    {
+      "asset_id": "kenney_blocky_person_q",
+      "title": "Kenney Blocky Person Q — passenger prototype",
+      "category": "people/civilian",
+      "metadata": "people/civilian/kenney_blocky_person_q/asset.json",
+      "model": "people/civilian/kenney_blocky_person_q/model.glb",
+      "thumbnail": "people/civilian/kenney_blocky_person_q/thumbnail.jpg",
+      "attribution": "people/civilian/kenney_blocky_person_q/attribution.txt",
+      "sha256": "a6469d8673d6c5ae6aaa5b6e68e51f1d20a3217e5f60f04e8e1bd6d83a1144cf"
+    }
+  ],
+  "excluded": [
+    "cubesat_3u",
+    "gnss_bus",
+    "goes_r",
+    "leo_comms_bus",
+    "starlink_flat"
+  ]
+}

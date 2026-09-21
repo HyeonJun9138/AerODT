@@ -1,0 +1,7 @@
+{
+  "scale_m": 406.9305780134473,
+  "method": "train_future_relative_l2_percentile_95",
+  "train_observations_sha256": "59cd2c64c80209545365727eb416c6bd22d3cb701ca1cd9e36254edd18edbaa5",
+  "train_target_sha256": "d653f89253605adc918de41f8bf575c9c30e954910e0d390d0c35f85393661d9",
+  "window_index_sha256": "152ae3aacbbe3412477d22e59ee9e6b29122e38f2afd063e7fe6eab9abeaefbb"
+}

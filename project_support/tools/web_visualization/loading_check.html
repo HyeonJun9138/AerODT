@@ -1,0 +1,34 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AeroDT 로딩 디자인 검증 — 실제 진행률 아님</title>
+<link rel="stylesheet" href="/static/styles.css?v=20260909-brand-layout">
+<link rel="stylesheet" href="/static/loading.css?v=20260909-brand-layout">
+<style>#checks{position:fixed;z-index:101;bottom:12px;left:12px;right:12px;display:flex;justify-content:center;gap:6px;flex-wrap:wrap;font:11px sans-serif;color:#39453f}#checks button{color:#39453f;background:#fff9;border-color:#7774;font-size:11px;min-height:26px}#checks span{width:100%;text-align:center}</style>
+<div id="checks"><span>디자인 검증 전용 · 실제 준비 진행률 아님 · 외부 데이터 요청 없음</span>
+<button data-value="0">0%</button><button data-value="45">45%</button><button data-value="90">90%</button><button data-value="100">100%</button>
+<label><input id="reduce-motion" type="checkbox">모션 줄이기 시험</label><button id="finish">완료 전환</button><button id="failure">오류 확인</button><output id="measure" style="width:100%;text-align:center"></output></div>
+<script type="module">
+import {LoadingScreen} from '/static/loading_screen.js?v=20260908-map-ready-hold';
+const html=await (await fetch('/')).text();
+const root=new DOMParser().parseFromString(html,'text/html').getElementById('loading');
+document.body.append(document.importNode(root,true));
+const $=id=>document.getElementById(id);let screen;
+function reset(value){
+  screen?.destroy();$('loading').hidden=false;$('loading').setAttribute('aria-busy','true');
+  screen=new LoadingScreen({root:$('loading'),progress:$('loading-progress'),status:$('loading-step'),retry:$('retry')});
+  screen.paint(value,value);$('loading-step').textContent=value===100?'지구와 서버 상태 준비 완료':value===0?'시각화 엔진 준비 중':'지구 시각화 준비 중';
+}
+for(const button of document.querySelectorAll('[data-value]'))button.onclick=()=>reset(Number(button.dataset.value));
+$('finish').onclick=()=>{
+  const start=performance.now(),records=[];let lastPhase='';
+  screen.finish(100,'지구와 서버 상태 준비 완료',{reducedMotion:$('reduce-motion').checked});
+  const sample=()=>{
+    const phase=$('loading').hidden?'hidden':$('loading').dataset.phase;
+    if(phase!==lastPhase){records.push({phase,ms:Math.round(performance.now()-start),percent:Number($('loading-progress').getAttribute('aria-valuenow'))});lastPhase=phase;}
+    $('measure').textContent=JSON.stringify(records);
+    if(phase!=='hidden' && performance.now()-start<15000)requestAnimationFrame(sample);
+  };sample();
+};
+$('failure').onclick=()=>screen.fail('시각화 엔진 연결을 확인해 주세요.',45);
+$('retry').onclick=()=>reset(0);
+reset(45);
+</script></html>

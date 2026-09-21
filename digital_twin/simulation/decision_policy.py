@@ -1,0 +1,440 @@
+"""What each decision maker decides, in a form that can be drawn and tuned.
+
+Four parties decide things in a rehearsed day, and until now each one's rules
+were constants spread through the file that used them. That is fine for code
+and useless for an operator, who cannot see why an aircraft is waiting or try a
+different rule without a programmer. This module is the one place that says:
+here is the decision, here are its branches, and here are the numbers it turns
+on.
+
+It is deliberately declarative. Nothing here decides anything - the engine, the
+sequencer and the pilot still do that. What this owns is the *description*: a
+chart the display can draw, and a set of named values those three read instead
+of their own constants. Keeping the description beside the defaults is the only
+way the drawing stays true; a chart maintained separately from the code drifts
+within a week and then lies.
+
+Four charts, because four parties decide:
+
+  psu       - who lands next, and who has to wait
+  pilot     - how the aircraft is flown between the points it was given
+  airline   - which airframe takes the next flight, and when it is let go
+  vertiport - what the deck does with its stands and its turnaround
+
+A chart carries the role its party joins the shared rehearsal as, so each
+stakeholder's own screen can open its own chart rather than a window of four.
+
+The web application snapshots policy when a scenario is loaded; saved changes
+apply to the next loaded scenario. `live` identifies engine-read parameters,
+not permission to mutate an already running scenario.
+The pilot's guidance numbers are compiled into the native flight library, so
+those carry `native` and take effect for flights started after the change -
+the aircraft already in the air keep the numbers they launched with, which is
+the truthful behaviour anyway: you do not re-tune an aircraft mid-approach.
+"""
+
+from digital_twin.model_library.flight_plan import ROUTE_CAPTURE_M
+
+SCHEMA_VERSION = 1
+
+# ---------------------------------------------------------------------------
+# PSU: who lands next
+# ---------------------------------------------------------------------------
+PSU_NODES = [
+ {'id': 'allocate', 'kind': 'start', 'text': '출발 전 FATO와 연결 항로를 비교·배정한다',
+  'detail': '이착륙 역할·유도로·실제 항로 연결을 확인하고 예상 대기를 비교한다. 원래 계획과 배정 결과를 기록하며 비행 중 항로를 갈아 끼우지 않는다', 'next': 'entry_meter'},
+ {'id':'entry_meter','kind':'decision','text':'예측 접근 시각의 진입 간격이 확보됐나?',
+  'detail':'접근 예측과 실제 비행·체공 중인 도착 수요를 함께 비교한다. 착륙 처리 간격보다 빠르게 투입하지 않는다. 예약 순번은 유지하되 지상 지연 후 실제 출발 시 혼잡을 다시 확인하고 필요하면 주기장에서 출발을 늦춘다',
+  'yes':'departure_terminal','no':'departure_hold'},
+ {'id': 'departure_terminal', 'kind': 'decision', 'text': '공용 패드와 상승 경로가 비었나?',
+  'detail': '도착 접근과 상승 경로의 교차·실제 점유·이착륙 간격을 확인한다. 착륙·혼합 간격 이상 체공한 도착편이 주기장과 출구를 확보하면 새 교차 출발보다 우선한다. 지상 출구가 막혔으면 출발을 막아 빈 주기장 확보를 방해하지 않는다', 'yes': 'ask', 'no': 'departure_hold'},
+ {'id': 'departure_hold', 'kind': 'end', 'text': '출발 주기장 대기 · 원인과 차단 기체 기록'},
+ {'id': 'terminal', 'kind': 'decision', 'text': '다른 FATO의 상승·접근 경로와 분리됐나?',
+  'detail': '출발편은 공용 구간을 계속 소유한다. 초기 접근만 분리되면 그 구간부터 예약하고, 공용 구간 앞의 감속 여유 안으로 들어가기 전에 다시 검사한다. 다른 접근편과 겹치면 대기한다',
+  'yes': 'clear', 'no': 'terminal_hold'},
+ {'id': 'terminal_hold', 'kind': 'end', 'text': '교차 경로 대기 · 차단 기체·FATO 기록'},
+ {'id': 'ask',
+  'kind': 'start',
+  'text': '실제 위치에서 도착 ETA를 갱신한다',
+  'detail': '접근 길이·수평속도·강하율로 남은 시간을 계산한다',
+  'next': 'known'},
+ {'id': 'known', 'kind': 'decision', 'text': '발급된 착륙 번호가 있나?', 'yes': 'reuse', 'no': 'pad'},
+ {'id': 'reuse',
+  'kind': 'action',
+  'text': '번호를 유지하고 예측 슬롯을 갱신한다',
+  'detail': '선행 지연은 뒤로 반영하고, 빨리 비면 대기를 줄인다. 출구 또는 대기점 복귀 경로가 막혀 접근을 시작하지 못하는 편은 번호를 유지하되 준비된 후속편을 막지 않는다. 이미 시작한 접근과 실제 패드 점유는 보호한다',
+  'next': 'pad'},
+ {'id': 'pad',
+  'kind': 'action',
+  'text': '출발 예약과 선행 착륙 ETA 사이에 배치한다',
+  'detail': '진행 중 접근이 우선이며 같은 패드의 시간 슬롯은 겹치지 않는다. 이륙은 가까운 패드의 접근까지 보호하고 실제 출발 위치 이탈을 확인한다',
+  'next': 'stand'},
+ {'id': 'stand', 'kind': 'decision', 'text': '빈 주기장과 도착 출구가 확보됐나?', 'detail': '실제 빈 주기장을 예약한다. 이동 중인 선행기가 허가된 경로로 교차 구간을 완전히 벗어날 시간도 확인한다', 'yes': 'grant', 'no': 'other'},
+ {'id': 'other', 'kind': 'decision', 'text': '다른 빈 주기장으로 안전하게 이동할 수 있나?', 'yes': 'move', 'no': 'forecast'},
+ {'id': 'move', 'kind': 'action', 'text': '연결된 빈 주기장·유도로를 함께 재배정한다', 'detail': '원래 계획을 보존하고 실제 배정·하차 동선을 갱신한다. 이동 중인 지상 기체나 최종 정렬 기체의 경로는 바꾸지 않는다', 'next': 'grant'},
+ {'id': 'forecast', 'kind': 'decision', 'text': '이동 중인 출발편이 도착 전에 게이트를 비우나?',
+  'detail': '실제 이동·지상 이동권·출구 전체 이탈 시각을 확인하고 후속 1편만 선예약한다. 실제 점유는 출발편에 남는다. 정지·이동권 축소·예상 지연이면 다시 보류한다', 'yes': 'grant', 'no': 'wait'},
+ {'id': 'wait', 'kind': 'end', 'text': '주기장·출구 확보 대기', 'detail': '미접근편의 사용할 수 없는 임시 게이트 예약은 반환하고 계속 재평가한다. 이미 접근을 시작한 기체의 예약과 실제 점유는 보호한다'},
+ {'id': 'grant', 'kind': 'decision', 'text': '접근 소요시간을 감안해 지금 시작할 수 있나?', 'yes': 'spacing', 'no': 'over'},
+ {'id': 'spacing', 'kind': 'decision', 'text': '선행 접근 간격과 동시 접근 수가 허용하나?', 'yes': 'terminal', 'no': 'spacing_hold'},
+ {'id': 'clear', 'kind': 'action', 'text': '복귀 경로 확인 · 접근 시작 허가', 'detail': '옆 대기점에서 접근점으로 복귀할 시간을 예측에 포함한다. 실제 접근점 도착 뒤 접근 구간으로 이어가며, 최종 착륙 허가는 별도로 확인한다', 'next': 'traffic_clear'},
+ {'id': 'traffic_clear', 'kind': 'decision', 'text': '접근 교통 분리가 확인됐나?', 'yes': 'final', 'no': 'traffic_hold'},
+ {'id': 'traffic_hold', 'kind': 'action', 'text': 'PSU에 지정 대기점 요청', 'detail': '항로 위에서 임의로 대기하지 않는다. PSU가 자리와 이동 경로를 배정하고 조종사가 실제 위치·교통을 확인한다', 'next': 'hold'},
+ {'id': 'final', 'kind': 'decision', 'text': '최종 진입 전 실제 패드·출구·선행편이 비었나?', 'detail': '실제 점유와 공용 구간을 재확인한다. 게이트만 점유 중이면 독립 FATO 선착륙 조건을 별도로 검사한다', 'yes': 'land', 'no': 'staging'},
+ {'id': 'land', 'kind': 'end', 'text': '최종 착륙 허가', 'detail': '접지 뒤 패드 반경을 실제로 벗어나야 다음 편에 넘긴다'},
+ {'id': 'staging', 'kind': 'decision', 'text': '빈 독립 FATO에서 게이트 해제를 잠시 기다릴 수 있나?',
+  'detail': '공용 패드·상승 경로·출발 유도로를 막지 않고, 이동 중 출발편의 게이트 해제가 임박한 경우만 선착륙한다. 접지 후 지상 이동권으로 대기·감속하며 실제 이탈 전까지 FATO 점유를 유지한다', 'yes': 'land', 'no': 'protect'},
+ {'id': 'protect', 'kind': 'end', 'text': '최종 접근 감속 대기', 'detail': '예측이 틀려도 점유된 패드로 내리지 않는다'},
+ {'id': 'over', 'kind': 'decision', 'text': '대기 한도를 넘겼나?', 'yes': 'refuse', 'no': 'hold'},
+ {'id': 'refuse', 'kind': 'end', 'text': '대기 한도 초과 보고'},
+ {'id': 'hold', 'kind': 'action', 'text': '접근점 측면 빈 자리 배정', 'detail': '접근점별 측면 6개 자리부터 채우고 차면 상층을 배정한다. 출발 전에 해당 지점을 조종사 경유점으로 전달해 항로 위에서 급정지하지 않도록 한다. 배정한 자리는 실제 복귀가 끝날 때까지 보유한다. 수직 착륙에 진입한 기체는 재배정하지 않는다', 'next': 'bay_clear'},
+ {'id': 'bay_clear', 'kind': 'decision', 'text': '대기점 이동 경로와 교통 간격이 확보됐나?', 'yes':'bay_move','no':'bay_retry'},
+ {'id': 'bay_move', 'kind': 'end', 'text': '지정 대기점 이동 · 도착 보고', 'detail':'실제로 접근 경로를 벗어나 도착하면 접근 예약을 반환한다. 게이트 해제 예측·복귀 시간·선행 간격으로 다음 투입을 재평가한다'},
+ {'id': 'bay_retry', 'kind': 'end', 'text': 'PSU 우회 경로 재계산 · 교통 재확인'},
+ {'id': 'spacing_hold', 'kind': 'action', 'text': '선행 접근 간격 대기', 'next':'hold'}]
+
+PSU_PARAMETERS = [
+ {'id':'assume_distinct_fatos_separated','label':'서로 다른 FATO 공중 분리 가정','node':'terminal','kind':'toggle',
+  'default':True,'scope':'live',
+  'note':'다음 계획 로드부터 적용. 같은 버티포트의 서로 다른 FATO는 공통 WP가 있어도 공중 경로 전체를 선점해 막지 않습니다. 실제 근접 대응과 패드 점유, 인접 패드 및 지상 검사는 유지합니다. 분리 항로를 생성하거나 안전을 보장하는 설정은 아닙니다.'},
+ {'id':'assume_mixed_separated','label':'이착륙 우측 분리 가정','node':'terminal','kind':'toggle',
+  'default':True,'scope':'live',
+  'note':'다음 비행계획 로드부터 적용. 이륙과 착륙은 비행 측에서 우측으로 분리된다고 가정하여 공중 경로 중첩만으로 사전 차단하지 않습니다. 우측 항로를 생성하는 기능은 아닙니다. 같은 패드 실제 점유, 지상 출구, 동방향 간격과 실제 근접 대응은 유지하는 연구 설정입니다.'},
+ {'id':'terminal_separation','label':'교차 경로 사전 차단','node':'terminal','kind':'toggle',
+  'default':True,'scope':'live',
+  'note':'끄면 다른 FATO의 상승·접근 경로가 겹친다는 이유로는 세우지 않습니다. 패드 점유, 착륙 '
+         '간격, 주기장 출구는 그대로 판단합니다. "이륙 경로와 접근 경로 분리 대기"가 이 판단이며, '
+         '아래 두 거리는 이것이 켜져 있을 때만 쓰입니다.'},
+ {'id':'terminal_horizontal_m','label':'경로 사전 차단 수평 거리','unit':'m','node':'terminal',
+  'min':10,'max':300,'step':5,'default':120.0,'scope':'live',
+  'note':'다음 비행계획 로드부터 적용. 경로 보호영역 비교용 연구 설정이며 실제 기체의 근접 대응 기준과 다릅니다. 완화값은 안전 보장 기준이 아닙니다.'},
+ {'id':'terminal_vertical_m','label':'경로 사전 차단 수직 거리','unit':'m','node':'terminal',
+  'min':5,'max':150,'step':5,'default':45.0,'scope':'live',
+  'note':'다음 비행계획 로드부터 적용. 경로 고도 범위 비교용이며 조종사의 실제 교통 대응 기준은 유지합니다.'},
+ {'id':'entry_spacing_s','label':'예측 진입 간격','unit':'초','node':'entry_meter',
+ 'min':60,'max':600,'step':10,'default':150.0,'scope':'live',
+ 'note':'설정값, 접근 시작 간격의 2배, 착륙 간격 중 큰 값을 사용합니다. 이미 비행·체공 중인 기체도 도착 수요에 포함합니다. 지상 출발 지연 뒤에는 예약 순번을 유지한 채 시각을 재확인합니다. 실제 패드 점유 검사는 별도입니다.'},
+ {'id':'entry_per_fato','label':'도착 FATO별 진입 간격','node':'entry_meter','kind':'toggle','default':True,'scope':'live',
+  'note':'켜면 진입 간격을 배정된 도착 FATO별로 따로 센다: 착륙 FATO가 둘이면 두 편이 나란히 들어온다. 끄면 버티포트 전체를 한 줄로 세워 FATO가 여럿이어도 한 번에 한 편만 들어온다. 패드 점유·인접 패드 확인은 그대로 유지한다.'},
+ {'id':'predictive_ground','label':'출발편 뒤 게이트 선예약','node':'forecast','kind':'toggle','default':True,'scope':'live','note':'이동·이동권이 확인된 출발편의 후속 게이트 예약. 단순 예정 시각만으로 허가하지 않습니다.'},
+ {'id':'ground_lookahead_s','label':'지상 해제 예측 범위','node':'forecast','default':120.,'min':30,'max':300,'step':10,'unit':'초','scope':'live','note':'허가된 지상 경로의 이탈 예상 시각을 이 범위까지 확인합니다.'},
+ {'id':'progressive_approach','label':'초기 접근 구간 먼저 투입','node':'terminal','kind':'toggle','default':True,'scope':'live','note':'이륙 경로와 겹치지 않는 초기 구간만 허가하고 공용 구간 앞에서 다시 검사합니다.'},
+ {'id':'direct_approach','label':'대기 구역에서 바로 접근','node':'terminal','kind':'toggle','default':True,'scope':'live','note':'다음 비행계획 로드부터 적용. 켜면 대기 구역에서 풀린 기체가 회랑 끝 진입점으로 되돌아가지 않고 그 자리에서 하강 구간으로 바로 접근합니다. 끄면 진입점으로 복귀한 뒤 접근합니다.'},
+ {'id':'landing_staging_wait_s','label':'선착륙 시 게이트 예상 대기','node':'staging','default':30.,'min':0,'max':90,'step':5,'unit':'초','scope':'live','note':'빈 독립 FATO에 착륙을 허가할 때의 예상 대기 상한. 0이면 선착륙 대기를 끕니다. 실제 지연이 늘면 지상에서 계속 보호합니다.'},
+{'id': 'allocate_fatos', 'label': '연결된 FATO로 분산 배정', 'node': 'allocate', 'kind': 'toggle', 'default': True, 'scope': 'live', 'note': '다음 비행계획 로드부터 적용합니다. 출발 전 배정하며 비행 중에는 접근 항로를 유지합니다.'}, {'id': 'predictive_arrivals', 'label': '예측 접근 허가', 'node': 'grant', 'kind': 'toggle', 'default': True, 'scope': 'live', 'note': '실제 위치 ETA로 슬롯을 갱신하고 접근과 최종 착륙을 따로 허가합니다.'}, {'id': 'prediction_buffer_s', 'label': 'ETA 여유', 'node': 'pad', 'default': 12.0, 'min': 0, 'max': 60, 'step': 1, 'unit': '초', 'scope': 'live', 'note': '도착 예측에 더하는 여유. 실제 패드 점유 확인은 별도로 유지합니다.'}, {'id': 'approach_headway_s', 'label': '접근 시작 간격', 'node': 'spacing', 'default': 30.0, 'min': 10, 'max': 180, 'step': 5, 'unit': '초', 'scope': 'live', 'note': '앞 기체가 접근을 시작한 뒤 다음 기체를 보낼 최소 시간.'}, {'id': 'approach_capacity', 'label': '패드별 동시 접근', 'node': 'spacing', 'default': 3.0, 'min': 1, 'max': 6, 'step': 1, 'unit': '대', 'scope': 'live', 'note': '최종 착륙 중인 기체를 포함합니다.'}, {'id': 'final_guard_s', 'label': '최종 진입 확인 시점', 'node': 'final', 'default': 45.0, 'min': 20, 'max': 120, 'step': 5, 'unit': '초', 'scope': 'live', 'note': '실제 접근 위치로 계산한 시간이 이 값 안에 들면 패드와 선행편을 확인합니다. 대기·복귀 ETA 때문에 이 판정이 반복해서 바뀌지 않습니다.'}, {'id': 'pad_adjacency_m', 'label': '인접 패드 간격', 'node': 'land', 'default': 50.0, 'min': 10, 'max': 200, 'step': 5, 'unit': 'm', 'scope': 'live', 'note': '같은 데크에서 이 거리 안의 패드는 하나로 본다: 한 패드가 쓰이는 동안 그 안의 다른 패드에서 이륙·최종 착륙을 시키지 않는다. 36 m 간격 4-FATO 데크에서 50 m면 F1·F3, F2·F4가 동시에 움직인다. 다운워시 안전 기준이 아닌 연구 설정이다.'}, {'id': 'pad_clear_radius_m', 'label': '패드 이탈 확인 반경', 'node': 'land', 'default': 25.0, 'min': 10, 'max': 80, 'step': 5, 'unit': 'm', 'scope': 'live', 'note': '접지 뒤 실제 지상 위치가 이 반경을 벗어나면 점유를 해제합니다.'}] + [
+    {"id": "arrival_request_lead_s", "label": "접근 요청 시점", "unit": "초", "node": "ask",
+     "min": 60, "max": 1800, "step": 10, "default": 180.0, "scope": "live",
+     "note": "착륙 예정 이 시간 전에 묻는다. 짧으면 순서를 바꿀 여지가 없고, 길면 아직 "
+             "모르는 앞순위까지 미리 밀어낸다."},
+    {"id": "fato_landing_separation_s", "label": "착륙 · 착륙 간격", "unit": "초", "node": "pad",
+     "min": 20, "max": 600, "step": 5, "default": 90.0, "scope": "live",
+     "note": "한 FATO가 연속 착륙 사이에 두는 시간. 수직 착륙과 유도로까지 빠지는 시간이다. "
+             "실제 접근에 걸리는 시간보다 짧으면 대기열이 계속 길어진다."},
+    {"id": "fato_departure_separation_s", "label": "출발 · 출발 간격", "unit": "초", "node": "pad",
+     "min": 15, "max": 600, "step": 5, "default": 60.0, "scope": "live",
+     "note": "출발은 수직으로 떠나므로 착륙보다 패드를 짧게 쓴다."},
+    {"id": "fato_mixed_separation_s", "label": "착륙 ↔ 출발 간격", "unit": "초", "node": "pad",
+     "min": 15, "max": 600, "step": 5, "default": 75.0, "scope": "live",
+     "note": "같은 패드에서 종류가 바뀔 때의 간격."},
+    {"id": "stand_wait_s", "label": "주기장 재확인 간격", "unit": "초", "node": "wait",
+     "min": 30, "max": 900, "step": 10, "default": 120.0, "scope": "live",
+     "note": "모든 주기장이 찼을 때 이만큼 미뤄두고 다시 본다."},
+    {"id": "minimum_hold_s", "label": "최소 대기", "unit": "초", "node": "grant",
+     "min": 5, "max": 300, "step": 5, "default": 20.0, "scope": "live",
+     "note": "이보다 짧은 지연은 대기로 치지 않고 접근을 늦춰 흡수한다. 올리면 짧은 대기가 "
+             "사라지는 대신 접근이 붐빈다."},
+    {"id": "maximum_hold_s", "label": "대기 한도", "unit": "초", "node": "over",
+     "min": 300, "max": 7200, "step": 60, "default": 1800.0, "scope": "live",
+     "note": "이보다 오래 기다려야 하면 착륙시키지 않고 회항 후보로 보고한다."},
+    {"id": "release_pad_at_touchdown", "label": "패드 이탈 후 조기 해제", "kind": "toggle",
+     "node": "pad", "default": True, "scope": "live",
+     "note": "켜면 접지 후 패드 반경을 벗어난 실제 위치로 해제합니다. 끄면 주기장 도착까지 점유합니다."},
+    {"id": "hold_radius_m", "label": "대기 구역 최대 반경", "unit": "m", "node": "hold",
+     "min": 200, "max": 6000, "step": 50, "default": 600.0, "scope": "live",
+     "note": "시간 기반 재생의 버티포트 중심 대기 범위입니다. native 운항은 접근점 측면 약480–566m의 고정 자리와 상위 고도층을 사용합니다."},
+    {"id": "hold_min_radius_m", "label": "대기 구역 최소 반경", "unit": "m", "node": "hold",
+     "min": 100, "max": 3000, "step": 50, "default": 400.0, "scope": "live",
+     "note": "시간 기반 재생의 대기 하한입니다. native 고정 자리는 항로 및 다른 자리의 복귀 경로와 겹치지 않게 배정합니다."},
+    {"id": "hold_speed_mps", "label": "대기 이동 속도", "unit": "m/s", "node": "hold",
+     "min": 3, "max": 60, "step": 1, "default": 15.0, "scope": "live",
+     "note": "대기 지점까지 나가고 돌아오는 속도."},
+    {"id": "hold_min_station_s", "label": "최소 정지 시간", "unit": "초", "node": "hold",
+     "min": 0, "max": 300, "step": 5, "default": 10.0, "scope": "live",
+     "note": "코스를 벗어난 이상 최소한 이만큼은 선다. 나갔다 바로 돌아오면 대기가 아니다."},
+    {"id": "reassign_stand", "label": "빈 주기장으로 재배정", "kind": "toggle", "node": "other",
+     "default": True, "scope": "live",
+     "note": "끄면 계획된 주기장이 빌 때까지 기다린다. 데크 차트에도 같은 값이 보인다."},
+]
+
+# ---------------------------------------------------------------------------
+# Pilot: how the aircraft is flown
+# ---------------------------------------------------------------------------
+PILOT_NODES = [{'id': 'tick',
+  'kind': 'start',
+  'text': '조종사가 자기 상태를 읽는다',
+  'detail': '위치·속도·자세는 물리에서 관측한다. 보간하지 않는다',
+  'next': 'traffic'},
+ {'id': 'traffic', 'kind': 'decision', 'text': '예측되는 근접 교통이 있나?', 'yes': 'avoid', 'no': 'held'},
+ {'id': 'avoid',
+  'kind': 'end',
+  'text': '순항 회피·감속 / 접근 순번 분리',
+  'detail': '같은 항로의 후속기는 실제 속도로 감속하며, 접근 중인 선행편과 감속만으로 분리할 수 없으면 확인된 우측 공간을 함께 사용한다. 접근 후속기는 PSU가 배정한 측면 대기점으로 이동한다. 실제 수직 착륙에 진입한 기체의 경로는 유지한다. 대기 해제 전 다음 접근 구간을 재진입해도 분리가 유지되는지 확인한다'},
+ {'id': 'held', 'kind': 'decision', 'text': 'PSU가 대기를 지시했나?', 'yes': 'loiter', 'no': 'reached'},
+ {'id': 'loiter', 'kind': 'end', 'text': 'PSU 지정 자리로 이동 · 위치 유지', 'detail': '관측 속도에서 감속·이동 명령을 시작한다. 경로를 재확인하며 배정한 자리로 이동하고, 복귀 허가와 접근점 도착 확인 뒤 항로를 재개한다'},
+ {'id': 'reached',
+  'kind': 'decision',
+  'text': '지금 경유점에 도달했나?',
+  'detail': '정지 요구 경유점은 반경 안에서 실제로 멈춰야 도달로 친다',
+  'yes': 'next',
+  'no': 'wing'},
+ {'id': 'next', 'kind': 'action', 'text': '다음 경유점으로 넘어간다', 'next': 'tick'},
+ {'id': 'wing', 'kind': 'decision', 'text': '고정익 구간인가?', 'yes': 'brake', 'no': 'vert'},
+ {'id': 'brake',
+  'kind': 'decision',
+  'text': '역천이를 시작할 거리인가?',
+  'detail': '천이에 걸리는 시간과 감속 거리를 합쳐 판단한다',
+  'yes': 'reverse',
+  'no': 'cruise'},
+ {'id': 'cruise', 'kind': 'end', 'text': '순항 — 제한 속도까지 내고 코스를 따라간다', 'detail': '남은 구간에서 멈출 수 있는 속도로 제한한다'},
+ {'id': 'reverse', 'kind': 'action', 'text': '역천이 — 속도를 낮추고 로터로 넘긴다', 'next': 'vert'},
+ {'id': 'vert', 'kind': 'decision', 'text': '하강을 시작할 지점인가?', 'yes': 'settle', 'no': 'track'},
+ {'id': 'settle',
+  'kind': 'decision',
+  'text': '역천이가 끝나고 수직 운동이 안정되었나?',
+  'detail': '로터의 실제 기울기와 속도를 확인한다. 지난 진입점으로 돌아가 정지하지 않는다',
+  'yes': 'descend',
+  'no': 'hold_entry'},
+ {'id': 'hold_entry', 'kind': 'end', 'text': '현재 고도에서 수직 운동을 줄이며 다음 접근으로 합류한다'},
+ {'id': 'descend',
+  'kind': 'end',
+  'text': '접근 — 수평속도와 강하율을 나누어 추종한다',
+  'detail': '멀리서는 설정한 접근 속도를 쓰며, 최종 정렬점에서는 6초 응답 여유와 남은 거리로 미리 감속한다. 가까이서는 보조 틸트를 해제하고, 하강 경사 제한을 끝까지 유지한다. 위치·속도·방향·로터 정렬 확인 후 수직 착륙한다'},
+ {'id': 'track', 'kind': 'end', 'text': '코스 추종 — 방위를 맞추고 속도를 낸다', 'detail': '실제 기수가 목표 방위에 들어오기 전에는 가속하지 않는다'}]
+
+PILOT_PARAMETERS = [{'id': 'pilot_self_hold', 'label': '조종사 자율 대기', 'node': 'traffic', 'kind': 'toggle',
+  'default': True, 'scope': 'live',
+  'note': '끄면 조종사는 스스로 멈추지 않고 PSU가 지시한 대기만 수행합니다. 근접 교통은 계속 '
+          '보고 회피·감속은 하되, 자기 판단으로 접근을 세우거나 분리 대기점으로 빠지지 않습니다. '
+          '기체가 계속 기다릴 때 그 원인이 조종사인지 PSU인지 가르는 데 쓰세요 — 끈 뒤에도 대기가 '
+          '남으면 PSU 쪽입니다.'},
+ {'id': 'traffic_avoidance', 'label': '예상 조우 대응', 'node': 'traffic', 'kind': 'toggle', 'default': True, 'scope': 'live', 'note': '다중 native 비행에서 실제 속도 기반 근접을 예측합니다.'}, {'id': 'traffic_lookahead_s', 'label': '조우 예측 시간', 'node': 'traffic', 'default': 35.0, 'min': 10, 'max': 90, 'step': 5, 'unit': '초', 'scope': 'live', 'note': '현재 관측 속도의 최근접 시각. 장기 궤적이나 장애물 예측이 아닙니다.'}, {'id': 'traffic_horizontal_m', 'label': '수평 근접 기준', 'node': 'traffic', 'default': 120.0, 'min': 30, 'max': 300, 'step': 10, 'unit': 'm', 'scope': 'live', 'note': '예측 수평·수직 기준을 함께 충족할 때 대응합니다.'}, {'id': 'traffic_vertical_m', 'label': '수직 근접 기준', 'node': 'traffic', 'default': 45.0, 'min': 10, 'max': 150, 'step': 5, 'unit': 'm', 'scope': 'live', 'note': '서로 다른 고도의 교통을 구분합니다.'}, {'id': 'traffic_right_m', 'label': '추가 우측 회피 폭', 'node': 'avoid', 'default': 35.0, 'min': 5, 'max': 80, 'step': 5, 'unit': 'm', 'scope': 'live', 'note': '회랑 폭과 기존 우측 오프셋을 뺀 여유 안에서만 사용합니다.'}, {'id': 'traffic_clear_s', 'label': '복귀 전 확인 시간', 'node': 'avoid', 'default': 8.0, 'min': 2, 'max': 30, 'step': 1, 'unit': '초', 'scope': 'live', 'note': '정지 상태와 접근 재개 경로 모두 근접이 해소된 뒤 확인 시간을 유지합니다.'}] + [
+    {"id": "max_speed_mps", "label": "최고 속도", "unit": "m/s", "node": "cruise",
+     "min": 10, "max": 60, "step": 1, "default": 60.0, "scope": "live",
+     "note": "계획된 구간 속도의 상한. 물리 라이브러리가 60을 넘기지 못한다."},
+    {"id": "precision_capture_m", "label": "정밀 경유점 반경", "unit": "m", "node": "reached",
+     "min": 1, "max": 60, "step": 1, "default": 8.0, "scope": "live",
+     "note": "수직 이착륙의 획득 반경 상한. 순항은 단일 비행과 같은 선회 경유점 반경을 쓴다."},
+    {"id": "turn_capture_m", "label": "선회 경유점 반경", "unit": "m", "node": "reached",
+     "min": 10, "max": 400, "step": 5, "default": ROUTE_CAPTURE_M, "scope": "live",
+     "note": "WP 좌우 통과 여유의 목표값이며 강제 한계가 아니다. 150m 전에 선회를 시작하라는 뜻이 아니다. 속도와 각도로 선회하고 필요하면 더 크게 통과한다. 이미 지난 상승 경유점을 잡으려고 되돌아가지 않고, "
+             "다음 경유점을 향하면서 계획 고도는 계속 추종한다. 정밀 경로 일치나 충돌 회피를 보장하지 않는다."},
+    {"id": "approach_brake_mps2", "label": "감속도", "unit": "m/s²", "node": "cruise",
+     "min": 0.2, "max": 3.0, "step": 0.1, "default": 0.7, "scope": "native",
+     "note": "남은 거리에서 멈출 수 있는 속도를 계산할 때 쓰는 감속도. 올리면 늦게까지 빠르게 "
+             "가다가 세게 선다. 승객이 느끼는 값이다."},
+    {"id": "approach_gain", "label": "근접 감속 계수", "unit": "1/s", "node": "cruise",
+     "min": 0.1, "max": 1.5, "step": 0.05, "default": 0.35, "scope": "native",
+     "note": "목표까지 남은 거리에 이 값을 곱한 속도로 다가간다. 낮으면 마지막 몇 미터가 한없이 "
+             "길어진다. 최종 착륙 정렬에서는 0.12 이하로 제한해 지나침을 줄인다."},
+    {"id": "reverse_speed_mps", "label": "역천이 속도", "unit": "m/s", "node": "reverse",
+     "min": 3, "max": 40, "step": 1, "default": 8.0, "scope": "native",
+     "note": "역천이 중 감속 목표. 먼저 고정익 상태에서 감속하고, 로터가 돌아오는 동안 "
+             "이 속도로 낮춘다. 순항 전체를 이 속도로 제한하지 않는다."},
+    {"id": "reverse_transition_s", "label": "역천이 준비 시간", "unit": "초", "node": "brake",
+     "min": 5, "max": 60, "step": 1, "default": 20.0, "scope": "native",
+     "note": "역천이를 이 시간만큼 앞당겨 시작한다. 작동기 천이가 12초라 그보다는 커야 한다. "
+             "고정익 감속 구간과 별도로 마지막 역천이에 필요한 거리를 확보한다."},
+    {"id": "reverse_margin_m", "label": "역천이 여유 거리", "unit": "m", "node": "brake",
+     "min": 0, "max": 1000, "step": 10, "default": 100.0, "scope": "native",
+     "note": "위 계산에 더하는 여유."},
+    {"id": "reverse_brake_span", "label": "감속 거리를 역천이에 포함", "kind": "toggle", "node": "brake",
+     "default": True, "scope": "native",
+     "note": "켜면 역천이 전에 고정익 감속 거리까지 확보한다. 끄면 일반 정지 거리 제한만 "
+             "적용하므로 접근 여유가 줄어든다. 어느 경우든 순항 전체를 저속 멀티로터로 바꾸지 않는다."},
+    {"id": "climb_rate_mps", "label": "상승률 상한", "unit": "m/s", "node": "track",
+     "min": 1, "max": 20, "step": 0.5, "default": 8.0, "scope": "native"},
+    {"id": "wing_altitude_gain", "label": "고정익 고도 보정", "unit": "1/s", "node": "cruise",
+     "min": 0.1, "max": 1.5, "step": 0.05, "default": 0.7, "scope": "native",
+     "note": "선회·감속 때 생기는 고도 오차의 수직속도 보정 계수. 근접 접근 계수와 분리하며 "
+             "기존 수직 가속도와 상승률 한계는 유지한다."},
+    {"id": "descent_rate_mps", "label": "강하율 상한", "unit": "m/s", "node": "descend",
+     "min": 0.5, "max": 15, "step": 0.01, "default": 2.54, "scope": "native",
+     "note": "대각선 접근의 수직 속도 상한. 2.54 m/s = 500 ft/min. 수평 속도와 별개다."},
+    {"id": "approach_horizontal_speed_mps", "label": "접근 수평속도", "unit": "m/s", "node": "descend",
+     "min": 2, "max": 20, "step": 0.5, "default": 10.0, "scope": "native",
+     "note": "역천이 후 대각선 접근의 수평 목표 속도. 10 m/s = 36 km/h. 짧거나 가파른 구간에서는 "
+             "수직 강하율과 최종 정지 거리를 지키기 위해 낮아진다. 최종 정렬점에서는 응답 여유를 포함해 더 일찍 감속한다. 수직 착륙 강하율과는 별개다."},
+    {"id": "landing_rate_mps", "label": "착륙 강하율", "unit": "m/s", "node": "descend",
+     "min": 0.2, "max": 5, "step": 0.1, "default": 1.2, "scope": "native",
+     "note": "패드 위 수직 강하. 승객이 느끼는 마지막 값이다."},
+    {"id": "hover_capture_m", "label": "정지 판정 반경", "unit": "m", "node": "reached",
+     "min": 0.2, "max": 20, "step": 0.1, "default": 0.6, "scope": "native",
+     "note": "정지 요구 경유점을 잡았다고 보는 거리. 0.6 m는 마지막 접근이 매우 느려지는 값이다."},
+    {"id": "hover_settle_s", "label": "정지 유지 시간", "unit": "초", "node": "reached",
+     "min": 0, "max": 10, "step": 0.5, "default": 1.0, "scope": "native"},
+    {"id": "descent_settle_s", "label": "하강 전 안정 시간", "unit": "초", "node": "settle",
+     "min": 0, "max": 10, "step": 0.5, "default": 1.0, "scope": "native",
+     "note": "이동하면서 실제 역천이 완료와 수직 운동 안정을 확인하는 시간. 0이어도 "
+             "로터의 기울기 확인은 생략하지 않는다. 진입점 정지는 요구하지 않는다."},
+    {"id": "hold_speed_mps", "label": "대기 이동 속도", "unit": "m/s", "node": "loiter",
+     "min": 2, "max": 30, "step": 1, "default": 8.0, "scope": "native",
+     "note": "대기 지점으로 향할 때의 멀티로터 속도."},
+    {"id": "wing_stall_mps", "label": "실속 속도", "unit": "m/s", "node": "wing",
+     "min": 10, "max": 45, "step": 1, "default": 23.0, "scope": "native",
+     "note": "이보다 느리게 가라앉으면 무슨 지시든 로터가 되받는다. 안전 하한이다."},
+    {"id": "wing_recover_mps", "label": "고정익 복귀 속도", "unit": "m/s", "node": "wing",
+     "min": 12, "max": 50, "step": 1, "default": 26.0, "scope": "native",
+     "note": "회복 속도에 도달하거나 실제 역천이가 끝나면 재천이를 허용한다. "
+             "최종 전환은 SimpleFlight의 관측 속도 조건으로 결정한다."},
+]
+
+# ---------------------------------------------------------------------------
+# Vertiport: the deck's own rules
+# ---------------------------------------------------------------------------
+# The deck does decide things, but today most of them are taken on its behalf:
+# the PSU picks the stand because it is the party that knows what else is
+# coming, and the schedule fixes the turnaround from the cabin size. That is
+# worth saying on the chart rather than inventing a deck controller that does
+# not exist - a chart that shows a decision nobody makes is worse than no chart.
+VERTIPORT_NODES = [
+    {"id": "land", "kind": "start", "text": "기체가 접지한다", "next": "pad_free"},
+    {"id": "pad_free", "kind": "decision", "text": "접지하면 패드를 놓는가?",
+     "detail": "PSU 설정과 같은 값이다. 여기서 바꾸면 저기서도 바뀐다",
+     "yes": "release", "no": "keep"},
+    {"id": "release", "kind": "action", "text": "패드를 놓는다 — 다음 편이 내려올 수 있다", "next": "taxi"},
+    {"id": "keep", "kind": "action", "text": "주기장에 들어갈 때까지 패드를 잡는다", "next": "taxi"},
+    {"id": "taxi", "kind": "action", "text": "유도로를 따라 배정된 주기장으로 이동한다",
+     "detail": "지상 경로는 계획이 만든 구간을 그대로 따른다. 엔진이 지상에서 다시 경로를 "
+               "찾지는 않는다", "next": "unload"},
+    {"id": "unload", "kind": "action", "text": "승객이 내린다",
+     "detail": "내리는 시간은 계획의 도보 구간에서 오고, 아래 값이 그 하한이다", "next": "ready"},
+    {"id": "ready", "kind": "decision", "text": "재정비가 끝났나?",
+     "detail": "좌석 등급이 정하는 재정비 시간과 하기 시간 중 긴 쪽", "yes": "free", "no": "occupied"},
+    {"id": "occupied", "kind": "end", "text": "주기장 점유 — 다음 도착은 다른 주기장을 받는다"},
+    {"id": "free", "kind": "end", "text": "출발 준비 완료 — 다음 편을 받을 수 있다"},
+]
+
+VERTIPORT_PARAMETERS = [
+    {"id": "release_pad_at_touchdown", "label": "패드 이탈 후 조기 해제", "kind": "toggle",
+     "node": "pad_free", "default": True, "scope": "live", "source": "psu",
+     "note": "PSU 차트와 같은 값이다. 어느 쪽에서 바꿔도 같이 바뀐다."},
+    {"id": "alighting_min_s", "label": "최소 하기 시간", "unit": "초", "node": "unload",
+     "min": 0, "max": 300, "step": 1, "default": 8.0, "scope": "live",
+     "note": "계획이 도보 구간을 만들지 못한 편의 하한. 도착이 즉시 끝나지 않도록 한다."},
+    {"id": "turnaround_scale", "label": "재정비 시간 배율", "unit": "×", "node": "ready",
+     "min": 0.2, "max": 3.0, "step": 0.05, "default": 1.0, "scope": "live",
+     "note": "좌석 등급별 재정비 시간(2석 8분 · 4석 10분 · 6석 12분 · 8석 15분)에 곱한다. "
+             "줄이면 같은 기체로 하루에 더 많이 난다. 운항사 차트에도 같은 값이 보인다."},
+    {"id": "reassign_stand", "label": "빈 주기장으로 재배정", "kind": "toggle", "node": "ready",
+     "default": True, "scope": "live", "source": "psu",
+     "note": "끄면 계획된 주기장이 빌 때까지 기다린다. PSU 차트와 같은 값이다."},
+]
+
+# ---------------------------------------------------------------------------
+# Airline: which airframe flies the next flight, and when it is let go
+# ---------------------------------------------------------------------------
+# The operator's decisions are the quietest of the four and the ones that set
+# how much of the schedule is flyable at all: an aircraft that is still being
+# turned round cannot take the flight it is rostered for, and one standing at
+# the wrong deck cannot take it at all.
+AIRLINE_NODES = [
+    {"id": "due", "kind": "start", "text": "다음 편의 출발 시각이 됐다",
+     "detail": "계획의 off-block 시각. 이 시각 전에는 아무것도 시작하지 않는다", "next": "ready"},
+    {"id": "ready", "kind": "decision", "text": "재정비가 끝났나?",
+     "detail": "좌석 등급이 정하는 재정비 시간과 하기 시간 중 긴 쪽", "yes": "where", "no": "wait"},
+    {"id": "wait", "kind": "end", "text": "출발 지연 — 준비될 때까지 기다린다"},
+    {"id": "where", "kind": "decision", "text": "기체가 출발지에 있나?", "yes": "permit", "no": "cancel"},
+    {"id": "cancel", "kind": "end", "text": "결항 — 재배치 비행이 필요하다고 보고한다",
+     "detail": "없는 기체를 날린 척하지 않는다. 날 수 없는 계획은 날 수 없다고 드러낸다"},
+    {"id": "permit", "kind": "decision", "text": "PSU가 출발을 허가했나?",
+     "detail": "출발도 FATO를 쓰므로 착륙과 같은 줄에 선다", "yes": "off", "no": "hold"},
+    {"id": "hold", "kind": "end", "text": "주기장 대기 — 다음 순번을 기다린다"},
+    {"id": "off", "kind": "end", "text": "출발 — 주기장을 비우고 유도로로 나간다"},
+]
+
+AIRLINE_PARAMETERS = [
+    {"id": "turnaround_scale", "label": "재정비 시간 배율", "unit": "×", "node": "ready",
+     "min": .2, "max": 3.0, "step": .05, "default": 1.0, "scope": "live", "source": "vertiport",
+     "note": "좌석 등급별 재정비 시간(2석 8분 · 4석 10분 · 6석 12분 · 8석 15분)에 곱한다. "
+             "데크 차트와 같은 값이다 — 재정비는 데크 위에서 일어나고 그 시간을 쓰는 것은 운항사다."},
+    {"id": "departure_lead_s", "label": "출발 허가 요청 여유", "unit": "초", "node": "permit",
+     "min": 0, "max": 600, "step": 10, "default": 0.0, "scope": "live",
+     "note": "유도로에 나가기 전에 이만큼 미리 묻는다. 0이면 출발 시각에 맞춰 묻는다."},
+    {"id": "fato_departure_separation_s", "label": "출발 · 출발 간격", "unit": "초", "node": "permit",
+     "min": 15, "max": 600, "step": 5, "default": 60.0, "scope": "live", "source": "psu",
+     "note": "PSU 차트와 같은 값이다."},
+]
+
+CHARTS = [
+    {"id": "psu", "name": "PSU · 착륙 순서", "role": "psu",
+     "summary": "ETA로 접근을 미리 허가하고 최종 패드는 실제 점유로 보호합니다. 발급 번호와 진행 중 접근의 우선권을 유지합니다.",
+     "entry": "allocate", "nodes": PSU_NODES, "parameters": PSU_PARAMETERS},
+    {"id": "pilot", "name": "조종사 · 비행 제어", "role": "pilot",
+     "summary": "받은 경유점을 실제 물리로 따라간다. 허가는 의도를 바꿀 뿐 위치를 바꾸지 않는다. "
+                "접근이 길어지는 대부분의 이유가 이 차트 안에 있다.",
+     "entry": "tick", "nodes": PILOT_NODES, "parameters": PILOT_PARAMETERS},
+    {"id": "airline", "name": "운항사 · 배차와 출발", "role": "operator",
+     "summary": "기체 한 대가 다음 편을 언제 받는가. 결정은 조용하지만 하루의 몇 편이 실제로 "
+                "날 수 있는지를 여기서 정한다.",
+     "entry": "due", "nodes": AIRLINE_NODES, "parameters": AIRLINE_PARAMETERS},
+    {"id": "vertiport", "name": "버티포트 · 패드와 주기장", "role": "vertiport",
+     "summary": "데크가 실제로 정하는 것은 많지 않다. 주기장은 다음에 무엇이 오는지 아는 PSU가 "
+                "대신 고르고, 재정비 시간은 좌석 등급이 정한다. 데크의 몫은 패드를 언제 놓는지와 "
+                "얼마나 빨리 다시 내보내는지다.",
+     "entry": "land", "nodes": VERTIPORT_NODES, "parameters": VERTIPORT_PARAMETERS},
+]
+
+CHART_BY_ID = {chart["id"]: chart for chart in CHARTS}
+# Some values are one decision seen from two charts. A deck that lets go of its
+# pad and a PSU that hands it on are not two settings that happen to agree, they
+# are one setting - so it is stored once, under the chart that owns it, and the
+# other chart shows the same number. `source` says where it is kept.
+MIRRORS = [(chart["id"], parameter["id"], parameter["source"])
+           for chart in CHARTS for parameter in chart["parameters"] if parameter.get("source")]
+
+
+def defaults():
+    """Every parameter at the value the code was written with."""
+    return {chart["id"]: {p["id"]: p["default"] for p in chart["parameters"]} for chart in CHARTS}
+
+
+def _one(parameter, value):
+    if parameter.get("kind") == "toggle":
+        return bool(value)
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return float(parameter["default"])
+    if number != number or number in (float("inf"), float("-inf")):
+        return float(parameter["default"])
+    return max(float(parameter["min"]), min(float(parameter["max"]), number))
+
+
+def validate(values):
+    """Clamp what came in to what each parameter allows, filling the rest.
+
+    A value outside its range is clamped rather than refused: the operator's
+    intent is legible - they wanted it as far that way as it goes - and refusing
+    the whole save because one field was typed a digit too long loses the other
+    fifteen they meant.
+    """
+    answer = defaults()
+    if isinstance(values, dict):
+        for chart in CHARTS:
+            given = values.get(chart["id"])
+            if not isinstance(given, dict):
+                continue
+            for parameter in chart["parameters"]:
+                if parameter["id"] in given and not parameter.get("source"):
+                    answer[chart["id"]][parameter["id"]] = _one(parameter, given[parameter["id"]])
+    # A mirrored value is only ever read from where it is kept, so the two
+    # charts cannot drift apart no matter which one was saved last.
+    for chart_id, name, source in MIRRORS:
+        answer[chart_id][name] = answer[source][name]
+    return answer
+
+
+def describe(values=None):
+    """The charts and the current values, as one answer for the display."""
+    return {"schema_version": SCHEMA_VERSION, "charts": CHARTS,
+            "values": validate(values), "defaults": defaults()}

@@ -1,0 +1,97 @@
+{
+  "title": "ICESat-2",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Ice, Clouds, and Land Elevation Satellite-2 (ICESat-2) (A)/Ice, Clouds, and Land Elevation Satellite-2 (ICESat-2) (A).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "icesat_2.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "icesat_2",
+      "label": "ICESat-2",
+      "exact": {
+        "norad": [
+          43613
+        ],
+        "names": [
+          "^ICESAT-2$"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 7,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 7.561237
+    }
+  ],
+  "display": {
+    "native_extent": 7.561237,
+    "reference_extent_m": 7,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 7.561237156391144
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "icesat_2",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 1499504,
+    "sha256": "e7d260d69852fcd3367c8e7a3c236f8c0551c591abc5a8e8f42c0356a2eebf38"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 26,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 201656
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "e7d260d69852fcd3367c8e7a3c236f8c0551c591abc5a8e8f42c0356a2eebf38"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 8238,
+    "sha256": "5884058ee1f9911041323e1923d3824cd7b8c98ec064aa799fbbc19e25a92236"
+  }
+}

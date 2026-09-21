@@ -1,0 +1,63 @@
+{
+  "title": "A350 (logo-free)",
+  "source": {
+    "provider": "amvlab",
+    "url": "https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/A350_nologo.glb",
+    "revision": "91d835e8e851b2317fe79af291c9fed6153fd525",
+    "original_file": "models/A350_nologo.glb"
+  },
+  "rights": {
+    "label": "CC-BY-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "credit": "amvlab / aircraft-models",
+    "public_export": true,
+    "note": "Retain attribution, license link and modification notice. No manufacturer endorsement or accuracy certification."
+  },
+  "representation": "type_visualization",
+  "aliases": [],
+  "display": {
+    "native_extent": null,
+    "reference_extent_m": null,
+    "scale_basis": "unverified; preview auto-fit only",
+    "forward_axis": "unverified",
+    "browser_measured_extent": 67.47106988192932
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "amvlab_a350",
+  "category": "aircraft/civilian",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 221828,
+    "sha256": "d91061ecff300c4e8951b571a476d6fcacd4d50dceb8e1d9a80cde7fa86b19f5"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 1,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 3710
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 1,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "d91061ecff300c4e8951b571a476d6fcacd4d50dceb8e1d9a80cde7fa86b19f5"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 6469,
+    "sha256": "45ca686c46e7300c6744848cc9a1d384777f485fa50930fa40b009f7886db45e"
+  }
+}

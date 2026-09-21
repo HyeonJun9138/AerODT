@@ -1,0 +1,8 @@
+{
+  "host": "0.0.0.0",
+  "port": 8766,
+  "vworld_domain": "http://103.218.162.73:8766",
+  "tick_seconds": 1.0,
+  "stream_seconds": 1.0,
+  "fixture_mode": false
+}

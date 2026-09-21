@@ -1,0 +1,35 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>승객 탑승 검증</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>html,body,#view{width:100%;height:100%;margin:0}nav{position:absolute;top:10px;left:10px;z-index:3;background:#e3e9edde;padding:12px;border-radius:10px;font:13px sans-serif}input{width:300px}button{padding:8px}</style>
+<div id="view"></div><nav><b>승객 탑승 · 실제 시설/기체/사람 모델</b><br><button id="play">재생 / 정지</button><button id="walk">걷는 중</button><button id="done">탑승 완료</button><button id="arrive">하차 중</button><button id="home">시설 입장 완료</button><button id="far">멀리</button><button id="near">가까이</button><br><input id="time" type="range" min="0" step="0.01"><pre id="report"></pre></nav>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {FlightLayer} from '/visualization/flight_layer.js';
+import {VertiportLayer} from '/visualization/vertiport_layer.js';
+import {boardingAt} from '/visualization/passenger_boarding.js';
+import {resolvePlan,readRun,sampleRun} from '/flight-plan.js';
+const C=Cesium,v=new C.Viewer('view',{baseLayer:false,globe:false,skyBox:false,skyAtmosphere:false,animation:false,timeline:false,baseLayerPicker:false,geocoder:false,homeButton:false,sceneModePicker:false,navigationHelpButton:false,selectionIndicator:false,infoBox:false});
+v.scene.backgroundColor=C.Color.fromCssColorString('#92aaba');
+const data=await fetch('/boarding.json').then(r=>r.json());
+const ports=new VertiportLayer(C,v);await ports.place(data.departure.id,data.departure);await ports.place(data.arrival.id,data.arrival);
+const plan=await resolvePlan(data.plan,{deckTop:id=>(id===data.departure.id?data.departure:data.arrival).platform_height_m+.06});
+const samples=readRun(plan,data.states);
+const layer=new FlightLayer(C,v,{assets:id=>data.assets.find(a=>a.asset_id===id),onWarning:console.warn});layer.show(plan);
+const b=plan.boarding,p=plan.legs[0].path[0],frame=C.Transforms.eastNorthUpToFixedFrame(C.Cartesian3.fromDegrees(p[0],p[1],p[2]));
+const charge=plan.legs.find(l=>l.stage==='charge'),q=charge.path[0],arrivalFrame=C.Transforms.eastNorthUpToFixedFrame(C.Cartesian3.fromDegrees(q[0],q[1],q[2]));
+let atArrival=false;
+function camera(far=false){v.camera.lookAtTransform(atArrival?arrivalFrame:frame,new C.Cartesian3(far?0:15,far?-900:-22,far?350:14));}
+camera();const slider=document.getElementById('time');slider.max=charge.start_s+plan.alighting.duration_s+4;slider.value=7;
+let playing=false,last=performance.now();
+document.getElementById('play').onclick=()=>playing=!playing;
+document.getElementById('walk').onclick=()=>{playing=false;slider.value=7;atArrival=false;camera();};
+document.getElementById('done').onclick=()=>{playing=false;slider.value=b.duration_s;};
+document.getElementById('arrive').onclick=()=>{playing=false;slider.value=charge.start_s+7;atArrival=true;camera();};
+document.getElementById('home').onclick=()=>{playing=false;slider.value=charge.start_s+plan.alighting.duration_s;atArrival=true;camera();};
+document.getElementById('far').onclick=()=>camera(true);document.getElementById('near').onclick=()=>camera();
+v.scene.preRender.addEventListener(()=>{
+ const now=performance.now();if(playing)slider.value=Math.min(+slider.max,+slider.value+(now-last)/1000);last=now;
+ const sample=sampleRun(samples,+slider.value);layer.moveTo(sample);const state=boardingAt(plan,+slider.value);
+ document.getElementById('report').textContent=JSON.stringify({time:+slider.value,phase:state.phase,stage:sample.stage,count:b.count,boarded:state.boarded,aircraftSpeed:sample.speed_mps,models:layer.passengers?.slots.length,visible:layer.passengers?.slots.filter(s=>s.model.show).length,walkClips:layer.passengers?.slots.map(s=>s.model.activeAnimations.length),legRotation:layer.passengers?.slots.map(s=>s.model.ready?Array.from(s.model.getNode('leg-left')?.matrix ?? []):[])},null,2);
+});
+</script></html>

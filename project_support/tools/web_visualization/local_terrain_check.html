@@ -1,0 +1,27 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>AeroDT local terrain verification</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>html,body,#view{margin:0;width:100%;height:100%;overflow:hidden}aside{position:absolute;top:10px;left:10px;background:#edf1f4dd;padding:12px;color:#123;font:13px sans-serif;max-width:460px}pre{white-space:pre-wrap}button{padding:8px}</style>
+<div id="view"></div><aside><button id="world">Cesium 지형</button><button id="local">로컬 DEM 우선</button><pre id="result">검증 준비 중</pre></aside>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {loadWorldTerrain} from '/visualization/terrain_layer.js';
+import {loadLocalTerrain} from '/visualization/local_terrain_provider.js';
+const C=Cesium,result=document.getElementById('result');
+const v=new C.Viewer('view',{baseLayer:false,animation:false,timeline:false,geocoder:false,baseLayerPicker:false});
+v.scene.globe.enableLighting=false;v.scene.globe.depthTestAgainstTerrain=true;
+v.imageryLayers.addImageryProvider(new C.UrlTemplateImageryProvider({url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',maximumLevel:19,credit:'Esri World Imagery'}));
+v.camera.setView({destination:C.Cartesian3.fromDegrees(126.94,37.510,1600),orientation:{heading:0,pitch:C.Math.toRadians(-40),roll:0}});
+try {
+ const world=await loadWorldTerrain(C),local=await loadLocalTerrain(C,world,{onFallback:()=>{result.textContent+='\nLocal tile fallback';}});
+ const samples=[[126.94,37.526],[126.96,37.527],[126.98,37.529]];
+ const a=await C.sampleTerrainMostDetailed(world,samples.map(p=>C.Cartographic.fromDegrees(...p)));
+ const b=await C.sampleTerrainMostDetailed(local,samples.map(p=>C.Cartographic.fromDegrees(...p)));
+ const report={world:a.map(p=>p.height),local:b.map(p=>p.height),differences:b.map((p,i)=>p.height-a[i].height),source:'local_dem'};
+ v.terrainProvider=local;
+ let pending=0;v.scene.globe.tileLoadProgressEvent.addEventListener(n=>pending=n);
+ const show=()=>{result.textContent=JSON.stringify({...report,pending,tilesLoaded:v.scene.globe.tilesLoaded},null,2);};
+ setInterval(show,1000);show();
+ document.getElementById('world').onclick=()=>{v.terrainProvider=world;report.source='world_terrain';show();};
+ document.getElementById('local').onclick=()=>{v.terrainProvider=local;report.source='local_dem';show();};
+}catch(error){result.textContent='FAILED: '+error.message;}
+</script></html>

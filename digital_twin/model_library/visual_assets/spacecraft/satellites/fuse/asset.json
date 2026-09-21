@@ -1,0 +1,97 @@
+{
+  "title": "FUSE",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Far Ultraviolet Spectroscopic Explorer/Far Ultraviolet Spectroscopic Explorer.glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "fuse.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "fuse",
+      "label": "FUSE",
+      "exact": {
+        "norad": [
+          25791
+        ],
+        "names": [
+          "^FUSE"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 5.6,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 1.190615
+    }
+  ],
+  "display": {
+    "native_extent": 1.190615,
+    "reference_extent_m": 5.6,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 1.190614938735962
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "fuse",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 236704,
+    "sha256": "056c26e4f48bc362790ebc42c7c85101037c92b4f50a313bbe2783fc7004cdf8"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 28,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 22449
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "056c26e4f48bc362790ebc42c7c85101037c92b4f50a313bbe2783fc7004cdf8"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 8127,
+    "sha256": "56531ec9d1e67b9a02ad79057f502a125a16900ee4a7ff196ccb40b40b351181"
+  }
+}

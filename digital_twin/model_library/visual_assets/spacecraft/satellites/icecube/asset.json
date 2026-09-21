@@ -1,0 +1,65 @@
+{
+  "title": "CubeSat - ICECube",
+  "source": {
+    "provider": "nasa",
+    "url": "https://raw.githubusercontent.com/nasa/NASA-3D-Resources/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/CubeSat%20-%20ICECube/CubeSat%20-%20ICECube.glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "original_file": "3D Models/CubeSat - ICECube/CubeSat - ICECube.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "credit": "NASA 3D Resources; individual contributor credit should be retained where supplied",
+    "public_export": true,
+    "note": "NASA repository asset declaration applies; no endorsement. Logos and third-party rights remain separate. Repository meta.json also names NOSA 1.3; retained for review."
+  },
+  "representation": "mission_visualization",
+  "display": {
+    "native_extent": null,
+    "reference_extent_m": null,
+    "scale_basis": "unverified; preview auto-fit only",
+    "forward_axis": "unverified",
+    "browser_measured_extent": 8.289999961853027
+  },
+  "aliases": [],
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "icecube",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 309684,
+    "sha256": "7ad1a4be4beb2c1b62b6fc48a9538db6c914d871099681745e188deb1925f31a"
+  },
+  "geometry": {
+    "meshes": 6,
+    "materials": 21,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 58118
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "7ad1a4be4beb2c1b62b6fc48a9538db6c914d871099681745e188deb1925f31a"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 10182,
+    "sha256": "dc0c360b7b9d02bc5ed239ffeb856a1b92ed0b703af0d6ae7a3305ef269c78b1"
+  }
+}

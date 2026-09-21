@@ -1,0 +1,24 @@
+{
+  "id": "SceneAeroDTQuadrotor",
+  "actors": [
+    {
+      "type": "robot",
+      "name": "QUAD1",
+      // Resting on flat ground: the body box is 0.04 m tall, so its centre sits 0.02 m up.
+      "origin": { "xyz": "0.0 0.0 -0.02", "rpy-deg": "0 0 0" },
+      "robot-config": "model.jsonc"
+    }
+  ],
+  "clock": {
+    "type": "steppable",
+    "step-ns": 3000000,
+    "real-time-update-rate": 3000000,
+    "pause-on-start": false
+  },
+  "home-geo-point": {
+    "latitude": 37.5665,
+    "longitude": 126.9780,
+    "altitude": 38.0
+  },
+  "scene-type": "UnrealNative"
+}

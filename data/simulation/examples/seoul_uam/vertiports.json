@@ -1,0 +1,676 @@
+{
+  "schema_version": 1,
+  "id_sequence": 19,
+  "vertiports": [
+    {
+      "name": "여의도",
+      "group": "수도권",
+      "latitude": 37.52479,
+      "longitude": 126.920426,
+      "heading_deg": 53.0,
+      "pattern": "split",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 30.0,
+      "ground_reference": "highest",
+      "gates": 8,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        },
+        {
+          "id": "F3",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F4",
+          "role": "landing",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 30.0,
+      "landing_height_m": 30.0,
+      "id": "VP001",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "잠실",
+      "group": "수도권",
+      "latitude": 37.512246,
+      "longitude": 127.07181,
+      "heading_deg": 293.0,
+      "pattern": "radial",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 35.0,
+      "ground_reference": "highest",
+      "gates": 8,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        },
+        {
+          "id": "F3",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F4",
+          "role": "landing",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 30.0,
+      "landing_height_m": 30.0,
+      "id": "VP002",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "상암",
+      "group": "수도권",
+      "latitude": 37.561906,
+      "longitude": 126.890764,
+      "heading_deg": 125.0,
+      "pattern": "double",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 20.0,
+      "ground_reference": "highest",
+      "gates": 4,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 70.0,
+      "landing_height_m": 70.0,
+      "id": "VP003",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "용산",
+      "group": "수도권",
+      "latitude": 37.529999,
+      "longitude": 126.959954,
+      "heading_deg": 220.0,
+      "pattern": "double",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 6.0,
+      "ground_reference": "highest",
+      "gates": 4,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 30.0,
+      "landing_height_m": 30.0,
+      "id": "VP004",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "목동",
+      "group": "수도권",
+      "latitude": 37.519372,
+      "longitude": 126.880798,
+      "heading_deg": 0.0,
+      "pattern": "double",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 10.0,
+      "ground_reference": "highest",
+      "gates": 8,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        },
+        {
+          "id": "F3",
+          "role": "takeoff",
+          "side": "back"
+        },
+        {
+          "id": "F4",
+          "role": "landing",
+          "side": "back"
+        }
+      ],
+      "takeoff_height_m": 30.0,
+      "landing_height_m": 30.0,
+      "id": "VP005",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "미아",
+      "group": "수도권",
+      "latitude": 37.628118,
+      "longitude": 127.026852,
+      "heading_deg": 343.0,
+      "pattern": "double",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 30.0,
+      "ground_reference": "highest",
+      "gates": 4,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 30.0,
+      "landing_height_m": 30.0,
+      "id": "VP006",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "봉천",
+      "group": "수도권",
+      "latitude": 37.483626,
+      "longitude": 126.940025,
+      "heading_deg": 297.0,
+      "pattern": "double",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 20.0,
+      "ground_reference": "highest",
+      "gates": 4,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 30.0,
+      "landing_height_m": 30.0,
+      "id": "VP007",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "사당",
+      "group": "수도권",
+      "latitude": 37.475337,
+      "longitude": 126.983381,
+      "heading_deg": 8.0,
+      "pattern": "split",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 20.0,
+      "ground_reference": "highest",
+      "gates": 8,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        },
+        {
+          "id": "F3",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F4",
+          "role": "landing",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 30.0,
+      "landing_height_m": 30.0,
+      "id": "VP008",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "성수",
+      "group": "수도권",
+      "latitude": 37.539621,
+      "longitude": 127.042222,
+      "heading_deg": 205.0,
+      "pattern": "split",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 10.0,
+      "ground_reference": "highest",
+      "gates": 8,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        },
+        {
+          "id": "F3",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F4",
+          "role": "landing",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 30.0,
+      "landing_height_m": 30.0,
+      "id": "VP009",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "연신내",
+      "group": "수도권",
+      "latitude": 37.619197,
+      "longitude": 126.903715,
+      "heading_deg": 201.0,
+      "pattern": "split",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 15.0,
+      "ground_reference": "highest",
+      "gates": 8,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        },
+        {
+          "id": "F3",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F4",
+          "role": "landing",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 30.0,
+      "landing_height_m": 30.0,
+      "id": "VP010",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "천호",
+      "group": "수도권",
+      "latitude": 37.547429,
+      "longitude": 127.119295,
+      "heading_deg": 197.0,
+      "pattern": "double",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 10.0,
+      "ground_reference": "highest",
+      "gates": 8,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "both",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "both",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 30.0,
+      "landing_height_m": 30.0,
+      "id": "VP011",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "광화문",
+      "group": "수도권",
+      "latitude": 37.55833,
+      "longitude": 126.970144,
+      "heading_deg": 176.0,
+      "pattern": "double",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 35.0,
+      "ground_reference": "highest",
+      "gates": 10,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 50.0,
+      "landing_height_m": 50.0,
+      "id": "VP012",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "강남",
+      "group": "수도권",
+      "latitude": 37.489791,
+      "longitude": 127.022469,
+      "heading_deg": 341.0,
+      "pattern": "double",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 30.0,
+      "ground_reference": "highest",
+      "gates": 8,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        },
+        {
+          "id": "F3",
+          "role": "takeoff",
+          "side": "back"
+        },
+        {
+          "id": "F4",
+          "role": "landing",
+          "side": "back"
+        }
+      ],
+      "takeoff_height_m": 70.0,
+      "landing_height_m": 70.0,
+      "id": "VP013",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "가산",
+      "group": "수도권",
+      "latitude": 37.490126,
+      "longitude": 126.8735,
+      "heading_deg": 353.0,
+      "pattern": "double",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 12.0,
+      "ground_reference": "highest",
+      "gates": 6,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 30.0,
+      "landing_height_m": 30.0,
+      "id": "VP014",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "마곡",
+      "group": "수도권",
+      "latitude": 37.564262,
+      "longitude": 126.790939,
+      "heading_deg": 314.0,
+      "pattern": "radial",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 12.0,
+      "ground_reference": "highest",
+      "gates": 12,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "both",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "both",
+          "side": "front"
+        },
+        {
+          "id": "F3",
+          "role": "both",
+          "side": "front"
+        },
+        {
+          "id": "F4",
+          "role": "both",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 30.0,
+      "landing_height_m": 30.0,
+      "id": "VP015",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "망우",
+      "group": "수도권",
+      "latitude": 37.600617,
+      "longitude": 127.080699,
+      "heading_deg": 263.0,
+      "pattern": "split",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 20.0,
+      "ground_reference": "highest",
+      "gates": 8,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        },
+        {
+          "id": "F3",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F4",
+          "role": "landing",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 30.0,
+      "landing_height_m": 30.0,
+      "id": "VP016",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "수서",
+      "group": "수도권",
+      "latitude": 37.496853,
+      "longitude": 127.099741,
+      "heading_deg": 206.0,
+      "pattern": "split",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 12.0,
+      "ground_reference": "highest",
+      "gates": 8,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        },
+        {
+          "id": "F3",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F4",
+          "role": "landing",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 30.0,
+      "landing_height_m": 30.0,
+      "id": "VP017",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "인천",
+      "group": "수도권",
+      "latitude": 37.47895,
+      "longitude": 126.465438,
+      "heading_deg": 53.0,
+      "pattern": "double",
+      "vehicle_class": "large",
+      "vehicle_d_m": 16.0,
+      "platform_height_m": 20.0,
+      "ground_reference": "highest",
+      "gates": 8,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 30.0,
+      "landing_height_m": 30.0,
+      "id": "VP018",
+      "created_at": "2026-09-09T09:43:27+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    },
+    {
+      "name": "울산 테스트",
+      "group": "울산",
+      "latitude": 35.548427,
+      "longitude": 129.361165,
+      "heading_deg": 29.0,
+      "pattern": "double",
+      "vehicle_class": "medium",
+      "vehicle_d_m": 12.0,
+      "platform_height_m": 20.0,
+      "ground_reference": "highest",
+      "gates": 4,
+      "fatos": [
+        {
+          "id": "F1",
+          "role": "takeoff",
+          "side": "front"
+        },
+        {
+          "id": "F2",
+          "role": "landing",
+          "side": "front"
+        }
+      ],
+      "takeoff_height_m": 30.0,
+      "landing_height_m": 30.0,
+      "id": "VP019",
+      "created_at": "2026-09-18T06:27:49+00:00",
+      "updated_at": "2026-09-18T07:49:12+00:00"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "package-id": "aerodt.vehicle.air.multirotor.quadrotor",
+  "version": "0.1.0",
+  "model": "model.jsonc",
+  "scene": "scene.jsonc",
+  "sensors": "sensors.jsonc",
+  "physics": "fast-physics",
+  "controller": "simple-flight",
+  "airframe": "quadrotor-x",
+  "legacy-baseline": {
+    "project": "ProjectAirSim",
+    "commit": "097429f56fee32b0edfe508820bf2323ee7f2cb2",
+    "source": "client/python/example_user_scripts/sim_config/robot_quadrotor_fastphysics.jsonc"
+  },
+  // Representative demonstration values carried from the legacy quadrotor:
+  // a 1.2 kg airframe on four 0.2286 m propellers. Not a surveyed aircraft.
+  "note": "ProjectAirSim demonstration quadrotor; replace the parameters with a measured vehicle before using the results."
+}

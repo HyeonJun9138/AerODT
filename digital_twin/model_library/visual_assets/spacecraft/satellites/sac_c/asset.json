@@ -1,0 +1,97 @@
+{
+  "title": "SAC-C",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Satellite for Scientific Applications (SAC-C)/Satellite for Scientific Applications (SAC-C).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "sac_c.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "sac_c",
+      "label": "SAC-C",
+      "exact": {
+        "norad": [
+          26620
+        ],
+        "names": [
+          "^SAC-C$"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 6,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 60.236134
+    }
+  ],
+  "display": {
+    "native_extent": 60.236134,
+    "reference_extent_m": 6,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 60.23613357543945
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "sac_c",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 73608,
+    "sha256": "cf1e9ad3923ded6f6157ec06b545de50840b5b7c9526d0a9bda8be1f021ca745"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 18,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 14931
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "cf1e9ad3923ded6f6157ec06b545de50840b5b7c9526d0a9bda8be1f021ca745"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 8571,
+    "sha256": "78a88c0784eb51357a37d3f43c054921432f3509f06e7e9c6000052fe739e45e"
+  }
+}

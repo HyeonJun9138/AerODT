@@ -1,0 +1,240 @@
+{
+  "title": "OneWeb형 통신위성",
+  "source": {
+    "provider": "spacetwin",
+    "url": "",
+    "revision": null,
+    "imported_from": "icdcdt",
+    "original_file": "leo_comms_bus.glb"
+  },
+  "rights": {
+    "label": "Project owner/provider review",
+    "credit": "SpaceTwin 자체 제작",
+    "url": "",
+    "public_export": false,
+    "note": "Local project use only pending owner/provider permission review; not cleared for public redistribution."
+  },
+  "representation": "generic",
+  "aliases": [
+    {
+      "key": "oneweb",
+      "label": "OneWeb형 통신위성",
+      "exact": {
+        "norad": [],
+        "names": []
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": [
+          "^ONEWEB"
+        ]
+      },
+      "size_m": 6.3,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 6.3
+    },
+    {
+      "key": "kuiper",
+      "label": "Kuiper형 통신위성",
+      "exact": {
+        "norad": [],
+        "names": []
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": [
+          "^KUIPER"
+        ]
+      },
+      "size_m": 12,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 6.3
+    },
+    {
+      "key": "iridium",
+      "label": "Iridium형 통신위성",
+      "exact": {
+        "norad": [],
+        "names": []
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": [
+          "^IRIDIUM"
+        ]
+      },
+      "size_m": 9.4,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 6.3
+    },
+    {
+      "key": "globalstar",
+      "label": "Globalstar형 통신위성",
+      "exact": {
+        "norad": [],
+        "names": []
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": [
+          "^GLOBALSTAR"
+        ]
+      },
+      "size_m": 10,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 6.3
+    },
+    {
+      "key": "orbcomm",
+      "label": "Orbcomm형 통신위성",
+      "exact": {
+        "norad": [],
+        "names": []
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": [
+          "^ORBCOMM"
+        ]
+      },
+      "size_m": 6,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 6.3
+    },
+    {
+      "key": "o3b",
+      "label": "O3b형 통신위성",
+      "exact": {
+        "norad": [],
+        "names": []
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": [
+          "^O3B"
+        ]
+      },
+      "size_m": 12,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 6.3
+    },
+    {
+      "key": "china_leo_comms",
+      "label": "저궤도 통신망 위성",
+      "exact": {
+        "norad": [],
+        "names": []
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": [
+          "^QIANFAN",
+          "^SATNET",
+          "^GUOWANG",
+          "^HULIANWANG"
+        ]
+      },
+      "size_m": 12,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 6.3
+    }
+  ],
+  "display": {
+    "native_extent": 6.3,
+    "reference_extent_m": 6.3,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 6.3
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "leo_comms_bus",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 15896,
+    "sha256": "aba350d67d392924b68b2f8abf9712e55200ad4a88d2340e44c3f5220b84ff09"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 6,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 212
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "aba350d67d392924b68b2f8abf9712e55200ad4a88d2340e44c3f5220b84ff09"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 4865,
+    "sha256": "3993b9ebc93850005b02bab5cf13ef748a7ffc12658c59a813da4f143f33d3a4"
+  }
+}

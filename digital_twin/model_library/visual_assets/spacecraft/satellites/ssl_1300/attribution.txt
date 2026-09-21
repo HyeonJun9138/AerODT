@@ -1,0 +1,5 @@
+NASA 3D Resources
+https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Space Systems Loral (SSL-1300)/Space Systems Loral (SSL-1300).glb
+https://www.nasa.gov/nasa-brand-center/images-and-media/
+NASA attribution; no endorsement. Trademarks and third-party rights remain separate.
+Changes: Original GLB bytes preserved.

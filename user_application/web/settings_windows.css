@@ -1,0 +1,14 @@
+/* Mirror the original #settings-panel typography inside workspace windows. */
+.ww-settings-window{overflow:auto;padding:14px 16px;color:var(--text,#dbe7ec)}
+.ww-settings-window h2{margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:.4px}
+.ww-settings-window h3{margin:12px 0 6px;font-size:9px;font-weight:600;letter-spacing:1.2px;color:#c0d4dd}
+.ww-settings-window .setting-row button[data-settings-source-id=sunlight][aria-pressed=true]{background:#3b3428b3;border-color:#e0c98c66;color:#f0d79a}
+.ww-settings-window .setting-row button[data-settings-source-id=airspace]{font-size:13px}
+.ww-settings-window .setting-row button[data-settings-source-id=airspace][aria-pressed=true]{background:#4a2a30b3;border-color:#ff4d5e66;color:#ffb3ba}
+.ww-settings-window [data-settings-source-id=sound-status]{min-height:3.3em}
+
+/* Replay view controls share a clock; the window close is presentation-only. */
+.ww-control-view{display:block!important;pointer-events:auto!important;overflow:auto!important;padding:12px!important;background:var(--panel-glass)!important;color:#dce9ef}
+.ww-control-view .flight-collapse,.ww-control-view [data-settings-source-id="scenario-minimise"],.ww-control-view [data-settings-source-id="scenario-mini-expand"]{display:none!important}
+.ww-control-view .flight-console-surface,.ww-control-view .scenario-surface{max-width:none!important;width:100%!important}
+[data-workspace-source="true"]{display:none!important}

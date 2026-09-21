@@ -1,0 +1,69 @@
+{
+  "title": "A320 (logo-free)",
+  "source": {
+    "provider": "amvlab",
+    "url": "https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/A320_nologo.glb",
+    "revision": "91d835e8e851b2317fe79af291c9fed6153fd525",
+    "original_file": "models/A320_nologo.glb"
+  },
+  "rights": {
+    "label": "CC-BY-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "credit": "amvlab / aircraft-models",
+    "public_export": true,
+    "note": "Retain attribution, license link and modification notice. No manufacturer endorsement or accuracy certification."
+  },
+  "representation": "type_visualization",
+  "aliases": [],
+  "display": {
+    "native_extent": null,
+    "reference_extent_m": null,
+    "scale_basis": "unverified; preview auto-fit only",
+    "forward_axis": "unverified",
+    "browser_measured_extent": 37.68139961627681
+  },
+  "conversion": {
+    "operation": "web_compatibility_repair",
+    "tool": "asset_library.py",
+    "source_sha256": "08cc60caafe3d0937f3e12e72c28bcb96dfdb39763ac124bcd4da8adaea11ab9",
+    "removed_uris": [],
+    "changes": [
+      "normal accessor 1: normalized 40, undefined +Y lighting fallback 0"
+    ],
+    "note": "Vertex positions preserved. Missing texture/UV surfaces use base colours; undefined normals use a lighting fallback. Appearance is not guaranteed identical. normal accessor 1: normalized 40, undefined +Y lighting fallback 0"
+  },
+  "schema_version": 1,
+  "asset_id": "amvlab_a320",
+  "category": "aircraft/civilian",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 250472,
+    "sha256": "8271176c4aaa423446466cb789f83a7c27210690f1fb44dc03fb66ca9056e3d0"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 1,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 5229
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "8271176c4aaa423446466cb789f83a7c27210690f1fb44dc03fb66ca9056e3d0"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 8142,
+    "sha256": "1cce0bf64e7701ab83367915c4178790562744c9a3dadfd4c7d3b0b549f2060d"
+  }
+}

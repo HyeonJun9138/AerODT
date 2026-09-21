@@ -1,0 +1,97 @@
+{
+  "title": "Swift 감마선 관측위성",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Swift/Swift.glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "swift.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "swift",
+      "label": "Swift 감마선 관측위성",
+      "exact": {
+        "norad": [
+          28485
+        ],
+        "names": [
+          "^SWIFT$"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 5.6,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 39.915409
+    }
+  ],
+  "display": {
+    "native_extent": 39.915409,
+    "reference_extent_m": 5.6,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 39.915409088134766
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "swift",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 211404,
+    "sha256": "e7074fe1590550747fbcd6803b0c6086b4f57cafd8e3d93789f0b0b7e59b0372"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 56,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 38032
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "e7074fe1590550747fbcd6803b0c6086b4f57cafd8e3d93789f0b0b7e59b0372"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 9743,
+    "sha256": "56f834e706700398f146a1d07ba197f1b00f03f8d1b14b893d7cca4cc24170f2"
+  }
+}

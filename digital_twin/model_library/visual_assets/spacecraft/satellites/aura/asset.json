@@ -1,0 +1,97 @@
+{
+  "title": "Aura (EOS CH-1)",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Aura (A)/Aura (A).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "aura.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "aura",
+      "label": "Aura (EOS CH-1)",
+      "exact": {
+        "norad": [
+          28376
+        ],
+        "names": [
+          "^AURA$"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 17,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 50.822115
+    }
+  ],
+  "display": {
+    "native_extent": 50.822115,
+    "reference_extent_m": 17,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 50.82211451027872
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "aura",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 476264,
+    "sha256": "99d46cd9af551c7511befe47d3f24b9b957da6a9dc35a0e29fc784db9f55b381"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 9,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 6135
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "99d46cd9af551c7511befe47d3f24b9b957da6a9dc35a0e29fc784db9f55b381"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 7707,
+    "sha256": "8e1b93ed84458079954970bb38793be1f3e5d1fc1800addd102de3e73a63eeb9"
+  }
+}

@@ -1,0 +1,87 @@
+/* The joystick window. A tuning row has to be read while the hand is on the
+   stick, so every row shows its live value next to the control that shapes it
+   -- the bar moves as the axis moves, and the number under it is what the
+   aircraft will actually receive. */
+.joy-setup{border:0;padding:0;background:transparent;color:#dcebf3;font:12px 'Segoe UI','Malgun Gothic',sans-serif;max-width:none;max-height:none}
+.joy-setup::backdrop{background:#04090ccc}
+.joy-setup[hidden]{display:none}
+.joy-form{box-sizing:border-box;width:min(1220px,calc(100vw - 48px));max-height:calc(100vh - 64px);overflow:auto;
+  display:flex;flex-direction:column;gap:14px;padding:18px 20px 16px;
+  background:var(--chrome-surface,#33404a);border:1px solid #95b6c14d;border-radius:14px;box-shadow:0 18px 60px #0006}
+
+.joy-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.joy-head h2{margin:0;font-size:15px;font-weight:600;letter-spacing:.3px}
+.joy-head-device{margin-left:auto;display:flex;align-items:center;gap:8px}
+.joy-setup select,.joy-setup button{font:inherit;color:inherit;background:#ffffff0d;border:1px solid #95b6c14d;border-radius:6px;padding:6px 9px}
+.joy-setup select{color-scheme:dark;background:#263b47;color:#f2f6f8;cursor:pointer;max-width:320px}
+.joy-setup select option{background:#263b47;color:#f2f6f8}
+.joy-setup button{cursor:pointer}
+.joy-setup button:hover{background:#ffffff1a;border-color:#9fd9e8a8}
+.joy-setup :focus-visible{outline:2px solid #99e5d6;outline-offset:2px}
+
+.joy-note{margin:0;color:#a8c0cb;font-size:11px;line-height:1.5}
+.joy-hint{margin:0;padding:8px 11px;border-radius:8px;background:#ffcf7a1f;border:1px solid #ffcf7a8c;color:#ffdda6;font-size:11.5px}
+.joy-hint[hidden]{display:none}
+.joy-status{margin:0;margin-right:auto;color:#9defd2;font-size:11px;min-height:1.2em}
+
+.joy-section{display:flex;flex-direction:column;gap:9px;padding:12px 13px;border:1px solid #95b6c12e;border-radius:10px;background:#0e1a2233}
+.joy-section h3{margin:0;font-size:10px;font-weight:700;letter-spacing:1.4px;color:#9fbecb}
+
+/* One axis per line: name, live bar, number, which axis it is, and the three
+   values that shape it. It wraps rather than shrinking, because a deadzone
+   slider three pixels wide is not a control. */
+.joy-rows{display:flex;flex-direction:column;gap:7px}
+.joy-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 9px;border-radius:8px;background:#ffffff08;border:1px solid transparent}
+.joy-row[data-live=true]{border-color:#7ee3c44d;background:#7ee3c412}
+.joy-row-name{display:flex;flex-direction:column;min-width:86px}
+.joy-row-name strong{font-size:12px}
+.joy-row-name small{color:#93aab6;font-size:10px}
+.joy-bar{position:relative;flex:1 1 120px;min-width:110px;height:12px;border-radius:6px;background:#0d1b2480;border:1px solid #95b6c133;overflow:hidden}
+.joy-centre{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#c6dce133}
+.joy-fill{position:absolute;top:1px;bottom:1px;background:#7ee3c4;border-radius:5px;box-shadow:0 0 10px #7ee3c459}
+.joy-live{font-variant-numeric:tabular-nums;font-size:11px;color:#9defd2;min-width:4.2em;text-align:right}
+.joy-index{font-size:10.5px;color:#b9dff0;background:#ffffff0f;border-radius:5px;padding:3px 6px;min-width:3.1em;text-align:center}
+.joy-detect{font-size:10.5px;padding:5px 7px;white-space:nowrap}
+
+.joy-field{display:flex;align-items:center;gap:6px;font-size:11px;color:#b4c8d2;white-space:nowrap}
+.joy-field input[type=range]{width:78px;accent-color:#99e5d6}
+.joy-field output{font-variant-numeric:tabular-nums;min-width:2.8em;color:#dceaf2}
+.joy-check{gap:5px}
+.joy-check input{accent-color:#99e5d6;width:14px;height:14px}
+
+.joy-view{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+
+/* Buttons: the lamp answers "which one did I just press?" without the operator
+   having to count rows. */
+.joy-buttons{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:6px}
+.joy-button{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:7px;background:#ffffff08;border:1px solid transparent}
+.joy-button[data-down=true]{border-color:#7ee3c47a;background:#7ee3c418}
+.joy-button code{font-size:10.5px;color:#9fbecb;min-width:2.4em}
+.joy-button select{flex:1 1 auto;min-width:0;padding:4px 7px;font-size:11px}
+.joy-lamp{width:9px;height:9px;border-radius:50%;background:#54646e;flex:none}
+.joy-lamp[data-on=true]{background:#7ee3c4;box-shadow:0 0 9px #7ee3c48c}
+
+.joy-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.joy-save{background:#7ee3c41f;border-color:#7ee3c47a;color:#b6f2df}
+.joy-save:hover{background:#7ee3c433;border-color:#7ee3c4}
+.joy-close{width:30px;height:30px;padding:0;border-radius:8px;font-size:16px;line-height:1;color:#a9bcc6}
+.joy-close:hover{background:#e0867c24;border-color:#e0867c8c;color:#ffd2ca}
+
+@media(max-width:720px){
+  .joy-form{width:calc(100vw - 20px);padding:14px}
+  .joy-row-name{min-width:78px}
+  .joy-field input[type=range]{width:72px}
+}
+
+/* Raw device values: bound or not, this is what the browser is reporting. It
+   is the first thing to look at when nothing seems to be happening. */
+.joy-rawbox{border:1px solid #95b6c12e;border-radius:10px;background:#0e1a2233;padding:9px 12px}
+.joy-rawbox summary{cursor:pointer;font-size:11px;color:#b9dff0;list-style:revert}
+.joy-rawbox .joy-note{margin:7px 0 8px}
+.joy-raw-axes{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:5px 14px}
+.joy-raw-axis{display:flex;align-items:center;gap:7px}
+.joy-raw-axis code,.joy-raw-button code{font-size:10px;color:#9fbecb;min-width:2.2em}
+.joy-raw-axis .joy-bar{flex:1 1 90px;min-width:70px;height:9px}
+.joy-raw-axis .joy-live{min-width:3.4em;font-size:10.5px}
+.joy-raw-buttons{display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:8px}
+.joy-raw-button{display:flex;align-items:center;gap:4px}

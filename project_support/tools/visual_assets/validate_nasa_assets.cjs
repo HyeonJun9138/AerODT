@@ -1,0 +1,4 @@
+const fs=require('fs'),path=require('path');
+const validator=require('../../environment/visual_assets/node_modules/gltf-validator');
+const root=path.resolve(__dirname,'../../..'),shelf=path.join(root,'digital_twin/model_library/visual_assets/aircraft/civilian');
+(async()=>{const results=[];for(const name of fs.readdirSync(shelf).filter(n=>n.startsWith('nasa_'))){const file=path.join(shelf,name,'model.glb');const result=await validator.validateBytes(new Uint8Array(fs.readFileSync(file)),{maxIssues:30});results.push({name,errors:result.issues.numErrors,warnings:result.issues.numWarnings,messages:result.issues.messages});console.log(name,result.issues.numErrors,result.issues.numWarnings,result.issues.messages.slice(0,2));}fs.writeFileSync(path.join(root,'data/workspace/visual_assets/nasa_validation.json'),JSON.stringify(results,null,2));if(results.some(r=>r.errors))process.exitCode=1;})();

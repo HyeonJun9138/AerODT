@@ -1,0 +1,26 @@
+{
+  "physical_uam_url": "http://127.0.0.1:18770",
+  "risk_python_executable": "",
+  "opensky_enabled": false,
+  "aircraft_poll_seconds": 45,
+  "aircraft_retention_seconds": 300,
+  "aircraft_bounds": {
+    "lamin": 33.0,
+    "lamax": 38.6,
+    "lomin": 126.0,
+    "lomax": 130.0
+  },
+  "airspace": {
+    "provider": "",
+    "url": "",
+    "key_param": "serviceKey",
+    "layers": {},
+    "bbox": [
+      122.0,
+      30.0,
+      134.0,
+      40.0
+    ],
+    "note": "provider: 'vworld' (V-World Data API 2.0 with a vworld.json key; layers default to the 항공정보도 codes) or 'wfs' (any GeoJSON WFS; url + layers {typename: kind} + key_param, with the datago.json key). Empty provider picks by which key exists."
+  }
+}

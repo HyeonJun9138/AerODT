@@ -1,0 +1,99 @@
+{
+  "title": "THEMIS",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Time History of Events and Macroscale Interactions During Substorms (THEMIS)/Time History of Events and Macroscale Interactions During Substorms (THEMIS).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "themis.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "themis",
+      "label": "THEMIS",
+      "exact": {
+        "norad": [
+          30580,
+          30583,
+          30584
+        ],
+        "names": [
+          "^THEMIS"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 2.5,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 7.206684
+    }
+  ],
+  "display": {
+    "native_extent": 7.206684,
+    "reference_extent_m": 2.5,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 7.206683615441705
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "themis",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 682092,
+    "sha256": "2dfe2a2e07de211f6686adbb612c09c5dfac62a397cb88343f119c2124d818e3"
+  },
+  "geometry": {
+    "meshes": 4,
+    "materials": 4,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 11424
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 3,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "2dfe2a2e07de211f6686adbb612c09c5dfac62a397cb88343f119c2124d818e3"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 4716,
+    "sha256": "87c0b0b8d13c2e2c32f529e9ef05614cf07b4249d46be59fe72eb9f09ad16562"
+  }
+}

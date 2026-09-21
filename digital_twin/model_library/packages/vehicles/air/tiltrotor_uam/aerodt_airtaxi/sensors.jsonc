@@ -1,0 +1,51 @@
+{
+  "$schema": "../../../../../schemas/sensor_config_schema.jsonc",
+  "version": 1,
+  "mode": "ideal",
+  "sensors": [
+    {
+      "id": "IMU1",
+      "type": "imu",
+      "enabled": true,
+      "sample-interval-ns": 3000000,
+      "parent-link": "Frame",
+      "origin": { "xyz": "0 0 0", "rpy-deg": "0 0 0" }
+    },
+    {
+      "id": "GPS",
+      "type": "gps",
+      "enabled": true,
+      "sample-interval-ns": 100000000,
+      "parent-link": "Frame",
+      "origin": { "xyz": "0 0 0", "rpy-deg": "0 0 0" }
+    },
+    {
+      "id": "Chase",
+      "type": "camera-state",
+      "enabled": true,
+      "sample-interval-ns": 30000000,
+      "parent-link": "Frame",
+      "origin": { "xyz": "-10.0 0.0 -3.0", "rpy-deg": "0 -11.46 0" },
+      "intrinsics": {
+        "width": 1280,
+        "height": 720,
+        "horizontal-fov-deg": 90,
+        "enabled-image-types": [0]
+      }
+    },
+    {
+      "id": "DownCamera",
+      "type": "camera-state",
+      "enabled": true,
+      "sample-interval-ns": 20000000,
+      "parent-link": "Frame",
+      "origin": { "xyz": "0.0 0.0 0.5", "rpy-deg": "0.0 -90 0.0" },
+      "intrinsics": {
+        "width": 400,
+        "height": 225,
+        "horizontal-fov-deg": 90,
+        "enabled-image-types": [0, 2]
+      }
+    }
+  ]
+}

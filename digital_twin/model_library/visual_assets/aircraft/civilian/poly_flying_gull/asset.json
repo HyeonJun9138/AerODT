@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "asset_id": "poly_flying_gull",
+  "title": "Flying gull",
+  "category": "aircraft/civilian",
+  "purpose": "visual_only",
+  "source": {
+    "provider": "Poly by Google via Poly Pizza",
+    "url": "https://poly.pizza/m/eMNhHDZakYp",
+    "file_url": "https://static.poly.pizza/882c4ff3-c97b-4ae2-aedf-953c8d692898.glb",
+    "original_file": "poly_pizza_flying_gull.glb",
+    "original_sha256": "60e65ec7e29102289e0e755aae0c19361f4a577c911861e93572bfeca2564975",
+    "acquired_on": "2026-09-15",
+    "approved_by": "operator request"
+  },
+  "rights": {
+    "label": "CC-BY-3.0",
+    "url": "https://creativecommons.org/licenses/by/3.0/",
+    "credit": "Poly by Google (Flying gull) via Poly Pizza",
+    "public_export": true,
+    "note": "Retain attribution and license link. Modification: uniform scale baked into the root node."
+  },
+  "representation": "generic",
+  "aliases": [
+    "bird",
+    "seagull"
+  ],
+  "display": {
+    "native_extent": 88.46697998046875,
+    "reference_extent_m": 1.1,
+    "scale_basis": "root node scaled so the wingspan extent is 1.1 m (a gull); axes unverified",
+    "forward_axis": "unverified",
+    "browser_measured_extent": 1.1
+  },
+  "conversion": {
+    "operation": "root_scale",
+    "factor": 0.01243401775716603,
+    "note": "Original mesh bytes preserved; only nodes[0].scale set."
+  },
+  "model": {
+    "path": "model.glb",
+    "bytes": 64244,
+    "sha256": "7be56c1d4a715cbed7ebb2fedc3055227451836b6542f66fa21737dede435fd6"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 1,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [],
+    "native_coordinates": "glTF right-handed +Y up (obj2gltf); forward axis unverified",
+    "physical_dimensions_verified": false
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "not_run",
+    "browser": "not_run"
+  }
+}

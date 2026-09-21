@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AeroDT static visual asset metadata v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "asset_id", "kind", "uri", "metadata_uri", "size_m", "units", "axes", "attribution", "license", "temporary", "thumbnail_uri", "description", "size_definition"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "asset_id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "kind": {"enum": ["aircraft", "satellite"]},
+    "uri": {"type": "string", "pattern": "^/visual-assets/[a-z0-9_/]+/model\\.glb$"},
+    "metadata_uri": {"type": "string", "pattern": "^/visual-assets/[a-z0-9_/]+/asset\\.json$"},
+    "thumbnail_uri": {"type": "string", "pattern": "^/visual-assets/[a-z0-9_/]+/thumbnail\\.svg$"},
+    "size_m": {"type": "number", "exclusiveMinimum": 0},
+    "units": {"const": "metres"},
+    "axes": {"const": {"forward": "+X", "up": "+Y", "handedness": "right"}},
+    "attribution": {"type": "string", "minLength": 1},
+    "license": {"type": "string", "minLength": 1},
+    "temporary": {"type": "boolean"},
+    "description": {"type": "string", "minLength": 1},
+    "size_definition": {"type": "string", "minLength": 1}
+  }
+}

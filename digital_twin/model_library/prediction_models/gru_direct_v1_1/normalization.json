@@ -1,0 +1,12 @@
+{
+  "_comment": "What the training run normalised by. scale_m and time_scale_s come from the delivery; head_activation was not delivered and is measured. See manifest.json for where each came from.",
+  "scale_m": 406.9305780134473,
+  "time_scale_s": 3.0,
+  "head_activation": "gelu",
+  "source": {
+    "run_id": "20260909T231143_96a3d4337799",
+    "scale_m": "run/normalization.json, delivered 2026-09-10; the 95th percentile of the training future relative distance",
+    "time_scale_s": "the delivery note INPUT_OUTPUT.md: 시간은 (timestamp-t0)/3초",
+    "head_activation": "measured here, not delivered - the weights name head.0 and head.3 and whatever sits between them left no tensor behind"
+  }
+}

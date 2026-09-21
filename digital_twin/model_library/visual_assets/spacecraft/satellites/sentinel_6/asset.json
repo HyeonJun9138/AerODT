@@ -1,0 +1,98 @@
+{
+  "title": "Sentinel-6 Michael Freilich",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Jason Continuity of Service (Sentinel-6)/Jason Continuity of Service (Sentinel-6).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "sentinel_6.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "sentinel_6",
+      "label": "Sentinel-6 Michael Freilich",
+      "exact": {
+        "norad": [
+          46984
+        ],
+        "names": []
+      },
+      "series": {
+        "norad": [],
+        "names": [
+          "^SENTINEL-6"
+        ]
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 5.13,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 5.132573
+    }
+  ],
+  "display": {
+    "native_extent": 5.132573,
+    "reference_extent_m": 5.13,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 5.132573485374451
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "sentinel_6",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 2108496,
+    "sha256": "cd257b8d63deef018d0227fa6c4bcb29974f257073c4d4f92abd557098b3d580"
+  },
+  "geometry": {
+    "meshes": 14,
+    "materials": 17,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression",
+      "KHR_texture_transform"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 22866
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 11,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "cd257b8d63deef018d0227fa6c4bcb29974f257073c4d4f92abd557098b3d580"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 13872,
+    "sha256": "4811dc4953b88185804e922ab81d65b8528a881b6230a363ee10f1b7c0c1028a"
+  }
+}

@@ -1,0 +1,16 @@
+<!doctype html><meta charset="utf-8"><title>Flight rig QA</title>
+<style>body{margin:0;background:#a7afb7;font:16px sans-serif}header{padding:12px}button,select{padding:8px}canvas{display:block}</style>
+<header><select id="asset"><option>joby_s4</option><option>kp2a</option><option>amvlab_evtol</option><option>projectairsim_airtaxi</option></select><button id="hover">VTOL 0°</button><button id="half">45°</button><button id="cruise">Cruise 90°</button><output id="status"></output></header>
+<script type="importmap">{"imports":{"three":"/vendor/build/three.module.js","three/addons/":"/vendor/examples/jsm/"}}</script>
+<script type="module">
+import * as T from 'three';import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';import {OrbitControls} from 'three/addons/controls/OrbitControls.js';import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+const r=new T.WebGLRenderer({antialias:true});r.setSize(1000,650);r.setClearColor(0xa7afb7);document.body.append(r.domElement);
+const scene=new T.Scene(),camera=new T.PerspectiveCamera(35,1000/650,.01,1000),controls=new OrbitControls(camera,r.domElement);
+const pm=new T.PMREMGenerator(r);scene.environment=pm.fromScene(new RoomEnvironment(),.04).texture;scene.add(new T.HemisphereLight(0xffffff,0x667788,2));const light=new T.DirectionalLight(0xffffff,2);light.position.set(5,10,8);scene.add(light);
+camera.up.set(...(new URLSearchParams(location.search).get('up')??'0,1,0').split(',').map(Number));
+let model,meta,rest;const status=document.querySelector('#status');
+function draw(){r.render(scene,camera)}controls.addEventListener('change',draw);
+async function load(){try{if(model)scene.remove(model);const id=document.querySelector('#asset').value,base='/library/aircraft/civilian/'+id+'/';meta=await(await fetch(base+'asset.json')).json();model=(await new GLTFLoader().loadAsync(base+(meta.flight_visual?.path??meta.model.path))).scene;scene.add(model);rest=new Map();model.traverse(n=>rest.set(n.name,n.quaternion.clone()));const box=new T.Box3().setFromObject(model),size=box.getSize(new T.Vector3());controls.target.copy(box.getCenter(new T.Vector3()));camera.position.copy(controls.target).add(new T.Vector3(...(new URLSearchParams(location.search).get('camera')??'12,7,12').split(',').map(Number)));controls.update();status.textContent=id+' extent '+Math.max(size.x,size.y,size.z).toFixed(3)+' m';tilt(0);}catch(e){status.textContent=String(e)}}
+function tilt(deg){for(const spec of meta.flight_visual?.rotors?.tilt?.nodes??[]){const n=model.getObjectByName(spec.name),axis=new T.Vector3(...({x:[1,0,0],y:[0,1,0],z:[0,0,1]}[spec.axis]));n.quaternion.copy(rest.get(n.name)).premultiply(new T.Quaternion().setFromAxisAngle(axis,(deg*spec.sign+(spec.offset_deg??0))*Math.PI/180));}draw()}
+document.querySelector('#asset').onchange=load;document.querySelector('#hover').onclick=()=>tilt(0);document.querySelector('#half').onclick=()=>tilt(45);document.querySelector('#cruise').onclick=()=>tilt(90);document.querySelector('#asset').value=new URLSearchParams(location.search).get('id')??'joby_s4';await load();
+</script>

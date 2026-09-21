@@ -1,0 +1,18 @@
+<!doctype html><meta charset="utf-8"><title>항로 페이드 검증</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>body{margin:0}#view{height:95vh}aside{position:absolute;top:10px;background:white;padding:12px}</style><div id="view"></div><aside><button id="run">검증</button><pre id="result">준비 중</pre></aside>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script><script type="module">
+import {RouteLayer} from '/visualization/route_layer.js';import {RouteGeometryFade} from '/visualization/route_geometry_fade.js';
+const C=Cesium,v=new C.Viewer('view',{baseLayer:false,baseLayerPicker:false,geocoder:false,timeline:false,animation:false});v.camera.setView({destination:C.Cartesian3.fromDegrees(127,37.53,16000)});
+const layer=new RouteLayer(C,v);await layer.show({nodes:[{id:'a',name:'A',longitude:126.96,latitude:37.53,altitude_m:500},{id:'b',name:'B',longitude:127,latitude:37.53,altitude_m:500},{id:'c',name:'C',longitude:127.04,latitude:37.53,altitude_m:500}],links:[{id:'line',name:'선',from:'a',to:'b',segment:'C'},{id:'corridor',name:'항로',from:'b',to:'c',segment:'F',width_m:300}]});
+const result=document.getElementById('result');result.textContent='준비 완료';document.getElementById('run').onclick=()=>{
+ const baseMesh=layer.primitive.getGeometryInstanceAttributes('link:corridor').color[3];const fade=new RouteGeometryFade(C),start=performance.now(),samples=[];
+ const remove=v.scene.preRender.addEventListener(()=>{const elapsed=performance.now()-start;fade.update(layer,v,start+elapsed);
+ if(samples.length===0 || samples.length===1&&elapsed>=450 || samples.length===2&&elapsed>=950){
+  samples.push({elapsed,point:layer.markers.get('a').entity.point.color.getValue(v.clock.currentTime).alpha,line:layer.lines.get('line').entity.polyline.material.color.getValue(v.clock.currentTime).alpha,mesh:layer.primitive.getGeometryInstanceAttributes('link:corridor').color[3]});
+ }
+ if(samples.length===3){remove();result.textContent=JSON.stringify({pass:samples[0].point===0&&samples[1].point>0&&samples[1].point<1&&samples[2].point===1&&samples[2].mesh===baseMesh,samples},null,2);}
+ });
+};window.addEventListener('pagehide',()=>{layer.destroy();v.destroy();},{once:true});
+</script>
+

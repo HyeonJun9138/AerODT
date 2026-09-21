@@ -1,0 +1,48 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>Stakeholder Workspace QA</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/static/styles.css?v=role-qa">
+<style>body{background:radial-gradient(ellipse at 68% 30%,#42585c,#17252e);min-height:100vh}#qa-tools{position:fixed;right:20px;top:10px;z-index:15;font-size:11px}#qa-report{white-space:pre-wrap;max-width:420px}#qa-frame{border:0;display:block;margin:65px 0 0}#qa-side{position:fixed;left:76px;top:15px;bottom:25px;width:330px;padding:16px;overflow:auto}#qa-side h3{margin:0 0 12px}#fixture-label{position:fixed;right:20px;top:10px;font-size:11px}</style>
+</head><body><script type="module">
+const query=new URLSearchParams(location.search);
+if(!query.has('frame')){
+ const toolbar=document.createElement('div');toolbar.id='qa-tools';
+ const frame=document.createElement('iframe');frame.id='qa-frame';frame.title='독립 Stakeholders 검수';frame.src=location.pathname+'?frame';frame.width='1360';frame.height='900';
+ const report=document.createElement('pre');report.id='qa-report';
+ for(const [label,fn] of Object.entries({
+  '1360×900':()=>{frame.width='1360';frame.height='900';},'600×650':()=>{frame.width='600';frame.height='650';},
+  '조종사':()=>frame.contentWindow.qaRole('pilot'),'버티포트':()=>frame.contentWindow.qaRole('vertiport'),'PSU':()=>frame.contentWindow.qaRole('psu'),
+  '상세 열기':()=>frame.contentWindow.qaOpen(),'접기':()=>frame.contentWindow.qaFold(),'넓게 보기':()=>frame.contentWindow.qaExpand(),
+  '닫기':()=>frame.contentWindow.qaClose(),'요약만':()=>{frame.contentWindow.qaClose();},
+  '보고 폼 펼치기':()=>frame.contentWindow.qaReports(),
+  '배치 검사':()=>{const d=frame.contentDocument,w=frame.contentWindow;
+    const nodes=[...d.querySelectorAll('.stakeholder-console,.ops-console,.stakeholder-launch,.stakeholder-console-header,.vp-report-form')].filter(n=>n.getBoundingClientRect().width&&n.getBoundingClientRect().height);
+    report.textContent=JSON.stringify({size:[w.innerWidth,w.innerHeight],errors:w.qaErrors,panels:nodes.map(n=>{const r=n.getBoundingClientRect();return {class:n.className,rect:[r.x,r.y,r.width,r.height].map(Math.round),overflow:n.scrollWidth>n.clientWidth+2};})},null,2);}
+ })){const b=document.createElement('button');b.textContent=label;b.onclick=()=>{if(typeof frame.contentWindow.qaRole!=='function'){report.textContent='검수 화면 준비 중';return;}fn();};toolbar.append(b);}
+ toolbar.append(report);document.body.append(toolbar,frame);
+}else{
+ document.body.style.setProperty('--left-offset','406px');
+ const side=document.createElement('aside');side.id='qa-side';side.className='glass';side.innerHTML='<h3>Stakeholders</h3><div id="fixture-panel"></div>';
+ const label=document.createElement('p');label.id='fixture-label';label.textContent='독립 GUI 검수 / 예시 데이터 / 운영 API 호출 없음';document.body.append(side,label);
+ window.qaErrors=[];window.addEventListener('error',e=>qaErrors.push(e.message));window.addEventListener('unhandledrejection',e=>qaErrors.push(String(e.reason)));
+ const [{PilotPanel},{VertiportPanel},{PsuPanel},{StakeholderPanel},{ScenarioVertiportMonitor}]=await Promise.all([
+  import('/static/pilot_panel.js?v=qa-roles'),import('/static/vertiport_panel.js?v=qa-roles'),import('/static/psu_panel.js?v=qa-roles'),import('/static/stakeholder_panel.js?v=qa-roles'),import('/static/scenario_stakeholders.js?v=qa-roles')]);
+ const record={id:'VP001',name:'여의도',layout:{frame:{latitude:37.52,longitude:126.93},platform:{corners_m:[[-35,-35],[35,-35],[35,35],[-35,35]]},
+  fatos:[{id:'F1',role:'both',center_m:[0,20],radius_m:9}],gates:[{id:'G1',center_m:[-15,-15],radius_m:5},{id:'G2',center_m:[15,-15],radius_m:5}],chargers:[{id:'C1',gate:'G1',center_m:[-24,-15],radius_m:2}],edges:[{id:'E1',from:'F1',to:'G1',points_m:[[0,20],[-15,-15]],width_m:3}]}};
+ const aircraft=['UAM001','UAM002','UAM003'].map((id,i)=>({aircraft_id:id,flight_id:`FPL00${i+1}`,origin:'목동',destination:'여의도',phase:'descent',altitude_m:280,speed_mps:25,hold_seconds:i*15,
+  clearance:{sequence:i+1,eta_s:24100,approach_s:24030,cleared_s:24120},instruction:{clearance:i?'hold':'approach',clearance_reason:i?'선행편의 접근 구간 이탈 대기':'분리 확인 후 접근 시작',reason:'예상 근접 없음',right_m:0,speed_factor:1}}));
+ const deck={vertiport_id:'VP001',clock:'06:43:48',standing:[{aircraft_id:'UAM008',stand:'G1',phase:'parked'}],inbound:aircraft.slice(0,1),holding:aircraft.slice(1).map(r=>({...r,holding:true})),outbound:[],stands:{G1:'UAM008'},pads:{F1:[]}};
+ const session={online:false,mutating:false,member:null,data:{server_time:1789105428,facilities:{VP001:'여의도',VP002:'목동'},requests:[],history:[],participants:[]},subscribe:()=>()=>{},join:()=>{},leave:()=>{},action:()=>{}};
+ let profile={source:'계획 속도 · 독립 QA',not_taken:'이후 생성하는 계획에 반영하는 설정입니다.',values:{cruise_kt:95,stall_kt:45,takeoff_vertical_fpm:500,taxi_speed_mps:3},
+ fields:[['cruise_kt','순항 속도','kt'],['stall_kt','실속 기준 속도','kt'],['takeoff_vertical_fpm','수직 상승률','ft/min'],['taxi_speed_mps','지상 이동 속도','m/s']].map(([name,label,unit])=>({name,label,unit,min:1,max:1000,step:1})),phases:[{phase:'cruise',label:'순항',knots:95,mps:48.9}]};
+ const closeOther=role=>{if(role!=='pilot')pilot.close();if(role!=='vertiport')vp.close();if(role!=='psu')psu.close();};
+ const pilot=new PilotPanel({api:{read:async()=>profile,write:async values=>(profile={...profile,values:{...profile.values,...values}}),reset:async()=>profile,operations:async()=>({state:'playing',clock:deck.clock,aircraft})},onOpen:()=>closeOther('pilot')});
+ const vp=new VertiportPanel({session,api:{list:async()=>({vertiports:[record,{...record,id:'VP002',name:'목동'}]}),weather:async()=>({points:[]}),scenarioVertiport:async id=>({...deck,vertiport_id:id})},onOpen:()=>closeOther('vertiport')});
+ vp.scenarioDeck=new ScenarioVertiportMonitor({api:{}});
+ const psu=new PsuPanel({session,api:{scenarioVertiports:async()=>({clock:deck.clock,time_s:24228,vertiports:[{vertiport_id:'VP001',holding:2,inbound:3,standing:1}],arrivals:[]})},onOpen:()=>closeOther('psu')});
+ const panels={pilot,vertiport:vp,psu};const stakeholders=new StakeholderPanel({pilotPanel:pilot,vertiportPanel:vp,psuPanel:psu});
+ window.qaRole=role=>{closeOther(role);stakeholders.role=role;stakeholders.render(document.querySelector('#fixture-panel'));};
+ window.qaOpen=()=>panels[stakeholders.role].open();window.qaClose=()=>panels[stakeholders.role].close();
+ window.qaFold=()=>panels[stakeholders.role].foldButton.click();window.qaExpand=()=>panels[stakeholders.role].expandButton.click();
+ window.qaReports=()=>{for(const n of document.querySelectorAll('.stakeholder-detail-section'))n.open=true;};
+ qaRole('pilot');window.addEventListener('pagehide',()=>{stakeholders.destroy();pilot.destroy();vp.destroy();psu.destroy();});
+}
+</script></body></html>

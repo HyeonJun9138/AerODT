@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AeroDT visual asset metadata v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "asset_id",
+    "category",
+    "purpose",
+    "title",
+    "source",
+    "rights",
+    "model",
+    "representation",
+    "conversion",
+    "validation",
+    "display",
+    "geometry",
+    "aliases",
+    "thumbnail"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "asset_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "category": {
+      "enum": [
+        "aircraft/civilian",
+        "aircraft/military",
+        "spacecraft/satellites",
+        "people/civilian"
+      ]
+    },
+    "purpose": {
+      "const": "visual_only"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "representation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "provider",
+        "url",
+        "original_file"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "rights": {
+      "type": "object",
+      "required": [
+        "label",
+        "credit",
+        "url",
+        "public_export",
+        "note"
+      ],
+      "properties": {
+        "public_export": {
+          "type": "boolean"
+        },
+        "credit": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "model": {
+      "$ref": "#/$defs/file"
+    },
+    "thumbnail": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/file"
+        }
+      ]
+    },
+    "conversion": {
+      "type": "object",
+      "required": [
+        "operation",
+        "note"
+      ]
+    },
+    "validation": {
+      "type": "object",
+      "required": [
+        "container",
+        "gltf_validator",
+        "browser"
+      ],
+      "properties": {
+        "container": {
+          "enum": [
+            "passed",
+            "failed"
+          ]
+        },
+        "gltf_validator": {
+          "enum": [
+            "passed",
+            "failed",
+            "not_run"
+          ]
+        },
+        "browser": {
+          "enum": [
+            "passed",
+            "failed",
+            "not_run"
+          ]
+        }
+      }
+    },
+    "display": {
+      "type": "object"
+    },
+    "geometry": {
+      "type": "object"
+    },
+    "aliases": {
+      "type": "array"
+    },
+    "flight_visual": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256",
+        "source_sha256",
+        "rotors",
+        "purpose",
+        "note",
+        "validation"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^flight_[a-z0-9_]+\\.glb$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "rotors": {
+          "type": "object"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        },
+        "validation": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "file": {
+      "type": "object",
+      "required": [
+        "path",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+\\.(glb|jpg)$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  }
+}

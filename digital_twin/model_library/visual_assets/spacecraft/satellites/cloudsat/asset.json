@@ -1,0 +1,97 @@
+{
+  "title": "CloudSat",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/CloudSat (A)/CloudSat (A).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "cloudsat.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "cloudsat",
+      "label": "CloudSat",
+      "exact": {
+        "norad": [
+          29107
+        ],
+        "names": [
+          "^CLOUDSAT"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 4.6,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 172.140313
+    }
+  ],
+  "display": {
+    "native_extent": 172.140313,
+    "reference_extent_m": 4.6,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 172.14031265632826
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "cloudsat",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 267656,
+    "sha256": "293aab60f12decc020fe7e19ddd0837b0643067425a4ad09f01ffd8a380e7423"
+  },
+  "geometry": {
+    "meshes": 20,
+    "materials": 19,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 73915
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "293aab60f12decc020fe7e19ddd0837b0643067425a4ad09f01ffd8a380e7423"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 11609,
+    "sha256": "87ce138c93c73c1161d3f486cb428d8347f411d9beee0ac90b2457bd91a3ec8c"
+  }
+}

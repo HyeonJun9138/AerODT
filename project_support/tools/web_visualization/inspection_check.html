@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AeroDT — Live Twin</title><link rel="stylesheet" href="/static/styles.css">
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+</head><body>
+<main id="globe" aria-label="위성 및 항공기 실시간 지구"></main>
+<header class="glass"><a class="brand" href="/" aria-label="AeroDT 홈">AERO<span>DT</span></a><span class="eyebrow">Live Twin</span></header>
+<div id="clock" class="glass"><time id="state-time" aria-label="현재 UTC 시간">시계 준비 중</time></div>
+<aside id="operations" class="glass" aria-label="운용 안내">
+  <details open><summary>운용 안내 <span>STATUS &amp; GUIDE</span></summary>
+    <ul id="notices" aria-live="polite" aria-relevant="additions"></ul>
+    <div class="operation-help"><span>드래그 <b>이동</b></span><span>휠 <b>확대 / 축소</b></span><span>Ctrl + 드래그 <b>시점 회전</b></span><span>기체 클릭 <b>상세 보기</b></span></div>
+    <details id="diagnostics"><summary>데이터 및 지도 상태</summary><div id="transport-status" role="status">연결 준비 중</div><div id="snapshot-time">마지막 상태 대기 중</div><div id="terrain-status">지형 준비 중</div><div id="building-status">건물 준비 중</div><div id="place-status">지역명 준비 중</div><div id="sources"></div></details>
+  </details>
+</aside>
+<div id="summary" class="glass" role="group" aria-label="대상 표시"><button id="layer-satellite" class="layer-toggle" aria-label="위성 표시" aria-pressed="true"><span class="dot satellite"></span>위성 <b id="satellites">0</b></button><button id="layer-aircraft" class="layer-toggle" aria-label="항공기 표시" aria-pressed="true"><span class="dot aircraft"></span>항공기 <b id="aircraft">0</b></button></div>
+<div id="hover-card" class="glass" role="tooltip" hidden><strong id="hover-name"></strong><span id="hover-detail"></span></div>
+<section id="selection" hidden inert aria-hidden="true" aria-label="선택한 대상 상세" data-open="false">
+  <div class="selection-heading"><span class="eyebrow" id="selected-kind"></span><button id="clear" aria-label="선택 해제" title="닫기 (Esc)">×</button></div>
+  <div class="preview-stage"><div id="model-preview" aria-label="선택 대상 대표 3D 모델"></div><img id="preview-image" hidden alt="대표 모델 썸네일"><div id="preview-empty">3D PREVIEW</div><span id="preview-status" role="status"></span></div>
+  <div class="model-caption"><strong id="model-title"></strong><span id="model-disclaimer"></span></div>
+  <div class="selection-body"><h2 id="selected-name"></h2><span id="selected-quality"></span><dl id="selected-detail"></dl><details class="asset-credit"><summary>모델 출처</summary><p id="model-attribution"></p></details><p class="state-note">진행 방향은 기체 자세가 아닙니다. 속력은 지구고정계 기준이며 위성의 궤도 관성계 속력과 다릅니다.</p></div>
+  <div class="actions"><button id="focus">대상 보기</button><button id="track" aria-pressed="false">추적</button></div>
+</section>
+<nav id="camera" class="glass" aria-label="카메라 조작"><button id="sunlight" title="실시간 태양 조명 켜짐 — 클릭하면 전체 밝기" aria-label="실시간 태양 조명" aria-pressed="true">☀</button><button id="buildings" title="3D 건물 — 가까이 확대하면 표시" aria-label="3D 건물 표시" aria-pressed="true">▥</button><button id="place-names" title="지역명 표시 켜기 / 끄기" aria-label="지역명 표시" aria-pressed="true">가</button><span></span><button id="north" title="북쪽 정렬" aria-label="북쪽 정렬">N</button><button id="top" title="수직 시점" aria-label="수직 시점">⊙</button><span></span><button id="zoom-in" aria-label="확대">+</button><input id="zoom" type="range" min="0" max="100" value="58" aria-label="카메라 거리"><button id="zoom-out" aria-label="축소">−</button><span></span><button id="reset" title="서울 기본 시야" aria-label="서울 기본 시야">⌂</button></nav>
+<footer id="program-footer"><div class="program-info"><strong>AeroDT</strong><span>Developed by <b>KADA</b></span><span>© <span id="copyright-year">2026</span> KADA</span></div><div id="map-credits" aria-label="지도 엔진 및 데이터 출처"></div></footer>
+<section id="loading" role="status"><div class="loading-content"><div class="loading-brand">AeroDT <span>by KADA</span></div><h1 class="twinning-title">AERO <span>TWINNING</span></h1><div class="loading-tagline">현실을 디지털로 잇다</div><p id="loading-step">시각화 엔진 준비 중</p><div class="progress"><div id="loading-bar"></div></div><span id="loading-percent">0%</span><button id="retry" hidden>다시 시도</button></div></section>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script><script type="module" src="/static/inspection_check.js"></script><nav id="qa" style="position:fixed;left:380px;bottom:80px;z-index:200;background:#071923;padding:12px;max-width:600px"><strong>FIXTURE / NOT LIVE</strong><button id="qa-hover">Hover aircraft</button><button id="qa-aircraft">Select aircraft</button><button id="qa-satellite">Select satellite</button><button id="qa-fallback">Broken preview</button><button id="qa-verify">Inspect result</button><pre id="qa-result"></pre></nav></body></html>

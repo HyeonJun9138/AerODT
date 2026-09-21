@@ -1,0 +1,106 @@
+/* Common window chrome sits above scene-bound MFDs, below blocking dialogs. */
+body[data-workspace]{--left-offset:var(--rail-width,76px)!important}
+.ww-shell{position:fixed;display:flex;flex-direction:column;box-sizing:border-box;min-width:0;min-height:0;border:1px solid #95b6c14d;border-radius:12px;background:var(--chrome-surface);box-shadow:0 10px 34px #07182459;isolation:isolate;color:#dce9ef;font:12px 'Segoe UI','Malgun Gothic',sans-serif;container-type:inline-size}
+.ww-shell[hidden],.ww-preview[hidden],.ww-tabs button[hidden]{display:none!important}
+.ww-shell[data-active=true]{border-color:#a3d6d295;box-shadow:0 14px 40px #06162265,0 0 0 1px #8bccca18}
+.ww-titlebar{height:34px;flex:0 0 34px;display:flex;align-items:center;gap:6px;padding:0 8px 0 12px;border-bottom:1px solid #afcbd32b;border-radius:12px 12px 0 0;background:linear-gradient(110deg,#ffffff0c,#ffffff02);cursor:grab;touch-action:none;user-select:none;position:relative;z-index:3}
+.ww-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:600;outline-offset:2px}
+.ww-titlebar button,.ww-placement summary,.ww-shelf button{font:inherit;color:inherit;border:1px solid #9ab7c52e;border-radius:5px;background:#0f243630;cursor:pointer;padding:4px 8px;white-space:nowrap}
+.ww-titlebar button:hover,.ww-placement summary:hover,.ww-shelf button:hover{background:#99d8d329}
+.ww-shell :focus-visible,.ww-shelf :focus-visible{outline:2px solid #9fddd7;outline-offset:2px}
+.ww-placement{position:relative}.ww-placement summary{font-size:10px;list-style:none}.ww-placement summary::-webkit-details-marker{display:none}
+.ww-choices{position:absolute;right:0;top:29px;width:220px;display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:9px;background:#263f50;border:1px solid #98bdca66;border-radius:8px;box-shadow:0 12px 26px #0005}
+.ww-choices button{text-align:left;font-size:11px;padding:8px}
+.ww-content{position:relative;flex:1;min-height:0;min-width:0;overflow:hidden;border-radius:0 0 11px 11px;isolation:isolate}
+.ww-content>.ww-managed{position:relative!important;inset:auto!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;min-width:0!important;min-height:0!important;margin:0!important;transform:none!important;opacity:1!important;z-index:auto!important;border-radius:0!important;border:0!important;box-shadow:none!important;transition:none!important;animation:none!important;box-sizing:border-box}
+.ww-content>#drawer{overflow:hidden}.ww-content>#settings-panel,.ww-content>.ai-library,.ww-content>.deck-detail,.ww-content>.demand-summary,.ww-content>.vp-selection-info{overflow:auto}
+.ww-grip{position:absolute;z-index:5;touch-action:none}.ww-n,.ww-s{left:8px;right:8px;height:7px;cursor:ns-resize}.ww-n{top:-3px}.ww-s{bottom:-3px}.ww-e,.ww-w{top:8px;bottom:8px;width:7px;cursor:ew-resize}.ww-e{right:-3px}.ww-w{left:-3px}
+.ww-ne,.ww-nw,.ww-se,.ww-sw{width:14px;height:14px}.ww-ne{right:-3px;top:-3px;cursor:nesw-resize}.ww-nw{left:-3px;top:-3px;cursor:nwse-resize}.ww-se{right:-3px;bottom:-3px;cursor:nwse-resize}.ww-sw{left:-3px;bottom:-3px;cursor:nesw-resize}.ww-se:after{content:'';position:absolute;right:4px;bottom:4px;width:6px;height:6px;border-right:1px solid #b7d5dd;border-bottom:1px solid #b7d5dd}
+.ww-preview{position:fixed;z-index:48;box-sizing:border-box;border:2px solid #92e5d9;background:#65d5c324;pointer-events:none;border-radius:12px;display:grid;place-items:center}.ww-preview span{padding:8px 13px;background:#173c4c;border-radius:6px;color:#d3f5ed;font:12px 'Segoe UI',sans-serif}
+.ww-shelf{position:fixed;z-index:45;left:calc(var(--rail-width,76px) + 12px);bottom:12px;max-width:calc(100vw - var(--rail-width,76px) - 220px);display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--chrome-surface);border:1px solid #94b8c94d;border-radius:9px;color:#d5e6eb;font:11px 'Segoe UI','Malgun Gothic',sans-serif;box-shadow:0 5px 18px #00172233}
+.ww-label{font-size:10px;color:#a6c2ce;white-space:nowrap}.ww-tabs{display:flex;gap:4px;overflow:auto;max-width:50vw}.ww-tabs button{max-width:150px;overflow:hidden;text-overflow:ellipsis}.ww-tabs button[aria-pressed=true]{border-color:#8ecfc775;background:#6eccc220}.ww-tabs button[aria-pressed=false]{opacity:.65}
+.ww-dragging,.ww-dragging *{user-select:none!important}.ww-dragging .ww-content{pointer-events:none}
+@container (max-width:760px){.ww-managed.prediction-workspace{display:flex;flex-direction:column;overflow:auto}.ww-managed .pred-header{flex-wrap:wrap;gap:8px;padding:10px 12px}.ww-managed .pred-brand{min-width:0}.ww-managed .pred-brand-icon{display:none}.ww-managed .pred-brand h1{font-size:17px}.ww-managed .pred-perspective,.ww-managed .pred-toolbar{flex-wrap:wrap;gap:7px;padding:8px 12px}.ww-managed .pred-main{display:flex;flex-direction:column;flex:1 0 auto;overflow:visible;min-height:400px}.ww-managed .pred-map-panel{min-height:320px}.ww-managed .pred-map-host{min-height:240px}.ww-managed .pred-feed{overflow:visible}.ww-managed .pred-map-top{padding:10px 12px}.ww-managed .pred-footer{flex-shrink:0}}
+@container (max-width:550px){.ww-managed .vp-console-layout,.ww-managed .pilot-console-body,.ww-managed .psu-console-content{display:block;overflow:auto}.ww-managed .stakeholder-console-header{flex-wrap:wrap;gap:6px}.ww-managed .dc-body{overflow:auto}.ww-managed table{font-size:10px}}
+@media(max-width:700px){.ww-shelf{right:10px;max-width:none;gap:3px}.ww-label{display:none}.ww-shelf button{font-size:10px;padding:5px}.ww-tabs{max-width:42vw}.ww-shell{border-radius:9px}}
+
+body[data-focus=on] .ww-shell,body[data-focus=on] .ww-shelf,body[data-focus=on] .ww-preview{display:none!important}
+
+/* One titlebar owns window dismissal. Keep domain actions (including simulation stop) visible. */
+.ww-titlebar .ww-control{display:grid;place-items:center;flex:0 0 26px;width:26px;height:26px;padding:0;font-size:18px;line-height:1;border-color:transparent;background:transparent;border-radius:5px}
+.ww-titlebar .ww-control:hover{background:#b3dcd92b;border-color:#a5c9cf40}
+.ww-titlebar .ww-close:hover{background:#c98f8f35;border-color:#d0a0a04d;color:#ffdddd}
+.ww-panel{display:flex;flex-direction:column;overflow:auto;background:transparent;color:inherit}
+.ww-managed #drawer-close,
+.ww-managed.prediction-workspace .pred-close,
+.ww-managed.oa-window .oa-close,
+.ww-managed.pilot-console .stakeholder-console-header button[aria-label='조종사 컨트롤 닫기'],
+.ww-managed.pilot-console .stakeholder-console-header button[aria-label='조종사 컨트롤 접기'],
+.ww-managed.pilot-console .stakeholder-console-header button[aria-label='조종사 컨트롤 펼치기'],
+.ww-managed.vp-console .vp-close,.ww-managed.vp-console .vp-fold,
+.ww-managed.psu-control .stakeholder-console-header button[aria-label='PSU 컨트롤 닫기'],
+.ww-managed.psu-control .stakeholder-console-header button[aria-label='PSU 컨트롤 접기'],
+.ww-managed.psu-control .stakeholder-console-header button[aria-label='PSU 컨트롤 펼치기'],
+.ww-managed.risk-radar .risk-actions button[aria-label='레이더 접기'],
+.ww-managed.dc-window button[aria-label='의사결정 로직 닫기'],
+.ww-managed.deck-detail .deck-head button[aria-label='버티포트 상세 닫기'],
+.ww-managed.vp-selection-info .place-close,
+.ww-managed#demand-summary .place-close,.ww-managed.ai-library .place-close{display:none!important}
+.ww-managed .selection-heading button[aria-label='정보 창 숨기기'],
+.ww-managed.vp-selection-info>header button[aria-label='버티포트 정보 닫기']{display:none!important}
+
+/* Miniature screen diagrams use the same geometry as the placement action. */
+.ww-placement summary{display:flex;align-items:center;justify-content:center;width:30px;height:26px;padding:4px;box-sizing:border-box}
+.ww-layout-picture{display:block;position:relative;width:56px;height:36px;box-sizing:border-box;border:1px solid #a9c5d477;border-radius:3px;background:#112635;overflow:hidden;pointer-events:none}
+.ww-layout-fill{position:absolute;display:block;box-sizing:border-box;border:1px solid #b7eeea;background:#87cfc9;border-radius:1px;box-shadow:0 0 5px #8cdfd322}
+.ww-placement summary .ww-layout-picture{width:20px;height:14px}
+.ww-choices{width:218px;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.ww-choices button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:9px 5px;font-size:10px;min-height:66px}
+.ww-choices button:hover .ww-layout-fill{background:#b7eeea}
+
+/* Side and corner radar layouts reserve the remaining height for the full SVG. */
+.ww-shell[data-window-kind="risk"]{container-type:size;container-name:risk-window}
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-header{padding:4px 8px;min-height:23px;border:0}
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-header small,
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-header strong,
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-actions,
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-time-control>span,
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-legend,
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-disclaimer,
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-provenance{display:none}
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-identity{margin:0;max-width:none;font-size:10px}
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-body{flex:1;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto auto;gap:3px;min-height:0;overflow:hidden;padding:2px 8px 6px}
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-controls{gap:5px;min-width:0}
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-controls label{gap:3px;font-size:9px}
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-time-control{margin:0}
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-plot{min-height:0;max-height:none;aspect-ratio:auto;height:100%;width:100%;overflow:hidden}
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-plot svg{overflow:hidden}
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-stats{padding:2px 0;font-size:9px}
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-status{margin:0;font-size:9px;line-height:1.3;max-height:2.6em;overflow:auto}
+.ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-detail{margin:0;padding:4px 6px;max-height:68px;overflow:auto;font-size:9px}
+.risk-detail[hidden]{display:none!important}
+@container risk-window (max-height:360px){
+ .ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-controls select{min-height:23px;padding:2px;max-width:80px}
+ .ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-time-control select{min-height:20px;padding:1px}
+ .ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-settings{min-height:23px}
+ .ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-detail{max-height:38px}
+}
+@container risk-window (max-height:360px){
+ .ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-body{grid-template-columns:104px minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto auto auto;column-gap:4px}
+ .ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-controls{grid-column:1;grid-row:1;flex-wrap:wrap;align-content:start}
+ .ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-controls label{width:100%;justify-content:space-between}
+ .ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-settings{margin-left:0}
+ .ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-time-control{grid-column:1;grid-row:2}
+ .ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-plot{grid-column:2;grid-row:1 / 4}
+ .ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-stats{grid-column:1 / -1;grid-row:4}
+ .ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-status{grid-column:1 / -1;grid-row:5}
+ .ww-shell[data-window-kind="risk"]:not([data-snap^="bottom-"]) .risk-detail{grid-column:1 / -1;grid-row:6}
+}
+
+/* Managed PSU follows its resized window, not the standalone console's 360px cap. */
+.ww-content>.psu-control.ww-managed{display:flex;flex-direction:column;overflow:hidden}
+.ww-content>.psu-control.ww-managed>.ops-console-header{flex:none}
+.ww-content>.psu-control.ww-managed>.psu-console-content{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+.ww-content>.psu-control.ww-managed .psu-workspace-nav{flex:none}
+.ww-content>.psu-control.ww-managed .psu-live-workspace{flex:1;height:auto;min-height:0;max-height:none;overflow:auto}
+.ww-content>.psu-control.ww-managed .psu-practice{flex:1;height:auto;min-height:0;max-height:none;overflow:auto}

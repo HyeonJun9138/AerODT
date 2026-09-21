@@ -1,0 +1,5 @@
+Microsoft Corporation / ProjectAirSim
+https://github.com/microsoft/ProjectAirSim
+https://github.com/microsoft/ProjectAirSim/blob/main/LICENSE
+MIT licence; the copyright and permission notice must travel with the model. Sample content, not a certified vehicle geometry.
+Changes: Unreal glTF exporter output, unmodified. Textures were written as JPEG quality 90 by the exporter; lossless PNG produced a 41 MB file. Geometry and part placement come from the model package and are not edited here.

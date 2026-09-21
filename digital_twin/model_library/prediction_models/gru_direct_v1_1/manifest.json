@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "model_id": "gru_direct_v1_1",
+  "label": "GRU 직접예측 v1.1",
+  "delivered": "2026-09-10",
+  "note": "한 물체의 최근 3초(5 Hz 16점) 위치로 앞으로 15초(75점)를 한 번에 예측합니다. 합성 VTOL 관측으로 학습된 모델입니다.",
+  "run": {
+    "run_id": "20260909T231143_96a3d4337799",
+    "display_name": "V1.1 full-flight streaming-eval",
+    "status": "stopped",
+    "epoch": 46.14,
+    "best_ade_m": 18.755284286558766,
+    "evaluation_mode": "validation_only",
+    "test_evaluated": false,
+    "dataset": "VTOL_corpus_16000episodes_seeds1-100_365e47bc7a1b (synthetic)",
+    "installed_from": "the delivered run folder; run.json, status.json, effective_config.yaml, manifest.csv and normalization.json are kept beside the weights in run/",
+    "note": "best_ade_m is the run's own validation on its synthetic corpus, not a measurement on our flights"
+  },
+  "weights": {
+    "file": "model.safetensors",
+    "bytes": 976456,
+    "sha256": "ffca2350df720813f2e6e7e025fb2b75b80421347b2f1d7dc31ab365f407e02e",
+    "checked_against": "run/manifest.csv, which names this hash for checkpoints/best/model.safetensors",
+    "replaced": "an earlier checkpoint of the same size, sha256 babe5739b2e6e10e342a47d2f31ead13f1e4fd2130854f0f15502ebeb31e8d14"
+  },
+  "contract": {
+    "frame": "local_enu_m",
+    "rate_hz": 5.0,
+    "step_seconds": 0.2,
+    "input_points": 16,
+    "input_seconds": 3.0,
+    "output_points": 75,
+    "output_seconds": 15.0,
+    "input_features": ["relative_east_m", "relative_north_m", "relative_up_m", "relative_time_s"],
+    "output": "relative_position_m from the last observation"
+  },
+  "architecture": {
+    "recovered_from": "the weight file; the delivery carries effective_config.yaml but it does not name the head activation",
+    "gru": {"layers": 2, "input_size": 4, "hidden_size": 128},
+    "head": ["linear 128->256", "gelu (measured, see below)", "dropout 0.1 (identity at inference)", "linear 256->225"],
+    "auxiliary": {"behavior_head": "linear 128->19, training only, not used at inference"}
+  },
+  "normalization": {
+    "required": true,
+    "file": "normalization.json",
+    "present": true,
+    "scale_m": {"value": 406.9305780134473, "from": "delivered run/normalization.json"},
+    "time_scale_s": {"value": 3.0, "from": "the delivery note INPUT_OUTPUT.md"},
+    "head_activation": {"value": "gelu", "from": "measured here; not delivered"}
+  },
+  "head_activation_measurement": {
+    "why": "head.0 and head.3 are the two Linear layers; the activation between them leaves no tensor, and effective_config.yaml does not name it",
+    "how": "at the delivered scale, so only the activation varied: 360 windows from 6 of our own 5 Hz UAM flight runs, scored two ways - the 15 s displacement error against what each flight did, and a continuity residual (how far the first predicted point sits from carrying the last second's observed velocity forward one step, which does not depend on our flights resembling its training motion)",
+    "result_ade_m": {"gelu": 41.24, "silu": 49.99, "relu": 87.39, "tanh": 232.62},
+    "result_continuity_m": {"gelu": 1.152, "silu": 1.162, "relu": 2.880, "tanh": 5.095},
+    "reading": "gelu is lowest on both, and the two measures agree. gelu and silu are close because the functions are close; relu and tanh are ruled out by a wide margin. This is strong evidence, not the trained configuration - if the run's own head activation can be sent, it should replace this."
+  },
+  "measured_on_our_flights": {
+    "windows": 360,
+    "flights": 6,
+    "model_ade_m": 41.2,
+    "constant_velocity_ade_m": 26.5,
+    "reading": "on our own flights the model is worse than carrying the last velocity forward. That is not a verdict on the model: our flight runs are kinematic and straight-legged by construction, which is the case a constant-velocity rule is exactly right for, while the model was trained on a synthetic corpus of turning, climbing and transitioning VTOL motion where its own validation ADE is 18.8 m. It is worth watching once the twin carries motion that is not straight."
+  },
+  "scale_check": {
+    "why": "to see whether the delivered scale is credible rather than to fit one",
+    "gelu_ade_m_by_scale": {"200": 58.1, "300": 37.1, "350": 37.0, "380": 37.6, "406.93": 41.2, "430": 42.5, "470": 48.9, "550": 55.5, "700": 63.2},
+    "reading": "the curve is shallow between 300 and 430 and the delivered 406.93 sits inside it. The delivered value is used as delivered - the delivery note is explicit that the scale is a property of the training run and must not be refitted per input."
+  }
+}

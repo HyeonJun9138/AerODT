@@ -1,0 +1,53 @@
+/* Shared presentation only; each role retains its own data and operations. */
+.stakeholder-summary,.vp-workspace,.psu-summary{min-width:0}
+.psu-summary{padding-top:0}
+.psu-summary>.stakeholder-launch{margin-bottom:0}
+button.stakeholder-launch{display:block;width:100%;min-height:42px;margin:0 0 14px;padding:11px 12px;border:1px solid #8fd1dd80;border-radius:8px;background:#8fcfdd26;color:#e5f8fd;font-size:12px;font-weight:650;text-align:left;line-height:1.5}
+button.stakeholder-launch:hover{background:#8fcfdd40}
+button.stakeholder-launch:disabled{opacity:.45;cursor:not-allowed}
+.stakeholder-summary-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:12px 0 8px;font-size:11px}
+.stakeholder-side-link{width:100%;margin-bottom:9px;font-size:10px}
+.stakeholder-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0 12px}
+.stakeholder-metrics>div{display:grid;gap:5px;text-align:center;padding:10px 3px;background:#192e3b55;border:1px solid #adc9d12b;border-radius:7px}
+.stakeholder-metrics strong{font-size:22px;font-weight:500;font-variant-numeric:tabular-nums}
+.stakeholder-metrics span{font-size:10px;color:#c0d2da}
+.stakeholder-weather{display:grid;gap:6px;border-top:1px solid #adc9d12b;padding:12px 0;font-size:11px}
+.stakeholder-weather small{font-size:10px;color:#bbced6;line-height:1.5}
+.pilot-summary .po-heading{font-size:11px;padding-bottom:8px}
+.pilot-summary .po-selector{grid-template-columns:1fr;gap:5px}
+.pilot-summary .po-route{font-size:11px}
+.pilot-summary .po-metrics>div,.pilot-summary .po-clearance{background:#192e3b55;border-color:#adc9d12b}
+.pilot-summary .po-clearance p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pilot-summary .po-clearance[data-state=hold]{border-color:#bc965c88;background:#6b533529}
+.stakeholder-console{position:fixed;left:calc(var(--left-offset,76px) + var(--edge,22px));right:auto;bottom:var(--edge,22px);width:1120px;max-width:calc(100vw - var(--left-offset,76px) - var(--edge,22px) - clamp(140px,20vw,470px));max-height:calc(100vh - 108px);z-index:7;border:1px solid var(--glass-border);border-radius:12px;background:var(--panel-glass);color:#e9f1f5;overflow:hidden;box-shadow:inset 0 1px 0 #ffffff12,0 10px 34px #0d161d59;backdrop-filter:blur(var(--display-panel-blur,14px)) saturate(.8);font-size:12px;container:stakeholder / inline-size}
+.stakeholder-console-header,.psu-control .stakeholder-console-header{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #d0e4ee20;height:56px;line-height:1.4}
+.stakeholder-console-header>div{flex:1;min-width:0}
+.stakeholder-console-header h2{font-size:15px;margin:3px 0 0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stakeholder-console-header small{font-size:9px;letter-spacing:1.2px;color:#b4d5df}
+.stakeholder-console-header>button{flex:none;font:inherit;font-size:10px;white-space:nowrap;padding:5px 8px;min-height:30px}
+.stakeholder-console-header .ops-icon,.stakeholder-console-header .vp-fold,.stakeholder-console-header .vp-close{display:grid;place-items:center;width:30px;height:30px;min-height:30px;padding:0;background:transparent;border:0;font-size:19px}
+.stakeholder-clock,.stakeholder-console-header .vp-console-clock{font-size:10px;color:#bbd2dc;white-space:nowrap}
+.pilot-console-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;height:390px;max-height:calc(100vh - 175px);overflow:auto;padding:14px;scrollbar-width:thin}
+.pilot-console-body>section{min-width:0}
+.pilot-console-body .pilot-settings{border-top:0;padding-top:0}
+.pilot-console-body .pilot-profile{border-left:1px solid #adc9d12b;padding-left:16px}
+.stakeholder-console select,.stakeholder-summary select{font:inherit;width:100%;min-width:0;padding:7px;border:1px solid #adc9d13d;border-radius:6px;background:#20313dcc;color:#e9f1f5}
+.stakeholder-console input{max-width:100%}
+.stakeholder-chart{margin-bottom:8px;font-size:10px}
+.stakeholder-detail-section{border-top:1px solid #adc9d12b;margin-top:10px;padding-top:7px;min-width:0}
+.stakeholder-detail-section>summary{cursor:pointer;padding:6px 0;font-size:11px;color:#cee1e8}
+.vp-console.stakeholder-console .vp-console-body{height:390px;max-height:calc(100vh - 175px);overflow:auto;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);padding:14px;gap:18px}
+.stakeholder-console[data-expanded=true]{left:calc(var(--rail-width,76px) + 12px);right:76px;width:auto;max-width:none;max-height:calc(100vh - 94px)}
+.stakeholder-console[data-expanded=true]>.pilot-console-body,.vp-console.stakeholder-console[data-expanded=true]>.vp-console-body{height:calc(100vh - 185px)}
+.stakeholder-console [hidden]{display:none!important}
+.stakeholder-console[data-collapsed=true]{width:360px;max-width:calc(100vw - 24px);right:auto;max-height:46px}
+.stakeholder-console[data-collapsed=true] .stakeholder-console-header{height:44px;padding:7px 10px}
+.stakeholder-console[data-collapsed=true] .stakeholder-console-header small,.stakeholder-console[data-collapsed=true] .stakeholder-console-header>span,.stakeholder-console[data-collapsed=true] .stakeholder-console-header>.stakeholder-size-button{display:none}
+@container stakeholder (max-width:650px){.pilot-console-body,.vp-console.stakeholder-console .vp-console-body{grid-template-columns:minmax(0,1fr)}.pilot-console-body .pilot-profile{border-left:0;border-top:1px solid #adc9d12b;padding:12px 0 0}.stakeholder-console-header>span{display:none}.stakeholder-console-header h2{font-size:13px}}
+
+.vp-console.stakeholder-console{container-name:stakeholder vp-console}
+
+@media(max-width:1100px){.stakeholder-console,.stakeholder-console[data-expanded=true]{left:calc(var(--rail-width,76px) + 10px);right:10px;width:auto;max-width:calc(100vw - var(--rail-width,76px) - 20px);bottom:var(--edge,22px)}}
+@media(max-width:750px){.stakeholder-console,.stakeholder-console[data-expanded=true]{left:10px;max-width:calc(100vw - 20px)}.stakeholder-console[data-collapsed=true]{width:320px}}
+
+.psu-control:has(>.psu-console-content[hidden]) .stakeholder-console-header{height:44px}

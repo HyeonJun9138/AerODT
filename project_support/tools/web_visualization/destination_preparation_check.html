@@ -1,0 +1,56 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>버티포트 전환 검증 — 시험 데이터</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<link rel="stylesheet" href="/static/destination_loading.css">
+<style>html,body,#view{margin:0;width:100%;height:100%;overflow:hidden;background:#101d25;color:#eef;font:13px sans-serif}:root{--left-offset:0px}#tools{position:fixed;z-index:10;top:12px;left:12px;max-width:530px;background:#10242fe8;padding:14px;border-radius:12px}button{padding:8px;margin:4px;cursor:pointer}pre{white-space:pre-wrap;font:11px monospace;max-height:240px;overflow:auto}</style>
+<div id="view"></div><section id="tools"><b>시험용 기체 8대 / 서버 운항은 변경하지 않음</b><br>
+<button id="baseline" disabled>기존 전환</button><button id="new" disabled>사전 준비 전환</button><button id="slow" disabled>느린 로드 · 5초 상한</button><button id="cancel">준비 취소</button><button id="map">2D 전환</button>
+<pre id="out">준비 중</pre></section>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {LiveGlobe} from '/visualization/globe.js?v=20260911-destination';
+import {DestinationLoading} from '/static/destination_loading.js';
+const C=Cesium,out=document.getElementById('out'),ui=new DestinationLoading({document});
+let report=null,history=[],slow=false,delays=[];
+const g=new LiveGlobe(C,'view',{terrainEnabled:false,onWarning:m=>{if(report)report.warnings.push(m);},onDestinationPreparation:s=>{
+ ui.update(s);if(report){report.status=s;report.phases.push({phase:s.phase,ms:Math.round(performance.now()-report.started)});if(['ready','timeout','cancelled'].includes(s.phase))report.finished_ms=Math.round(performance.now()-report.started);}
+}});
+g.setBuildingsEnabled(false);g.setSunEnabled(false);
+const catalog=await (await fetch('/api/visual-assets')).json();g.setAssets(catalog);
+const frame={longitude:126.92,latitude:37.525,altitude_m:30};
+const centre=C.Cartesian3.fromDegrees(frame.longitude,frame.latitude,30);
+g.viewer.entities.add({position:centre,box:{dimensions:new C.Cartesian3(300,250,10),material:C.Color.DARKSLATEGRAY}});
+const snapshot=()=>{const t=Date.now()/1000;return {sequence:1,state_time:t,entities:Array.from({length:8},(_,i)=>{
+ const lon=frame.longitude+(i%4-1.5)*.0005,lat=frame.latitude+(Math.floor(i/4)-.5)*.0007,p=C.Cartesian3.fromDegrees(lon,lat,40);
+ return {entity_id:`qa:${i}`,kind:'uam',source:'scenario',name:`TEST ${i}`,quality:'valid',state_time:t,observation_time:t,received_time:t,latitude_deg:lat,longitude_deg:lon,altitude_m:40,position_ecef_m:[p.x,p.y,p.z],velocity_ecef_mps:[0,0,0],heading_deg:0,flight_phase:'parked',visual_asset_id:['projectairsim_airtaxi','joby_s4','kp2a'][i%3]};})};};
+g.setLayerVisible('uam',false);g.replace(snapshot());
+g.viewer.camera.setView({destination:C.Cartesian3.fromDegrees(127.2,37.6,30000),orientation:{heading:0,pitch:-1,roll:0}});
+const load=g.entityScene.loadModel.bind(g.entityScene);
+g.entityScene.loadModel=function(item,priority){
+ if(!slow)return load(item,priority);
+ if(item.loading||item.model)return;
+ item.loading=true;delays.push(setTimeout(()=>{item.loading=false;void load(item,priority);},7000));
+};
+function begin(mode){
+ for(const t of delays)clearTimeout(t);delays=[];g.destinationPreparation.cancel();g.stopTracking();g.setLayerVisible('uam',false);
+ for(const i of g.items.values())i.loading=false;
+ g.viewer.camera.setView({destination:C.Cartesian3.fromDegrees(127.2,37.6,30000),orientation:{heading:0,pitch:-1,roll:0}});
+ slow=mode==='slow';report={mode,started:performance.now(),phases:[],warnings:[],maxGlyphs:0,loadsBeforeArrival:0,frame_ms:[],lastFrame:null,arrival_ms:null,allReady_ms:null};history.push(report);
+ g.setLayerVisible('uam',true);
+ if(mode==='baseline')g.viewer.camera.flyToBoundingSphere(new C.BoundingSphere(centre,120),{duration:1.6,offset:new C.HeadingPitchRange(0,-1.05,520),complete:()=>report.arrival_ms=Math.round(performance.now()-report.started)});
+ else g.flyToVertiport(frame);
+}
+for(const id of ['baseline','new','slow']){document.getElementById(id).disabled=false;document.getElementById(id).onclick=()=>begin(id);}
+document.getElementById('cancel').onclick=()=>{g.destinationPreparation.cancel();g.viewer.camera.cancelFlight();};
+document.getElementById('map').onclick=()=>g.setSceneMode(g.is2D()?'3d':'2d');
+let last=0;g.viewer.scene.postRender.addEventListener(()=>{
+ if(!report)return;const now=performance.now(),elapsed=now-report.started;
+ if(report.lastFrame&&elapsed<8000)report.frame_ms.push(now-report.lastFrame);report.lastFrame=now;
+ const items=[...g.items.values()],ready=items.filter(i=>i.model?.ready&&i.modelTexturesReady!==false).length,glyphs=items.filter(i=>i.billboard?.show).length;
+ report.maxGlyphs=Math.max(report.maxGlyphs,glyphs);
+ if(elapsed<1600)report.loadsBeforeArrival=Math.max(report.loadsBeforeArrival,g.entityScene.pendingModels+g.entityScene.residentModels.size);
+ if(ready===8&&report.allReady_ms===null)report.allReady_ms=Math.round(elapsed);
+ if(now-last<200)return;last=now;const frames=[...report.frame_ms].sort((a,b)=>a-b);
+ const summary=r=>({mode:r.mode,phases:r.phases.filter((p,i,a)=>i===0||p.phase!==a[i-1].phase),finished_ms:r.finished_ms,allReady_ms:r.allReady_ms,maxGlyphs:r.maxGlyphs,loadsBeforeArrival:r.loadsBeforeArrival,warnings:r.warnings});
+ out.textContent=JSON.stringify({current:{ready,glyphs,pending:g.entityScene.preparingModels(),overlay:ui.root.getAttribute('aria-hidden'),frame_p95:Math.round(frames[Math.floor(frames.length*.95)]||0)},runs:history.map(summary)},null,2);
+});out.textContent='준비 완료 · 기존 전환과 사전 준비 전환을 비교하세요.';
+</script></html>

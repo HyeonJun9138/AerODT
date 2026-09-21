@@ -1,0 +1,97 @@
+{
+  "title": "WIRE",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Wide-Field Infrared Explorer (WIRE)/Wide-Field Infrared Explorer (WIRE).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "wire.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "wire",
+      "label": "WIRE",
+      "exact": {
+        "norad": [
+          25646
+        ],
+        "names": [
+          "^WIRE"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 1.8,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 34.318913
+    }
+  ],
+  "display": {
+    "native_extent": 34.318913,
+    "reference_extent_m": 1.8,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 34.318912506103516
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "wire",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 375404,
+    "sha256": "adffb87ebd6d884f47b8d82b0aa8c37f72dc1c72bf532ba4117a94c392f6b2d0"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 35,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 35482
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "adffb87ebd6d884f47b8d82b0aa8c37f72dc1c72bf532ba4117a94c392f6b2d0"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 8402,
+    "sha256": "d932cbfaf29abb505a8b5882e7555a4eec13da1331f50773fc5fa5552cd97329"
+  }
+}

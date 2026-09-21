@@ -1,0 +1,9 @@
+{
+  "model_id": "physical_uam_sensors_v1", "version": 1,
+  "description": "Synthetic measurement model over native AirTaxi observations; not certified avionics",
+  "gnss": {"hz": 5, "position_sigma_m": [0.8, 0.8, 1.8], "velocity_sigma_mps": 0.12, "bias_sigma_m": 0.4, "dropout": 0.005},
+  "ahrs": {"hz": 20, "sigma_deg": 0.25, "dropout": 0.002},
+  "barometer": {"hz": 20, "sigma_m": 0.6, "bias_sigma_m": 0.8, "dropout": 0.002},
+  "imu": {"hz": 50, "accel_sigma_mps2": 0.04, "gyro_sigma_radps": 0.0014, "dropout": 0.002},
+  "vehicle": {"hz": 10, "dropout": 0.0}
+}

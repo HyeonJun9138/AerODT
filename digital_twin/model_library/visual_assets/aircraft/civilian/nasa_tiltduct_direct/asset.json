@@ -1,0 +1,417 @@
+{
+  "schema_version": 1,
+  "asset_id": "nasa_tiltduct_direct",
+  "title": "NASA Tiltduct 기준기체 (직결·베인 5)",
+  "category": "aircraft/civilian",
+  "purpose": "visual_only",
+  "representation": "specific",
+  "aliases": [
+    "nasa_tiltduct_direct",
+    "nasa_tiltduct_directdrive_5vanes"
+  ],
+  "source": {
+    "provider": "NASA",
+    "url": "https://www.nasa.gov/reference/uam-refs/",
+    "revision": "downloaded 2026-09-14",
+    "original_file": "NASA_Tiltduct_DirectDrive_5Vanes.vsp3",
+    "note": "Six ducted propulsors that tilt, direct drive, five exit vanes. Published as an OpenVSP parametric model, not as a mesh."
+  },
+  "rights": {
+    "label": "public domain (US Government work)",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "credit": "NASA",
+    "public_export": true,
+    "note": "Produced by the NASA Revolutionary Vertical Lift Technology project and the Aeronautics Systems Analysis Branch. NASA material is generally not subject to copyright and may be used. The NASA insignia and logos are not included here and are separately restricted. Nothing in this dashboard implies NASA endorsement of AeroDT. The airframe is a published concept for analysis, not a certified or manufactured aircraft."
+  },
+  "display": {
+    "reference_extent_m": 10.930514,
+    "extent": {
+      "x": 8.814578247070314,
+      "y": 4.648393011474609,
+      "z": 10.930514208984375
+    },
+    "cabin_m": {
+      "width": 1.722,
+      "length": 3.806,
+      "height": 1.693
+    },
+    "scale_basis": "Source feet converted once by the GLB root scale 0.3048. NASA reference convention, not certified physical measurements.",
+    "forward_axis": "+X",
+    "up_axis": "+Y",
+    "origin": "Visual footprint centre at ground level; not a mass-property or CG definition"
+  },
+  "geometry": {
+    "meshes": 54,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [],
+    "native_coordinates": "glTF metre scene, +X nose, +Y up; original feet mesh under the canonical root",
+    "physical_dimensions_verified": false
+  },
+  "conversion": {
+    "operation": "openvsp_geom_export",
+    "tool": "project_support/tools/visual_assets/openvsp_parts.py + openvsp_cabin.py",
+    "note": "Each OpenVSP Geom exported on its own and assembled into one glTF, so the rotors are separate nodes rather than welded into the airframe. Analysis surfaces (actuator disks, mass and CG markers) are not shape and were left out. The window band reuses the fuselage's own triangles and changes only their material: no vertex was moved, added or removed, so the outer shape is the shape NASA published. Cabin, seats and instrument panel are new geometry added inside.",
+    "repairs": [
+      "feet_to_meters_root",
+      "canonical_forward_axis",
+      "measured_rotor_shaft_basis",
+      "airframe_specific_tilt",
+      "nasa_reference_blue_pbr",
+      "cockpit_frame_conversion"
+    ],
+    "repair_tool": "project_support/tools/visual_assets/repair_nasa_assets.py"
+  },
+  "model": {
+    "path": "model.glb",
+    "bytes": 13022440,
+    "sha256": "32e55706e7c5041220364b02a31eb0792045431999b701d0678ec12b2f060c68"
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser": "passed",
+    "browser_sha256": "32e55706e7c5041220364b02a31eb0792045431999b701d0678ec12b2f060c68",
+    "browser_scope": "Manual Three.js exterior inspection of 9 models; Cesium 1.143 using production loadVisualModel and RotorSpin loaded 9 models with no missing rig nodes. Hover/cruise inspected for multi-tiltrotor, tiltduct and tiltwing. Not an actual flight mission or all-seat cockpit acceptance.",
+    "http_model_and_thumbnail_sha256": "passed",
+    "physical_dimensions_verified": false
+  },
+  "rotors": {
+    "axis": "y",
+    "turn_sign": "1 turns the way a right hand turns about +Y, counter-clock-wise from above.",
+    "direction_basis": "Inferred from the airframe, not declared by the source. OpenVSP records no rotation direction for these models, so each mirrored pair turns in opposite directions.",
+    "note": "Each rotor is re-based to its measured blade-plane normal with local +Y as its shaft. The rest geometry and hub are preserved.",
+    "nodes": [
+      {
+        "name": "AeroDT_Rotor_4",
+        "turn": -1,
+        "hub": [
+          0.6487543415976565,
+          2.109216023254395,
+          4.203192
+        ],
+        "side": "right",
+        "blades": 8,
+        "declared_diameter": 2.1579840000000003,
+        "measured_diameter": 2.180344128,
+        "source_shaft_axis": [
+          -8.197974684856548e-19,
+          1.4532769269168645e-18,
+          -1.0
+        ],
+        "axis": "y"
+      },
+      {
+        "name": "AeroDT_Rotor_12",
+        "turn": 1,
+        "hub": [
+          0.648608037597656,
+          2.109216023254395,
+          -4.203192
+        ],
+        "side": "left",
+        "blades": 8,
+        "declared_diameter": 2.1579840000000003,
+        "measured_diameter": 2.180344128,
+        "source_shaft_axis": [
+          3.0431875717146736e-19,
+          8.073762543272831e-19,
+          -1.0
+        ],
+        "axis": "y"
+      },
+      {
+        "name": "AeroDT_Rotor_21",
+        "turn": -1,
+        "hub": [
+          -3.4707639624023443,
+          3.386328023254395,
+          1.5758160000000003
+        ],
+        "side": "right",
+        "blades": 8,
+        "declared_diameter": 2.1579840000000003,
+        "measured_diameter": 2.180344128,
+        "source_shaft_axis": [
+          0.0,
+          -6.938893903907228e-18,
+          -1.0
+        ],
+        "axis": "y"
+      },
+      {
+        "name": "AeroDT_Rotor_29",
+        "turn": 1,
+        "hub": [
+          -3.4707639624023443,
+          3.386328023254395,
+          -1.5758159999999999
+        ],
+        "side": "left",
+        "blades": 8,
+        "declared_diameter": 2.1579840000000003,
+        "measured_diameter": 2.180344128,
+        "source_shaft_axis": [
+          0.0,
+          -6.938893903907228e-18,
+          -1.0
+        ],
+        "axis": "y"
+      },
+      {
+        "name": "AeroDT_Rotor_38",
+        "turn": -1,
+        "hub": [
+          3.9815960375976567,
+          1.4174632792543946,
+          2.10312
+        ],
+        "side": "right",
+        "blades": 8,
+        "declared_diameter": 2.1579840000000003,
+        "measured_diameter": 2.180344128,
+        "source_shaft_axis": [
+          -1.4163375651139249e-14,
+          -4.455786888275023e-12,
+          -0.9999999999999999
+        ],
+        "axis": "y"
+      },
+      {
+        "name": "AeroDT_Rotor_46",
+        "turn": 1,
+        "hub": [
+          3.9815960375976567,
+          1.4174632792543946,
+          -2.1031200000000005
+        ],
+        "side": "left",
+        "blades": 8,
+        "declared_diameter": 2.1579840000000003,
+        "measured_diameter": 2.180344128,
+        "source_shaft_axis": [
+          1.4162632901860393e-14,
+          -4.455786895051286e-12,
+          -1.0
+        ],
+        "axis": "y"
+      }
+    ],
+    "tilt": {
+      "axis": "x",
+      "sign": -1,
+      "frame": "parent",
+      "nodes": [
+        {
+          "name": "AeroDT_Hinge_rotor_0",
+          "axis": "x",
+          "sign": -1,
+          "offset_deg": 90
+        },
+        {
+          "name": "AeroDT_Hinge_rotor_1",
+          "axis": "x",
+          "sign": -1,
+          "offset_deg": 90
+        },
+        {
+          "name": "AeroDT_Hinge_rotor_2",
+          "axis": "x",
+          "sign": -1,
+          "offset_deg": 90
+        },
+        {
+          "name": "AeroDT_Hinge_rotor_3",
+          "axis": "x",
+          "sign": -1,
+          "offset_deg": 90
+        },
+        {
+          "name": "AeroDT_Hinge_rotor_4",
+          "axis": "x",
+          "sign": -1,
+          "offset_deg": 90
+        },
+        {
+          "name": "AeroDT_Hinge_rotor_5",
+          "axis": "x",
+          "sign": -1,
+          "offset_deg": 90
+        }
+      ],
+      "note": "Visual transition: 0 deg hover, 90 deg cruise. Source-authored cruise assemblies have a 90 deg hover offset; no dynamics are modified."
+    }
+  },
+  "cockpit": {
+    "schema_version": 1,
+    "viewpoints": [
+      {
+        "id": "seat_01",
+        "label": "승객석 1",
+        "eye": [
+          2.6613243575976564,
+          1.9487997832543946,
+          -0.32000952000000016
+        ],
+        "occupant_node": "Cabin_occupant_01"
+      },
+      {
+        "id": "seat_02",
+        "label": "승객석 2",
+        "eye": [
+          2.6613243575976564,
+          1.9487997832543946,
+          0.3200095199999999
+        ],
+        "occupant_node": "Cabin_occupant_02"
+      },
+      {
+        "id": "seat_03",
+        "label": "승객석 3",
+        "eye": [
+          1.9213309175976563,
+          1.9487997832543946,
+          -0.32000952000000016
+        ],
+        "occupant_node": "Cabin_occupant_03"
+      },
+      {
+        "id": "seat_04",
+        "label": "승객석 4",
+        "eye": [
+          1.9213309175976563,
+          1.9487997832543946,
+          0.3200095199999999
+        ],
+        "occupant_node": "Cabin_occupant_04"
+      },
+      {
+        "id": "seat_05",
+        "label": "승객석 5",
+        "eye": [
+          1.1813374775976564,
+          1.9487997832543946,
+          -0.3200095200000001
+        ],
+        "occupant_node": "Cabin_occupant_05"
+      },
+      {
+        "id": "seat_06",
+        "label": "승객석 6",
+        "eye": [
+          1.1813374775976564,
+          1.9487997832543946,
+          0.32000952
+        ],
+        "occupant_node": "Cabin_occupant_06"
+      }
+    ],
+    "occupant_nodes": [
+      "Cabin_occupant_01",
+      "Cabin_occupant_02",
+      "Cabin_occupant_03",
+      "Cabin_occupant_04",
+      "Cabin_occupant_05",
+      "Cabin_occupant_06"
+    ],
+    "occupant_default_scale": 0.0001,
+    "eye": [
+      2.6613243575976564,
+      1.9487997832543946,
+      -0.32000952000000016
+    ],
+    "forward": [
+      1.0,
+      0.0,
+      -6.123233995736766e-17
+    ],
+    "up": [
+      0.0,
+      1.0,
+      0.0
+    ],
+    "passenger_seats": 6,
+    "screens": [
+      {
+        "id": "pfd",
+        "center": [
+          3.3336826775976567,
+          1.6687800232543946,
+          -0.23500080000000023
+        ],
+        "width": 0.20000976,
+        "height": 0.15998952000000002,
+        "right": [
+          6.123233995736766e-17,
+          0.0,
+          1.0
+        ],
+        "up": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "id": "nav",
+        "center": [
+          3.3336826775976567,
+          1.6687800232543946,
+          -2.0412919102464739e-16
+        ],
+        "width": 0.20000976,
+        "height": 0.15998952000000002,
+        "right": [
+          6.123233995736766e-17,
+          0.0,
+          1.0
+        ],
+        "up": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "id": "system",
+        "center": [
+          3.3336826775976567,
+          1.6687800232543946,
+          0.23500079999999982
+        ],
+        "width": 0.20000976,
+        "height": 0.15998952000000002,
+        "right": [
+          6.123233995736766e-17,
+          0.0,
+          1.0
+        ],
+        "up": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      }
+    ],
+    "seat_nodes": [
+      "Cabin_passenger_01",
+      "Cabin_passenger_02",
+      "Cabin_passenger_03",
+      "Cabin_passenger_04",
+      "Cabin_passenger_05",
+      "Cabin_passenger_06"
+    ],
+    "interior": "AeroDT_Cabin: illustrative geometry fitted to the measured fuselage envelope, not certified cabin dimensions",
+    "coordinate_frame": "gltf_model_meters"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 47434,
+    "sha256": "0fb099efc71c1b1b93d622071fc83ee6c64438f2dc8d7b811e40283f2954b5f2",
+    "width": 760,
+    "height": 428,
+    "view": "Repaired model, manual browser studio render; no GLB loaded by the library shelf"
+  }
+}

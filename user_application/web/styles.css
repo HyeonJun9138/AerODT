@@ -1,0 +1,641 @@
+@import url("./destination_loading.css");
+@import url("./operations_analysis.css?v=20260911-ops1");
+@import url("./flight_control_bar.css");
+@import url("./vertiport_panel.css?v=20260913-info");
+@import url("./psu_panel.css?v=20260911-workspace");
+@import url("./decision_panel.css");
+@import url("./scenario_control.css");
+@import url("./demand_summary.css");
+@import url("./scheduling_progress.css");
+@import url("./display_settings.css");
+@import url("./selection_panel.css?v=20260911-stable-readouts");
+@import url("./stakeholder_workspace.css?v=20260911-roles");
+:root{color-scheme:dark;font-family:Inter,"Segoe UI","Malgun Gothic",sans-serif;background:#080e13;color:#e9f1f5;--edge:22px;--top-bar:44px;--top-bar-radius:22px;--rail-width:76px;--drawer-width:calc(330px * var(--display-text-scale,1));--left-offset:var(--rail-width);--panel-glass:linear-gradient(145deg,rgba(107,119,128,.78),rgba(62,75,85,.82));--glass-border:rgba(233,241,245,.22)}
+*{box-sizing:border-box}body{margin:0;overflow:hidden}#globe{position:fixed;inset:0}
+button,input{font:inherit}button{border:1px solid #95b4c426;background:#697a8959;color:#e9f1f5;border-radius:7px;cursor:pointer;min-height:34px;padding:0 12px;transition:background .2s}button:hover{background:#8c9da878}button:focus-visible,input:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #8edbea;outline-offset:3px}
+.glass{background:var(--panel-glass);border:1px solid var(--glass-border);box-shadow:inset 0 1px 0 #ffffff12,0 4px 16px #16212a12;-webkit-backdrop-filter:blur(var(--display-panel-blur,14px)) saturate(.8);backdrop-filter:blur(var(--display-panel-blur,14px)) saturate(.8);border-radius:12px}
+
+
+.eyebrow{font-size:10px;font-weight:500;letter-spacing:2.6px;color:#c0d7df}
+
+
+.brand-mark{display:block;width:74px;height:auto;object-fit:contain;background:transparent}
+@media(max-width:700px){.brand-mark{width:58px}}
+
+#rail{position:fixed;left:0;top:0;bottom:0;width:var(--rail-width);z-index:6;display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 6px;border-radius:0;border-left:0;border-top:0;border-bottom:0}
+.rail-nav{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;width:100%;flex:1}
+.rail-button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;width:100%;min-height:58px;padding:8px 2px;border:0;background:transparent;border-radius:11px;font-size:9px;line-height:1.25;letter-spacing:.2px;color:#d6e3ea;text-align:center;word-break:keep-all}
+.rail-button .icon{width:21px;height:21px;flex:none}
+.rail-button:hover{background:#a6b7c036}
+.rail-button[data-state=preparing] .icon{opacity:.6}
+.rail-button[aria-expanded=true]{background:#93c7d54d;color:#cdf3fa;opacity:1}
+.rail-button[aria-expanded=true] .icon{opacity:1}
+#settings{margin-top:auto}
+[data-drawer=open]{--left-offset:calc(var(--rail-width) + var(--drawer-width))}
+#drawer{position:fixed;left:var(--rail-width);top:0;bottom:0;width:var(--drawer-width);z-index:5;display:flex;flex-direction:column;border-radius:0 16px 16px 0;border-left:0;transform:translateX(calc(-100% - var(--rail-width)));transition:transform .22s ease}
+[data-drawer=open] #drawer{transform:none}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 16px 12px;border-bottom:1px solid #9cbcca1f;flex:none}
+#drawer-title{margin:0;font-size:calc(14px * var(--display-text-scale,1));font-weight:600;letter-spacing:.3px;color:#eaf3f7}
+#drawer-close{min-height:26px;width:26px;padding:0;font-size:19px;background:transparent;border:0}
+#drawer-body{padding:16px;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;flex:1;font-size:calc(11px * var(--display-text-scale,1));line-height:1.8;color:#c3d3db}
+/* Each source is its own layer: a header that opens it, and its settings inside. */
+/* The Library folds into groups the server names; a group holds cards. */
+.library-group{margin-bottom:8px;border:1px solid #9cbcca3d;border-radius:11px;background:#222e3745;overflow:hidden}
+.library-group[data-open=true]{border-color:#93c7d566;background:#26333c59}
+.library-group-head{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;width:100%;
+  padding:11px 12px;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer}
+.library-group-head:hover{background:#a6b7c024}
+.library-group-head strong{font-size:12px;font-weight:600;letter-spacing:.3px;color:#eaf3f7}
+.library-group[data-open=true] .library-group-head .library-chevron{transform:rotate(180deg)}
+.library-group-body{padding:0 10px 10px}
+.library-group-note{margin:0 2px 8px}
+.library-group-body .sim-actions{margin-top:10px}
+.library-card{margin-bottom:7px;border:1px solid #9cbcca2e;border-radius:10px;background:#26333c40;overflow:hidden}
+.library-card[data-open=true]{border-color:#93c7d566;background:#2c3d4859}
+.library-head{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 10px;width:100%;
+  padding:10px 12px;border:0;background:transparent;text-align:left}
+.library-head:hover{background:#a6b7c024}
+.library-head[aria-disabled=true]{cursor:default}
+.library-head[aria-disabled=true]:hover{background:transparent}
+.library-title{grid-column:1;grid-row:1;display:flex;flex-direction:column;gap:1px;min-width:0;justify-self:start;text-align:left}
+.library-head strong{font-size:12px;font-weight:600;color:#eaf3f7}
+.library-chevron{grid-column:2;grid-row:1/3;justify-self:end;align-self:center;font-size:15px;line-height:1;color:#b7cbd4;transition:transform .18s ease}
+.library-card[data-open=true] .library-chevron{transform:rotate(180deg)}
+.library-body{padding:2px 12px 12px}
+.library-state{grid-column:1;grid-row:2;justify-self:start;text-align:left;font-size:10px;line-height:1.6;color:#c0d0d8;overflow-wrap:anywhere}
+.library-state[data-status=error]{color:#f2b8a0}
+.library-state[data-status=ready]{color:#a9e3c0}
+.library-state[data-status=paused],.library-state[data-status=disabled],.library-state[data-status=pending]{color:#a9b8c0}
+.library-provider{display:block;font-size:10px;color:#9fb3bd}
+.library-origin{color:#8fd3c0;font-size:10px}
+.library-waiting{color:#9fb4c0;font-style:italic}
+.library-note{margin:0 0 2px;font-size:10px;line-height:1.6;color:#aec3cd}
+/* A download is a link the browser saves, so it looks like the buttons beside
+   it but stays an anchor: that is what puts the file on the asking computer. */
+.library-download-row{display:flex;align-items:center;gap:9px;margin-top:9px;flex-wrap:wrap}
+.library-download{display:inline-grid;place-items:center;min-height:28px;padding:0 12px;border-radius:8px;
+  border:1px solid #93c7d580;background:#93c7d52e;color:#dcf4fa;font-size:11px;font-weight:600;text-decoration:none;cursor:pointer}
+.library-download:hover{background:#93c7d547}
+.library-download-off{border-color:#95b4c433;background:#1f2a3240;color:#8fa3ad;cursor:default}
+.library-filename{font-size:9.5px;color:#9fb3bd;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.library-field{display:flex;flex-direction:column;gap:3px;margin-top:8px;font-size:10px;color:#c9d8df}
+/* Which model does a job is a button that opens the AI library, not a list of
+   names: what these are matters more than what they are called. */
+.library-model{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;padding:0 10px;border:1px solid #95b4c44d;border-radius:8px;background:#1f2a3266;color:#eaf3f7;text-align:left}
+.library-model:hover{background:#2a3944aa;border-color:#93c7d566}
+.library-model-name{flex:1 1 auto;font-size:11px;font-weight:600;color:#eaf3f7}
+.library-model-state{flex:0 0 auto;font-size:9px;color:#a9c3cd}
+.library-model-more{flex:0 0 auto;font-size:12px;color:#8fa9b5}
+/* The library window itself: one card per model, with what it is for. */
+.ai-library{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:12;width:min(460px,calc(100vw - 32px));max-height:min(70vh,620px);display:flex;flex-direction:column;padding:14px 16px 12px}
+.ai-library header{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px}
+.ai-library header>div{flex:1 1 auto;display:flex;flex-direction:column;gap:2px}
+.ai-library header strong{font-size:12px;letter-spacing:.3px;color:#eaf3f7}
+.ai-library-job{font-size:9px;color:#a9c3cd}
+.ai-library-note{margin:0 0 8px;font-size:10px;line-height:1.6;color:#b8c9d1}
+.ai-library-body{overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px;scrollbar-gutter:stable}
+.ai-library-card{padding:10px 12px;border:1px solid #95b4c433;border-radius:10px;background:#1b252d80}
+.ai-library-current{border-color:#93c7d580;background:#93c7d51f}
+.ai-library-blocked{opacity:.62}
+.ai-library-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.ai-library-head strong{font-size:11.5px;color:#eaf3f7}
+.ai-library-family{flex:0 0 auto;padding:2px 7px;border-radius:999px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#0b1419;background:#c9d8df}
+.ai-library-card[data-family=learned] .ai-library-family{background:#ffb457}
+.ai-library-card[data-family=follow] .ai-library-family{background:#7fe0a3}
+.ai-library-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.ai-library-tags span{padding:2px 7px;border-radius:6px;font-size:9px;color:#c0d4dd;background:#3a4a5455}
+.ai-library-text{margin:7px 0 0;font-size:10px;line-height:1.6;color:#b8c9d1}
+.ai-library-needs{margin:5px 0 0;font-size:9px;line-height:1.5;color:#8fa9b5}
+.ai-library-blocked-why{margin:5px 0 0;font-size:9px;line-height:1.5;color:#ffb457}
+.ai-library-actions{display:flex;justify-content:flex-end;margin-top:8px}
+.ai-library-pick{min-height:28px;padding:0 12px;border:1px solid #93c7d566;border-radius:8px;background:#93c7d54d;color:#cdf3fa;font-size:10px}
+.ai-library-pick:disabled{background:#1f2a3240;border-color:#95b4c422;color:#8fa3ad}
+.library-toggle{flex-direction:row!important;align-items:center;gap:9px;font-size:11px;color:#dceaf1}
+.library-toggle input{flex:none;width:16px;height:16px;margin:0;accent-color:#7fc9d8}
+.library-toggle span{flex:1;white-space:nowrap}
+.library-label{color:#c9d8df}
+.library-field input:not([type=checkbox]){min-height:30px;padding:0 8px;border:1px solid #95b4c433;border-radius:7px;background:#1f2a3266;color:#eaf3f7;font-size:11px;width:100%}
+.library-bounds{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.library-bounds label{display:flex;align-items:center;gap:6px;font-size:10px;color:#c9d8df}
+.library-bounds input{min-width:0}
+.library-bounds span{width:14px;color:#eaf3f7;font-weight:600}
+.sim-categories{display:flex;gap:4px;margin-bottom:10px}
+.sim-category{flex:1;min-height:30px;padding:0 8px;border:1px solid #95b4c433;border-radius:9px;background:transparent;font-size:11px;color:#d0dde3}
+.sim-category[aria-pressed=true]{background:#93c7d54d;border-color:#93c7d566;color:#cdf3fa}
+.sim-locate button{flex:1;font-size:10px;min-height:28px}
+#vertiport-pick[aria-pressed=true]{background:#93c7d54d;color:#cdf3fa;outline:1px solid #93c7d5}
+.sim-dimensions{margin:0;font-size:10px;line-height:1.6;color:#a9c3cd}
+
+/* Placement tools: a card on the map where the operator right-clicked, so the
+   deck is adjusted at the cursor instead of across the screen in the panel. */
+.place-menu{position:fixed;z-index:8;width:232px;max-height:min(70vh,340px);overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;padding:10px 12px 11px;display:flex;flex-direction:column;gap:9px;font-size:11px;color:#d4e2e9}
+.place-menu header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.place-menu header strong{font-size:10px;font-weight:600;letter-spacing:1.2px;color:#cdf3fa}
+.place-close{min-height:22px;width:22px;padding:0;font-size:16px;line-height:1;background:transparent;border:0}
+.place-tool{display:flex;flex-direction:column;gap:5px}
+.place-tool-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0;font-size:10px;font-weight:600;letter-spacing:.6px;color:#bed2db}
+.place-value{font-size:11px;font-weight:600;color:#cdf3fa;font-variant-numeric:tabular-nums}
+.place-menu input[type=range]{width:100%;accent-color:#8edbea}
+.place-turns{display:flex;gap:4px}
+.place-turns button{flex:1;min-height:24px;padding:0;font-size:10px}
+.place-pattern,.place-count{display:flex;flex-direction:column;gap:3px;font-size:10px;color:#c9d8df;min-width:0}
+.place-counts{display:flex;gap:6px}
+.place-counts .place-count{flex:1}
+.place-menu select,.place-menu input[type=number]{width:100%;min-height:27px;padding:0 7px;border:1px solid #95b4c433;border-radius:7px;background:#1f2a3266;color:#eaf3f7;font-size:11px}
+.place-relocate{width:100%;min-height:28px;font-size:10px}
+.place-actions{display:flex;gap:6px}
+.place-actions button{flex:1;min-height:28px;font-size:11px}
+.place-extra{display:flex;gap:6px;margin-top:6px}.place-extra button{flex:1;min-height:26px;font-size:10.5px}
+.place-confirm{background:#93c7d54d;border-color:#93c7d566;color:#cdf3fa}
+.place-note{margin:0;font-size:9px;line-height:1.5;color:#a9c3cd}
+.sim-tabs{display:flex;gap:4px;margin-bottom:14px;padding:3px;border-radius:9px;background:#3a4a5433}
+.sim-tab{flex:1;min-height:30px;padding:0 8px;border:0;background:transparent;font-size:11px;color:#d0dde3}
+.sim-tab[aria-selected=true]{background:#93c7d54d;color:#cdf3fa}
+.sim-heading{margin:14px 0 6px;font-size:10px;font-weight:600;letter-spacing:1.2px;color:#c0d4dd}
+button.sim-toggle{display:flex;align-items:center;gap:6px;width:100%;min-height:26px;padding:0;border:0;background:transparent;text-align:left;color:#c0d4dd;letter-spacing:1.2px}
+button.sim-toggle:before{content:'▸';font-size:9px;opacity:.8}
+button.sim-toggle[aria-expanded=true]:before{content:'▾'}
+button.sim-toggle:hover{color:#e3f1f7}
+.sim-empty{margin:0;font-size:11px;line-height:1.7;color:#b8c9d1}
+/* A party whose own view is not built yet: the promise reads quieter than a description. */
+.stakeholder-preparing{margin-top:6px;font-size:10px;color:#8fa9b5}
+.sim-list{list-style:none;margin:0 0 6px;padding:0}
+.sim-item{padding:9px 0;border-bottom:1px solid #b8cdd414}
+.sim-item strong{display:block;font-size:12px;font-weight:600;color:#eaf3f7}
+.sim-item span{display:block;font-size:10px;line-height:1.6;color:#c0d0d8;overflow-wrap:anywhere}
+.sim-item-actions{display:flex;gap:4px;margin-top:7px}
+.sim-item-actions button{min-height:26px;font-size:10px;padding:0 10px}
+.sim-danger[data-armed=true]{background:#7a3b33;color:#ffd9d2}
+.sim-form{display:flex;flex-direction:column;gap:8px}
+.sim-form label{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;font-size:10px;color:#c9d8df}
+.sim-form input,.sim-form select{min-height:28px;padding:0 8px;border:1px solid #95b4c433;border-radius:7px;background:#1f2a3266;color:#eaf3f7;font-size:11px;width:100%}
+.sim-row{display:flex;gap:6px}
+.sim-fieldset{border:1px solid #9cbcca26;border-radius:9px;padding:7px 10px 9px;margin:0;display:flex;flex-direction:column;gap:7px}
+.sim-fieldset legend{font-size:9px;font-weight:600;letter-spacing:1.1px;color:#a9c6d3;padding:0 5px}
+/* The shape the form is designing, above the fields that change it. */
+.sim-thumb{position:relative;margin:0;border:1px solid #95b4c433;border-radius:9px;background:linear-gradient(165deg,#2a353e,#1a232a);overflow:hidden;display:flex;align-items:center;justify-content:center;aspect-ratio:300/186}
+.sim-thumb canvas{display:block;width:100%;height:auto}
+/* `hidden` has to beat the rule above, or the blank canvas keeps its place and
+   squeezes the waiting line beside it into a column one letter wide. */
+.sim-thumb canvas[hidden],.sim-thumb-empty[hidden]{display:none}
+.sim-thumb-empty{margin:0;padding:0 16px;font-size:10px;line-height:1.6;color:#9fb6c1;text-align:center}
+.sim-fatos{display:grid;grid-template-columns:1fr;gap:6px}
+.sim-fato{flex-direction:row!important;align-items:center;gap:6px}
+.sim-fato span{width:22px;flex:0 0 auto;font-weight:600;color:#eaf3f7}
+.sim-fato select{flex:1 1 0;min-width:0}
+/* One choice places every FATO; a deck whose FATOs sit in the middle has nothing to place. */
+.sim-fato-preset{flex-direction:row!important;align-items:center;gap:6px;margin-bottom:2px}
+.sim-fato-preset span{flex:0 0 auto;color:#c9d8df}.sim-fato-preset select{flex:1 1 auto;min-width:0}
+.sim-fato-preset select:disabled,.sim-fato select:disabled{opacity:.55}
+.sim-actions{display:flex;gap:6px;margin-top:2px}
+.sim-actions button{flex:1;font-size:11px}
+.sim-error{margin:0;min-height:14px;font-size:10px;line-height:1.5;color:#f2b8a0}
+#layers{position:fixed;top:var(--edge);left:calc(var(--left-offset) + var(--edge));transition:left .22s ease;z-index:5;display:flex;align-items:center;gap:3px;padding:4px;min-height:var(--top-bar);border-radius:var(--top-bar-radius)}
+.chip{display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:0 13px;border:0;background:transparent;border-radius:18px;font-size:11px;color:#e2edf1;white-space:nowrap}
+.chip .icon{width:16px;height:16px;flex:none;opacity:.9}
+.chip:hover{background:#a6b7c036}
+.chip[aria-pressed=false]{opacity:.45}
+.chip[aria-disabled=true]{opacity:.38}
+#layer-aircraft .icon{color:#ffd28b}#layer-satellite .icon{color:#82d5f1}#layer-uam .icon{color:#c9d7de}
+#settings-panel{position:fixed;left:calc(var(--left-offset) + var(--edge));transition:left .22s ease;bottom:var(--edge);z-index:6;width:340px;max-width:calc(100vw - var(--left-offset) - 2*var(--edge));max-height:calc(100vh - 2*var(--edge));overflow:auto;padding:14px 16px}
+#settings-panel h2{margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:.4px}
+#settings-panel h3{margin:12px 0 6px;font-size:9px;font-weight:600;letter-spacing:1.2px;color:#c0d4dd}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 0;font-size:calc(11px * var(--display-text-scale,1));color:#dbe7ec}
+/* These buttons come from the camera rail, so they need their own on/off look here. */
+.setting-row button{min-height:28px;width:34px;padding:0;font-size:15px;border:1px solid #95b4c433;border-radius:8px;background:#1f2a3255;color:#c4d4dc}
+.setting-row button:hover{background:#a6b7c036}
+/* The one setting that is a quantity rather than a switch: the slider takes the
+   space the buttons leave and its value reads at the end of the row. */
+.setting-row-range{gap:8px}
+.setting-row-range>span{flex:0 0 auto;white-space:nowrap}
+.setting-row-range input[type=range]{flex:1 1 auto;min-width:0;height:20px;margin:0;accent-color:#94cddc;cursor:pointer}
+.setting-row-range .setting-value{flex:0 0 auto;min-width:34px;text-align:right;font-size:10px;font-weight:600;color:#a9c3cd;font-variant-numeric:tabular-nums}
+/* A layer whose provider is a choice rather than a switch: the select takes
+   the width the buttons leave. */
+.setting-row-select>span{white-space:nowrap;flex:none}
+.setting-row-select select{flex:1 1 auto;min-width:0;max-width:230px;min-height:32px;padding:0 8px;border:1px solid #a9c0cf70;border-radius:8px;background:#182630;color:#f1f6fa;font-size:calc(12px * var(--display-text-scale,1));color-scheme:dark}
+.setting-row-select select option,.library-card select option{background:#182630;color:#f1f6fa;font-size:12px}
+.setting-row-select select:focus-visible{outline:2px solid #83c8ed;outline-offset:2px}
+.setting-row-select select:disabled{opacity:.5}
+.setting-row button[aria-pressed=true]{background:#93c7d54d;border-color:#93c7d580;color:#d8f6fb;box-shadow:inset 0 0 0 1px #93c7d533}
+.setting-row button[aria-pressed=false]{background:#1f2a3240;border-color:#95b4c422;color:#8fa3ad;opacity:.72}
+.setting-row button#sunlight[aria-pressed=true]{background:#3b3428b3;border-color:#e0c98c66;color:#f0d79a}
+.setting-row button#airspace{font-size:13px}.setting-row button#airspace[aria-pressed=true]{background:#4a2a30b3;border-color:#ff4d5e66;color:#ffb3ba}
+#camera #airspace{font-size:13px}#camera #airspace[aria-pressed=true]{color:#ff8a94}
+#attribution{/* the surface comes from .glass, like every other panel; a colour of its own read as the odd one out */position:fixed;right:var(--edge);bottom:9px;z-index:3;display:flex;align-items:center;gap:9px;padding:5px 10px;font-size:9px;color:#dbe7ee;text-shadow:0 1px 3px #05121bcc;pointer-events:auto}
+#attribution .maker{display:flex;align-items:center;gap:6px;opacity:.88}
+#clock{/* the second bar on the same line as the chips: same height and curve, text centred rather than sitting a pixel low under padding */position:absolute;left:calc(var(--left-offset) + (100vw - var(--left-offset))/2);top:var(--edge);transform:translateX(-50%);transition:left .22s ease;display:flex;align-items:center;justify-content:center;min-height:var(--top-bar);padding:0 18px;border-radius:var(--top-bar-radius);white-space:nowrap}#state-time{font-size:12px;letter-spacing:.8px;font-variant-numeric:tabular-nums;color:#e0edf1}
+#operations{position:absolute;top:22px;right:var(--edge);width:268px;padding:13px 15px;color:#e1e8ec;font-size:11px;max-height:calc(100vh - 190px);overflow:auto}
+summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:none}#operations>details>summary{display:flex;align-items:center;gap:8px;color:#e2edf1;font-size:12px;font-weight:600}#operations>details>summary span{font-size:8px;letter-spacing:1.2px;font-weight:400;color:#d0dbe1;margin-left:auto}#operations>details>summary:after{content:'+';color:#d0dbe1}#operations>details[open]>summary:after{content:'−'}
+#notices{margin:12px 0 10px;padding:0;list-style:none}#notices:empty{display:none}#notices li{display:flex;align-items:baseline;gap:8px;margin:7px 0;font-size:10px;line-height:1.55}#notices time{flex:none;color:#d0dbe1;font-size:9px;font-variant-numeric:tabular-nums}#notices li span{overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}#notices li[data-status=error],#notices li[data-status=stale],#notices li[data-status=unavailable]{color:#e5c394}
+.operation-help{display:grid;grid-template-columns:1fr;gap:6px;border-top:1px solid #aec7d11c;padding-top:10px;font-size:10px;color:#d1dce2}.operation-help span{display:flex;justify-content:space-between}.operation-help b{font-weight:400;color:#c1d1d8}
+#diagnostics{margin-top:11px;border-top:1px solid #aec7d11c;padding-top:10px;font-size:10px;line-height:1.8;color:#d1dce2}#diagnostics summary{color:#bdcfd7}#diagnostics summary:after{content:' ›'}#diagnostics>div{overflow-wrap:anywhere}#sources span{display:block}.source-bad{color:#dbbc91}
+/* Above the projected cockpit instruments (z 2) and the credit plate (z 3):
+   the instruments are a read-only overlay and these are the controls that
+   move the map under them. Chrome you operate goes over chrome you read. */
+#camera{z-index:4;position:absolute;right:var(--edge);bottom:calc(var(--edge) + 54px);display:flex;flex-direction:column;padding:4px;gap:2px;border-radius:9px}#camera button{border:0;background:transparent;font-size:17px;min-height:25px;width:28px;padding:0}#camera button:hover{background:#a6b7c04d}#camera>span{height:1px;background:#aec7d126;margin:3px 4px}#zoom{writing-mode:vertical-lr;direction:rtl;height:48px;width:28px;margin:0;accent-color:#94cddc;cursor:pointer}#camera #place-names{font-size:13px}#camera [aria-pressed=true]{color:#9bdde8}#camera [aria-pressed=false]{opacity:.45}#camera #sunlight[aria-pressed=true]{color:#edcf88;background:#342e214d}#camera #scene-mode{font-size:11px;font-weight:600;letter-spacing:.3px}#camera button:disabled{opacity:.22;pointer-events:none}
+#selection{position:absolute;left:calc(var(--left-offset) + var(--edge));top:120px;width:290px;background:var(--panel-glass);border:1px solid var(--glass-border);border-radius:12px;padding:18px;-webkit-backdrop-filter:blur(var(--display-panel-blur,14px)) saturate(.8);backdrop-filter:blur(var(--display-panel-blur,14px)) saturate(.8);max-height:calc(100vh - 200px);overflow:auto}#selection h2{font-size:20px;font-weight:500;margin:12px 0}#selection p{font-size:11px;line-height:1.8;color:#adc1cc;white-space:pre-line;overflow-wrap:anywhere}.actions{display:flex;gap:6px;margin-top:16px}.actions button{font-size:11px}.actions button:last-child{margin-left:auto}
+#map-credits{font-size:9px;line-height:1.4;text-align:right;max-width:260px;opacity:.82;transition:opacity .2s}
+#map-credits:hover,#map-credits:focus-within{opacity:1}
+#map-credits .cesium-widget-credits{position:static;display:flex;align-items:center;justify-content:flex-end;gap:5px;color:inherit;font-size:9px;line-height:1.4}
+#map-credits a{color:#d3e4ec}
+#map-credits .cesium-credit-logoContainer{display:inline-block;line-height:0}
+#map-credits .cesium-credit-logoContainer img{width:52px;height:auto}
+/* Provider attribution stays on screen; the full list is one click away. */
+#map-credits .cesium-credit-textContainer{display:inline-block;max-width:132px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+#map-credits img{vertical-align:middle}
+#map-credits .cesium-credit-expand-link{/* it wrapped to a second line and made the plate two rows tall; a link is not a paragraph */padding-left:5px;white-space:nowrap;flex:none}
+[hidden]{display:none!important}
+/* Camera hints stay left of the control, clear of the pointer and screen edge. */
+#camera button[aria-label]{position:relative}
+#camera button[aria-label]::after{content:attr(aria-label);position:absolute;right:calc(100% + 14px);top:50%;transform:translateY(-50%);padding:7px 10px;border:1px solid #a8c8d34d;border-radius:7px;background:#263b46f5;color:#edf7fa;font:500 12px/1.4 sans-serif;white-space:nowrap;box-shadow:0 3px 12px #0003;pointer-events:none;opacity:0;visibility:hidden;z-index:2}
+#camera button[aria-label]:is(:hover,:focus-visible)::after{opacity:1;visibility:visible}
+@media(max-width:1000px){#operations{top:84px;width:240px}#camera{right:var(--edge)}}
+@media(max-height:650px) and (min-width:701px){#camera{right:calc(var(--edge) + 280px);bottom:calc(var(--edge) + 18px)}}
+/* Replaying a scheduled day is not a small difference from watching the live
+   sky: every number on screen belongs to another date. The clock says so in a
+   word, and a light travels round its edge so the difference is visible from
+   across the room without reading anything. */
+#clock{position:absolute;overflow:visible}
+/* Each mode keeps the colour it is already known by elsewhere: the day's
+   replay blue, and the two seat colours the role badge uses. */
+#clock[data-mode=scenario]{--clock-ring:#7be7ff;--clock-ring-dim:#5ad8ff2e;--clock-ring-peak:#eaf9ff}
+#clock[data-mode=psu]{--clock-ring:#7fe9f5;--clock-ring-dim:#7fe9f52e;--clock-ring-peak:#e8fdff}
+#clock[data-mode=vertiport]{--clock-ring:#7fe0a3;--clock-ring-dim:#7fe0a32e;--clock-ring-peak:#e9fff3}
+#clock[data-mode]:not([data-mode=live]){border-color:color-mix(in srgb,var(--clock-ring) 40%,transparent)}
+/* A line round the edge, not a glow over the clock. The mask cuts the middle
+   out of the gradient so only the border is left; its two stops must be written
+   out (#000,#000), because the shorthand with both stops at zero masked nothing
+   and the whole panel came out filled teal.
+
+   What travels is the light, not the outline. Rotating the element turned the
+   whole rounded rectangle like a pinwheel; the angle of the gradient is what
+   has to move, so the box stands still and a bright arc runs round its edge. */
+@property --clock-orbit{syntax:'<angle>';initial-value:0deg;inherits:false}
+#clock[data-mode]:not([data-mode=live])::before{content:'';position:absolute;inset:-2px;border-radius:inherit;padding:2.5px;
+  background:conic-gradient(from var(--clock-orbit),var(--clock-ring-dim) 0deg,var(--clock-ring-dim) 250deg,
+    var(--clock-ring) 320deg,var(--clock-ring-peak) 350deg,var(--clock-ring-dim) 360deg);
+  -webkit-mask:linear-gradient(#000,#000) content-box,linear-gradient(#000,#000);
+  -webkit-mask-composite:xor;mask:linear-gradient(#000,#000) content-box,linear-gradient(#000,#000);
+  mask-composite:exclude;animation:clock-orbit 2.4s linear infinite;pointer-events:none}
+@keyframes clock-orbit{to{--clock-orbit:360deg}}
+#clock-mode{font-size:9px;font-weight:700;letter-spacing:1.6px;color:#0b1b24;background:var(--clock-ring,#7be7ff);
+  border-radius:5px;padding:2px 6px;margin-right:8px}
+#clock[data-mode]:not([data-mode=live]) #state-time{color:#cdf3ff}
+/* This ring is not decoration: turning is how it says the twin is on another
+   clock, and this machine has reduced motion on. So it keeps turning for
+   someone who asked for less of it, at less than half the speed. */
+@media (prefers-reduced-motion:reduce){#clock[data-mode]:not([data-mode=live])::before{animation-duration:4s}}
+
+@media(max-width:700px){:root{--edge:12px;--rail-width:56px}#clock{top:14px;left:auto;right:var(--edge);transform:none;padding:10px}#state-time{font-size:10px;letter-spacing:0}#operations{top:84px;width:200px;max-height:calc(100vh - 360px)}#operations>details>summary span{display:none}.rail-button span{display:none}.rail-button{min-height:46px}#layers{top:auto;bottom:calc(var(--edge) + 44px);left:calc(var(--rail-width) + var(--edge));flex-wrap:wrap;max-width:calc(100vw - var(--rail-width) - 2*var(--edge))}.chip span{display:none}#settings-panel{width:min(250px,calc(100vw - var(--rail-width) - 2*var(--edge)))}:root{--drawer-width:min(300px,calc(100vw - var(--rail-width)))}#camera{right:var(--edge);bottom:calc(var(--edge) + 74px)}#attribution{gap:6px;font-size:8px;flex-wrap:nowrap;left:calc(var(--rail-width) + var(--edge));justify-content:flex-end}#attribution .maker span{display:none}#map-credits{max-width:130px}#map-credits .cesium-credit-logoContainer img{width:44px}#map-credits .cesium-credit-textContainer{max-width:0;padding:0}}
+
+/* Pointer inspection and a single selected-target drawer. */
+#hover-card{position:fixed;z-index:5;pointer-events:none;padding:10px 13px;max-width:230px;border-radius:8px;border-left:2px solid #b3e7f1;box-shadow:0 5px 22px #0005}#hover-card strong{display:block;font-size:12px;margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#hover-card span{font-size:10px;color:#b4cbd5;white-space:nowrap}
+@media(max-width:700px){#hover-card{max-width:200px}#hover-card span{font-size:9px}}
+
+/* Flight plan tab: one flight, played back and watched. The monitor is what an
+   operator reads while it runs — stage, clock, battery, height, speed — and the
+   leg list is the flight itself, clickable to jump to a stage. */
+.plan-vehicle{display:flex;flex-direction:column;gap:2px;margin:10px 0 8px;padding:9px 11px;border-radius:10px;
+  border:1px solid #95b4c433;background:#1f2a3255}
+.plan-vehicle strong{font-size:12px;font-weight:600;color:#eaf3f7;letter-spacing:.3px}
+.plan-vehicle span{font-size:10px;color:#a9c3cd}
+.plan-source{font-size:9px;color:#8fa9b5;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.plan-now{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px}
+.plan-stage{padding:3px 9px;border-radius:999px;background:var(--stage,#7fe9f5);color:#0b1419;font-size:10.5px;font-weight:700}
+.plan-clock{font-size:11px;color:#eaf3f7;font-variant-numeric:tabular-nums}
+.plan-leg-name{font-size:10px;color:#a9c3cd;overflow-wrap:anywhere}
+.plan-battery{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.plan-battery-track{flex:1 1 auto;height:9px;border-radius:999px;background:#1f2a3288;border:1px solid #95b4c433;overflow:hidden}
+.plan-battery-fill{display:block;height:100%;background:#7fe0a3;transition:width .12s linear}
+.plan-battery-text{flex:0 0 auto;font-size:10.5px;color:#c9d8df;font-variant-numeric:tabular-nums}
+.plan-battery[data-level=caution] .plan-battery-fill{background:#ffd166}
+.plan-battery[data-level=low] .plan-battery-fill{background:#ff8a94}
+.plan-battery[data-level=low] .plan-battery-text{color:#ffb3ba}
+.plan-readouts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:9px}
+.plan-readout{display:flex;flex-direction:column;gap:2px;padding:6px 7px;border-radius:8px;background:#1f2a3255;border:1px solid #95b4c422}
+.plan-readout-label{font-size:9px;color:#9fb3bd}
+.plan-readout-value{font-size:11px;color:#eaf3f7;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.plan-transport{display:flex;gap:6px;flex-wrap:nowrap;margin-bottom:6px}
+.plan-transport button{flex:1 1 auto;min-height:28px;font-size:11px;padding:0 8px;white-space:nowrap}
+/* The tiltrotor's rotors: 0 is a hover, 90 is wing-borne, and the bar fills
+   through the transition so the change reads while it happens. */
+.plan-tilt{display:flex;align-items:center;gap:7px;margin-bottom:9px}
+.plan-tilt-label{flex:0 0 auto;font-size:9px;color:#9fb3bd}
+.plan-tilt-track{flex:1 1 auto;height:7px;border-radius:999px;background:#1f2a3288;border:1px solid #95b4c433;overflow:hidden}
+.plan-tilt-fill{display:block;height:100%;background:#7fe9f5;transition:width .12s linear}
+.plan-tilt-text{flex:0 0 auto;font-size:10px;color:#c9d8df;font-variant-numeric:tabular-nums}
+.plan-tilt[data-mode=transition] .plan-tilt-fill{background:#ffb457}
+.plan-tilt[data-mode=multirotor] .plan-tilt-fill{background:#7fe0a3}
+#plan-scrub{width:100%;margin:0 0 8px;accent-color:#94cddc;cursor:pointer}
+.plan-legs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.plan-leg{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;
+  border:1px solid #95b4c422;background:#1f2a3240;cursor:pointer}
+.plan-leg:hover{background:#a6b7c024}
+.plan-leg-mark{width:7px;height:7px;border-radius:50%;background:var(--stage,#7fe9f5);opacity:.45}
+.plan-leg[data-state=now]{border-color:var(--stage,#7fe9f5);background:#2c3d4859}
+.plan-leg[data-state=now] .plan-leg-mark{opacity:1;box-shadow:0 0 0 3px color-mix(in srgb,var(--stage) 30%,transparent)}
+.plan-leg[data-state=done]{opacity:.55}
+.plan-leg-title{display:flex;flex-direction:column;gap:1px;min-width:0}
+.plan-leg-title strong{font-size:10.5px;color:#eaf3f7}
+.plan-leg-title small{font-size:9px;color:#9fb3bd;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plan-leg-figures{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.plan-leg-figures span{font-size:10px;color:#c9d8df;font-variant-numeric:tabular-nums}
+.plan-leg-figures small{font-size:9px;color:#9fb3bd;font-variant-numeric:tabular-nums}
+
+/* Route tab: the adding toggle, the lists, and the card that opens on the map. */
+.route-tools button{flex:1;font-size:11px;min-height:30px;white-space:nowrap;padding:0 6px}.route-tools button[aria-pressed=true]{background:#93c7d54d;border-color:#93c7d566;color:#cdf3fa}
+.route-hint{margin:8px 0 2px;font-size:10px;line-height:1.6;color:#a9c3cd}
+.route-status{display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:8px;border-radius:9px;background:#1f2a3266;border:1px solid #95b4c433;font-size:10px;line-height:1.5;color:#d4e2e9}
+.route-tag{flex:none;padding:2px 7px;border-radius:999px;font-size:9px;font-weight:700;letter-spacing:.4px;color:#0b1419;background:#c9d8df}
+.route-status[data-mode=adding]{border-color:#7fe0a3aa}.route-status[data-mode=adding] .route-tag{background:#7fe0a3}
+.route-status[data-mode=selected]{border-color:#fff2a8aa}.route-status[data-mode=selected] .route-tag{background:#fff2a8}
+.route-status[data-mode=linking]{border-color:#ffb457aa}.route-status[data-mode=linking] .route-tag{background:#ffb457}
+.route-status[data-mode=moving]{border-color:#fff2a8aa}.route-status[data-mode=moving] .route-tag{background:#fff2a8}
+/* The card can send its own point somewhere else; while it is carried the
+   position line says so rather than reading as the place it is saved at. */
+.route-move{width:100%;font-size:11px;min-height:28px}
+.route-note[data-pending=true]{color:#fff2a8}
+.route-card[data-mode=node-new]{border-color:#7fe0a3aa}.route-card[data-mode=node-new] .route-tag{background:#7fe0a3}
+.route-card[data-mode=node-edit] .route-tag{background:#c9eef5}
+.route-card[data-mode=link-new]{border-color:#ffb457aa}.route-card[data-mode=link-new] .route-tag{background:#ffb457}
+.route-card[data-mode=link-edit]{border-color:#ffb457aa}.route-card[data-mode=link-edit] .route-tag{background:#ffcf6d}
+.route-card[data-mode=vertiport]{border-color:#93c7d5aa}.route-card[data-mode=vertiport] .route-tag{background:#93c7d5}
+.route-card header{gap:6px}.route-card header .route-tag{margin-right:2px}
+.route-summary{margin:0 0 2px;font-size:10px;color:#c0d4dd;font-variant-numeric:tabular-nums}
+#route-clear[hidden]{display:none}
+.route-card{position:fixed;z-index:8;width:248px;max-height:min(72vh,420px);overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;padding:10px 12px 11px;display:flex;flex-direction:column;gap:8px;font-size:11px;color:#d4e2e9}
+.route-card header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.route-card header strong{font-size:11px;font-weight:600;letter-spacing:.4px;color:#cdf3fa;overflow-wrap:anywhere}
+.route-card-body{display:flex;flex-direction:column;gap:8px}
+.route-form{gap:7px}.route-form input,.route-form select{min-height:28px}
+.route-unit{flex:0 0 64px}
+.route-note{display:block;margin:0;font-size:9px;line-height:1.5;color:#a9c3cd}
+.route-info{margin:0;font-size:11px;line-height:1.5;color:#eaf3f7;font-variant-numeric:tabular-nums}
+.route-label{font-size:10px;color:#c9d8df}
+.route-choice{display:flex;flex-direction:column;gap:4px}.route-choice label{display:flex;flex-direction:row!important;align-items:center;gap:6px;font-size:10px;color:#d4e2e9}
+/* The segment picker is the mission profile itself: the whole flight is drawn
+   and the run this link flies is clicked on the drawing, so choosing looks like
+   the flight rather than like a list. The deck and the vertical hover over a
+   FATO belong to the vertiport, so they are drawn but not offered. */
+.route-picker{display:block}
+.route-profile{display:block;width:100%;height:auto;border:1px solid #95b4c433;border-radius:8px;background:#1b252d80;padding:2px 0}
+.route-profile-fixed path{fill:none;stroke:#95b4c455;stroke-width:1.4;stroke-linecap:round}
+.route-profile-fixed .route-profile-ground{stroke:#95b4c433;stroke-dasharray:3 3}
+.route-profile-fixed rect{fill:#95b4c438}
+.route-profile-fixed circle{fill:#101b23;stroke:#95b4c47a;stroke-width:1.1}
+.route-profile-fixed text{fill:#8fa9b5;font-size:7px;text-anchor:middle}
+.route-part{cursor:pointer}
+.route-part-hit{fill:none;stroke:#0000;stroke-width:18;stroke-linecap:round}
+.route-part-line{fill:none;stroke:var(--segment);stroke-width:2.4;stroke-linecap:round;opacity:.4}
+.route-part-name{fill:#c6d8e0;font-size:9px;text-anchor:middle}
+.route-part-letters{fill:#8fa9b5;font-size:7px;text-anchor:middle}
+.route-part:hover .route-part-line,.route-part:focus-visible .route-part-line{opacity:.8}
+.route-part:hover .route-part-name{fill:#eaf3f7}
+.route-part.route-picked .route-part-line{opacity:1;stroke-width:4}
+.route-part.route-picked .route-part-name{fill:var(--segment)}
+/* A run a FATO rules out: drawn so the flight still reads whole, but dead to the pointer. */
+.route-part.route-locked{cursor:not-allowed}
+.route-part.route-locked .route-part-line{opacity:.15;stroke-dasharray:3 3}
+.route-part.route-locked:hover .route-part-line{opacity:.15}
+.route-part.route-locked .route-part-name,.route-part.route-locked .route-part-letters{fill:#5f7480}
+/* What the buildings and the FATO rules said about a link, on its card. */
+.route-problem{color:#ffa552}.route-conflict{color:#ff4d4d}.route-tight{color:#ff9a9a}.route-drawn{opacity:.72}
+.route-tools-check{margin-top:6px}
+.route-part.route-picked .route-part-letters{fill:#c6d8e0}
+.route-part:focus-visible{outline:none}.route-part:focus-visible .route-part-name{text-decoration:underline}
+.route-card .sim-actions{flex-wrap:nowrap}
+.route-card .sim-actions button{min-height:28px;font-size:11px;padding:0 9px;white-space:nowrap;min-width:0}
+/* The delete button changes text when it is armed ("삭제" -> "삭제 확인"); it takes
+   the width that text needs so it never wraps onto a second line, and the others share the rest. */
+.route-card .sim-actions .sim-danger{flex:0 0 auto}
+
+/* Library: the 3D model shelf. Groups stay closed so the panel keeps its
+   height; an opened list scrolls inside itself instead of pushing the page. */
+.model-shelf{display:block;margin-top:14px;padding-top:12px;border-top:1px solid #9cbcca2e}
+.model-shelf-title{margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:.4px;color:#cfe0e8}
+.model-group .library-head{cursor:pointer}
+.model-list{max-height:460px;overflow-y:auto;padding:4px 6px 8px}
+.model-entry{border-radius:7px}
+.model-entry[data-open=true]{background:#8fc3d51f}
+.model-item{display:block;width:100%;padding:6px 8px;border:0;border-radius:7px;background:transparent;
+  color:#dceaf1;font-size:11px;line-height:1.5;text-align:left;cursor:pointer}
+.model-item:hover{background:#a6b7c024}
+.model-item[aria-expanded=true]{color:#eaf3f7;font-weight:600}
+.model-item-name{display:block;overflow-wrap:anywhere}
+.model-photo{margin:0;padding:0 4px 8px}
+/* The picture is what the shelf is for: it takes the panel's whole width in a
+   wide frame, and a fixed aspect keeps the row from jumping while it decodes. */
+.model-photo img{display:block;width:100%;aspect-ratio:1.6;object-fit:contain;
+  border-radius:8px;background:#16202880}
+/* One quiet line under it. The credit and licence are owed, not explanatory,
+   so they stay -- on a single line that truncates rather than wrapping the
+   picture off the screen. */
+.model-photo figcaption{display:flex;align-items:baseline;gap:8px;margin-top:5px;font-size:10px;
+  line-height:1.5;color:#9db4bf}
+.model-photo figcaption>span:first-child{flex:0 0 auto;font-variant-numeric:tabular-nums;color:#cfe0e8}
+.model-licence,.model-rights{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.model-licence{color:#8bdce2;text-decoration:underline}
+.model-retry{min-height:28px;padding:0 12px;margin-top:2px;border:1px solid #93c7d566;border-radius:8px;background:#93c7d52e;color:#cdf3fa;font-size:10px}
+.model-rights{color:#9db4bf}
+/* Flight planning: keep aircraft identity and shared physics separate. */
+.plan-tabs {display:flex; gap:6px; margin-bottom:14px;}
+.plan-tabs button {flex:1; padding:10px 8px; color:#c6d6e2; background:#172635; border:1px solid #456075; border-radius:7px; cursor:pointer;}
+.plan-tabs button[aria-selected="true"] {color:#fff; background:#18546a; border-color:#74d4ea; font-weight:700;}
+.plan-section {margin:12px 0; padding:12px; border:1px solid #415669; border-radius:9px; background:rgba(15,28,40,.6);}
+.plan-section h3 {font-size:12px; color:#8ed8e9; margin:0 0 10px; letter-spacing:.04em;}
+.plan-clear-actions{margin:10px 0}.plan-clear{width:100%;font-size:11px;color:#efc1ba;border:1px solid #b67f754d;background:#82463a14}
+.plan-clear:enabled:hover{background:#82463a40}.plan-clear:disabled{opacity:.4;cursor:default}
+.plan-section label {display:flex; flex-direction:column; gap:6px; min-width:0; color:#e6edf3; font-size:12px;}
+.plan-section select,.plan-section input {width:100%; box-sizing:border-box; background:#142331; color:#f0f6fa; border:1px solid #5d7385; border-radius:5px; padding:8px;}
+.plan-section option {background:#142331; color:#f0f6fa;}
+.plan-model-preview {display:flex; align-items:center; gap:12px; margin-top:10px; color:#f0f6fa;}
+.plan-model-preview img {width:128px; height:90px; object-fit:contain; background:#121f32; border-radius:6px;}
+.plan-model-preview p,.plan-dynamics-note {font-size:11px; line-height:1.65; color:#c7d5e0; margin:6px 0 0;}
+#plan-build {width:100%; padding:11px;}
+#plan-build:disabled {opacity:.6; cursor:wait;}
+#plan-single[hidden],#plan-multi[hidden] {display:none;}
+/* UAM chip opens a lightweight, anchored glass droplet; no new render loop. */
+#layer-uam[aria-expanded=true]{background:#c1dde52e;box-shadow:inset 0 0 0 1px #c4e8ec55}
+#layer-uam[data-off=true]{opacity:.5}
+.uam-display-menu{position:absolute;top:calc(100% + 12px);left:0;width:258px;max-width:calc(100vw - var(--left-offset) - 2*var(--edge));padding:15px;border-radius:26px 9px 26px 26px;border:1px solid #e2eff35c;background:linear-gradient(145deg,#9ba8afe8,#57656dde);backdrop-filter:blur(24px) saturate(1.12);box-shadow:0 14px 38px #10232f38,inset 0 1px 0 #ffffff45;color:#f0f7f8;transform-origin:92% 0;animation:uam-drop .2s ease-out}
+.uam-display-menu[hidden]{display:none}
+.display-menu-count{margin:0 2px 8px;padding:8px 10px;border-radius:10px;background:#20333e40;color:#e5f7fb;font-size:12px;font-variant-numeric:tabular-nums}
+.chip[data-off=true]{opacity:.45}
+.chip[aria-expanded=true]{background:#a6cbd340}
+.uam-display-menu header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px}
+.uam-display-menu header strong{display:block;font-size:15px;letter-spacing:1px}.uam-display-menu header span{font-size:10px;opacity:.8}
+.uam-master{border:1px solid #dfedf255;border-radius:16px;padding:7px 10px;background:#d9e8ee20;color:inherit;font-size:11px}
+.uam-display-row{display:flex;align-items:center;justify-content:space-between;width:100%;padding:10px 9px;border:0;border-radius:12px;background:transparent;color:inherit;font-size:12px;text-align:left}
+.uam-display-row:hover,.uam-master:hover{background:#effaff26}.uam-display-row:disabled{opacity:.38;cursor:default}
+.uam-display-row i{position:relative;width:29px;height:17px;border-radius:10px;background:#26374065;box-shadow:inset 0 1px 3px #14242e25}
+.uam-display-row i:after{content:'';position:absolute;left:3px;top:3px;width:11px;height:11px;border-radius:50%;background:#d6e2e7;transition:transform .16s ease}
+.uam-display-row[aria-checked=true] i{background:#93d8db}.uam-display-row[aria-checked=true] i:after{transform:translateX(12px);background:#fff}
+.uam-display-menu p{font-size:10px;line-height:1.5;opacity:.7;margin:10px 8px 0}
+.uam-display-menu button:focus-visible{outline:2px solid #bef3f5;outline-offset:2px}
+@keyframes uam-drop{from{opacity:0;transform:translateY(-7px) scale(.95)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.uam-display-menu{animation:none}.uam-display-row i:after{transition:none}}
+.plan-section .sim-row {display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px;}
+.plan-section .sim-row>label,.plan-section .sim-row>div {min-width:0; width:auto;}
+.plan-section .sim-row input,.plan-section .sim-row select {width:100%; max-width:none;}
+/* The multi-flight setup: five steps, one open at a time, so a long form reads
+   as a short one. Every step keeps its answer in its header once it is closed. */
+.dm{display:flex;flex-direction:column;gap:5px}
+.dm-step{border:1px solid #9cbcca26;border-radius:9px;overflow:hidden;background:#1f2a3222}
+.dm-head{display:flex;align-items:center;gap:7px;width:100%;min-height:32px;padding:0 9px;border:0;background:transparent;text-align:left;color:#d0dde3;font-size:11px}
+.dm-head[aria-expanded=true]{background:#93c7d51f;color:#cdf3fa}
+.dm-num{flex:0 0 auto;width:15px;height:15px;border-radius:50%;background:#93c7d54d;color:#cdf3fa;font-size:9px;line-height:15px;text-align:center;font-weight:700}
+.dm-title{flex:0 0 auto;font-weight:600}
+.dm-sum{flex:1 1 auto;text-align:right;font-size:9.5px;color:#9fb3bd;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dm-body{padding:8px 9px 9px;display:flex;flex-direction:column;gap:6px}
+.dm-body[hidden]{display:none}
+.dm-body input,.dm-body select{min-height:27px;padding:0 7px;border:1px solid #95b4c433;border-radius:7px;background:#1f2a3266;color:#eaf3f7;font-size:11px;width:100%}
+.dm-body input:disabled,.dm-body select:disabled{opacity:.45}
+.dm-sub{margin:5px 0 0;font-size:10px;font-weight:600;letter-spacing:.6px;color:#c0d4dd}
+.dm-field{display:flex;flex-direction:column;gap:2px;flex:1 1 0;min-width:0;font-size:9.5px;color:#9fb3bd}
+.dm-inline{display:flex;gap:6px}
+.dm-indent{padding-left:19px}
+.dm-choice{display:flex;align-items:center;gap:6px;font-size:10.5px;color:#dbe7ec}
+.dm-choice input{width:14px;min-height:14px;flex:0 0 auto}
+.dm-tools{display:flex;gap:4px}
+.dm-tools button{flex:1;min-height:26px;font-size:9.5px;padding:0 6px;white-space:nowrap}
+.dm-tools button[aria-pressed=true]{background:#93c7d54d;border-color:#93c7d566;color:#cdf3fa}
+.dm-note{margin:0;font-size:9.5px;line-height:1.6;color:#9fb3bd}
+.dm-figure{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border-radius:8px;background:#1f2a3255;border:1px solid #95b4c422;font-size:10px;color:#9fb3bd}
+.dm-figure strong{font-size:12.5px;color:#7fe9f5;font-variant-numeric:tabular-nums}
+.dm-table{max-height:172px;overflow-y:auto;border:1px solid #95b4c422;border-radius:8px}
+.dm-rows{list-style:none;margin:0;padding:0}
+.dm-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:7px;padding:5px 8px;border-bottom:1px solid #b8cdd414}
+.dm-row:last-child{border-bottom:0}
+.dm-row[aria-selected=true]{background:#93c7d524}
+.dm-row input[type=checkbox]{width:14px;min-height:14px}
+.dm-row-empty{display:block;padding:10px 9px;font-size:10px;line-height:1.6;color:#9fb3bd}
+/* A group heading: no checkbox of its own, so it spans where one would sit, and
+   it sticks to the top of the scroller so the network a row belongs to is still
+   named once the list is scrolled past its heading. */
+.dm-row-group{grid-template-columns:1fr auto;position:sticky;top:0;z-index:1;background:#12252dfa;border-bottom:1px solid #95b4c433}
+.dm-row-group .dm-row-name strong{font-size:10px;letter-spacing:.4px;color:#bfe0ea}
+.dm-row-group[data-state=all] .dm-row-name strong{color:#8fe3c6}
+.dm-row-group[data-state=some] .dm-row-name strong{color:#ffd166}
+.dm-row-name{min-width:0;border:0;background:transparent;padding:0;text-align:left;color:inherit}
+.dm-row-name strong{display:block;font-size:10.5px;font-weight:600;color:#eaf3f7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dm-row-name small{display:block;font-size:9px;color:#9fb3bd;font-variant-numeric:tabular-nums}
+.dm-row-note{font-size:9px;color:#ff8a94}
+.dm-row-fleet{grid-template-columns:1fr 42px 42px 42px;gap:5px}
+.dm-row-fleet input{padding:0 0 0 5px;text-align:center;font-variant-numeric:tabular-nums}
+.dm-row-head{position:sticky;top:0;z-index:1;background:#26323b;padding-top:6px;padding-bottom:6px;font-size:9px;letter-spacing:.4px;color:#9fb3bd}
+.dm-row-head span{text-align:center}
+.dm-row-head span:first-child{text-align:left}
+/* A deck with every gate taken reads as full rather than as an error. */
+.dm-row-fleet[data-state=full]{box-shadow:inset 2px 0 0 #7fe0a3aa}
+.dm-row-fleet[data-state=full] .dm-row-name small{color:#7fe0a3}
+.dm-row-fleet[data-state=off]{box-shadow:none;background:transparent}
+.dm-row-fleet[data-state=off] .dm-row-name strong{color:#eaf3f7}
+.dm-row-fleet[data-state=off] .dm-row-name small{color:#9fb3bd}
+.dm-mini{min-height:23px;font-size:9.5px;padding:0 8px}
+.dm-confirm{align-self:flex-end;min-height:26px;padding:0 14px;font-size:10px;background:#93c7d54d;border-color:#93c7d566;color:#cdf3fa}
+/* Two buttons of equal width: one opens the summary, the other empties the
+   form. Weighting the first wider said it was the bigger commitment, which it
+   is not — the commitment is inside the summary, on its own button. */
+.dm-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.dm-actions button{min-height:32px;font-size:11px}
+.dm-actions .dm-run{background:#7fe9f5;border-color:#7fe9f5;color:#0b1419;font-weight:700}
+.dm-save{width:100%;min-height:28px;margin-top:5px;font-size:10px}
+/* The rectangle a scrap is being drawn with, over the map itself. */
+.map-scrap{position:absolute;border:1px solid #7fe9f5;background:#7fe9f51f;pointer-events:none;z-index:4}
+.map-scrap[hidden]{display:none}
+/* Joined and cut, said the same way in the list and on the map. */
+.dm-key{display:flex;align-items:center;gap:10px;margin:0;font-size:9.5px;color:#9fb3bd}
+.dm-key-item{display:flex;align-items:center;gap:4px}
+.dm-key-item::before{content:'';width:15px;border-top:2px solid currentColor}
+.dm-key-on{color:#7fe9f5}
+.dm-key-off{color:#ff8a94}
+.dm-key-off::before{border-top-style:dashed}
+.dm-key-note{margin-left:auto;color:#8fa9b5}
+.dm-row[data-state=on]{box-shadow:inset 2px 0 0 #7fe9f5aa}
+.dm-row[data-state=on] .dm-row-name small{color:#7fe9f5}
+.dm-row[data-state=off]{box-shadow:inset 2px 0 0 #ff8a94aa;background:#ff8a940d}
+.dm-row[data-state=off] .dm-row-name strong{color:#ffc4c9}
+.dm-row[data-state=off] .dm-row-name small{color:#ff8a94}
+/* Which chair this browser is sitting in, said beside the clock: holding a
+   stakeholder role changes what the whole screen answers as. */
+#role-badge{position:absolute;left:calc(var(--left-offset) + (100vw - var(--left-offset))/2);
+  top:calc(var(--edge) + var(--top-bar) + 6px);transform:translateX(-50%);transition:left .22s ease;
+  display:flex;align-items:center;gap:6px;min-height:24px;padding:0 14px;border-radius:999px;
+  font-size:11px;letter-spacing:.4px;white-space:nowrap;z-index:5;
+  color:#0b1419;background:#7fe9f5;border:1px solid #7fe9f5;font-weight:700}
+#role-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:#0b1419;opacity:.65}
+#role-badge[data-role=vertiport]{background:#7fe0a3;border-color:#7fe0a3}
+#role-badge[hidden]{display:none}
+/* The replay console takes the line under the chips while it is open, so the
+   mode badge steps down to the next one rather than sitting behind it. */
+body[data-scenario-console] #role-badge{top:calc(var(--edge) + var(--top-bar) + var(--scenario-console-height, 96px) + 12px)}
+/* The parties that are shut while a seat is held. Still legible, and still
+   answering: pressing one says why rather than doing nothing. */
+.sim-tab[data-locked=true],.sim-category[data-locked=true]{opacity:.4}
+.sim-tab[data-locked=true]:hover,.sim-category[data-locked=true]:hover{cursor:not-allowed}
+.stakeholder-locked:empty{display:none}
+.stakeholder-locked{margin:6px 0 0}
+
+/* Every party's own rules, from every party's own screen. Quieter than the
+   primary action on the screen below it: reading the rule is something an
+   operator does before the day starts, not the thing they came here to do. */
+.sim-decisions{display:block;width:100%;margin:8px 0 10px;padding:9px 12px;border-radius:9px;
+  border:1px solid rgba(127,233,245,.34);background:rgba(127,233,245,.1);color:#bdeef5;
+  font-size:12px;cursor:pointer;text-align:left}
+.sim-decisions:hover{background:rgba(127,233,245,.18);border-color:rgba(127,233,245,.55)}
+
+/* ---------------------------------------------------------------- 시야 집중 모드
+   The map alone. Every panel is a direct child of <body>, so the rule names
+   what stays rather than what goes, and a panel added later is covered without
+   anyone remembering to add it here. The map credits stay: attribution is a
+   condition of using the imagery, not chrome. */
+#focus-exit{margin-left:10px;width:24px;height:24px;min-height:24px;padding:0;flex:none;border-radius:50%;
+  border:1px solid var(--glass-border);background:transparent;color:#cfe8ef;font-size:12px;line-height:1;
+  display:grid;place-items:center;cursor:pointer;transition:background .16s ease,color .16s ease}
+#focus-exit:hover{background:#ffffff24;color:#eaf9ff}
+#focus-exit:focus-visible{outline:2px solid var(--clock-ring,#7be7ff);outline-offset:2px}
+#focus-exit[aria-pressed=true]{background:var(--clock-ring,#7be7ff);color:#0b1b24;border-color:transparent}
+body[data-focus]{--left-offset:0px}
+body[data-focus]>:not(#globe):not(#clock):not(#attribution):not(#loading):not(.airframe-camera-render-host):not(.cockpit-instruments):not(.manual-flight-panel):not(.aircraft-dashboard[data-open=true]){display:none!important}
+body[data-focus] #attribution{opacity:.5}
+/* The aircraft camera button takes its own row under the three view buttons:
+   the label is a full phrase, and three-plus-one in one row squeezed all four. */
+#selection .actions{flex-wrap:wrap}#selection .actions .camera-live{flex:1 0 100%;margin-top:6px;background:#2a4a5a;border-color:#4fb9d8;color:#c5f0f6}
+
+:root{/* The colour the glass panels along the top actually render at over the
+   map: measured #4d585f..#5d696f across the chips, the clock and the guide,
+   mean #556067 (hue 203, saturation 10%, lightness 37%). The bottom chrome
+   is opaque so it does not shift with the map under it, and it is this
+   grey rather than the navy it was: same hue, but at a quarter of the
+   saturation the two read as one family. */
+  --chrome-surface:#556067;--chrome-border:#95b6c14d;--chrome-button:#ffffff08}
+
+/* Identical opaque chrome prevents each map background or panel height tinting it differently. */
+#attribution,#camera{background:var(--chrome-surface);border-color:var(--chrome-border);color:#dcebf3}
+#attribution{flex-wrap:nowrap;white-space:nowrap;gap:10px;overflow:visible}
+#attribution .maker{opacity:1;flex:none;gap:5px}
+#attribution .maker span{display:inline}
+#attribution .brand-mark{width:70px;height:auto}
+.attribution-details{position:relative;margin-left:auto;flex:none}
+.attribution-details>summary{list-style:none;cursor:pointer;font-size:10px;line-height:24px;color:#dcebf3;text-decoration:underline;text-underline-offset:3px}
+.attribution-details>summary::-webkit-details-marker{display:none}
+.attribution-details>summary:focus-visible{outline:2px solid #93e6ff;outline-offset:3px}
+.attribution-popover{position:absolute;right:0;bottom:calc(100% + 12px);width:300px;max-width:calc(100vw - 32px);max-height:60vh;overflow:auto;padding:14px;border:1px solid var(--chrome-border);border-radius:9px;background:var(--chrome-surface);box-shadow:0 8px 24px #0005;white-space:normal}
+#attribution:has(.attribution-details[open]){z-index:60}
+#attribution .attribution-popover #map-credits{max-width:none;text-align:left;opacity:1}
+#attribution .attribution-popover .cesium-widget-credits{flex-wrap:wrap;justify-content:flex-start;gap:10px}
+#attribution .attribution-popover .cesium-credit-textContainer{max-width:none;white-space:normal;overflow:visible;padding:0}
+#attribution .attribution-popover .cesium-credit-logoContainer img{width:auto;max-width:100px}
+/* UAM shortcuts share the confirmed Live Twin prediction settings. */
+.uam-display-menu{max-height:calc(100dvh - 100px);overflow-y:auto;overscroll-behavior:contain;}
+.uam-prediction-controls{margin-top:10px;padding-top:10px;border-top:1px solid #91bcc333;}
+.uam-prediction-horizons{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0;}
+.uam-prediction-horizons button{min-height:32px;border:1px solid #97bfc344;border-radius:6px;background:#152d37;color:#c7dbdf;cursor:pointer;font-size:11px;}
+.uam-prediction-horizons button[aria-pressed=true]{border-color:var(--prediction-color);box-shadow:inset 0 -2px var(--prediction-color);color:#edf8fa;}
+.uam-prediction-horizons [data-horizon=short_enabled]{--prediction-color:#61d7de;}
+.uam-prediction-horizons [data-horizon=mid_enabled]{--prediction-color:#f0ad68;}
+.uam-prediction-horizons [data-horizon=long_enabled]{--prediction-color:#bf9bef;}
+.uam-prediction-controls button:disabled{opacity:.4;cursor:default;}
+.uam-prediction-settings{width:100%;padding:7px;border:1px solid #91bcc333;border-radius:6px;background:transparent;color:#b5d8de;cursor:pointer;font-size:11px;}
+.uam-prediction-controls button:focus-visible{outline:2px solid #a8e9e5;outline-offset:2px;}

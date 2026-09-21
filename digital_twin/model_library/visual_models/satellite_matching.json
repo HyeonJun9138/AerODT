@@ -1,0 +1,923 @@
+{
+  "schema_version": 1,
+  "scope": "Display-only assignment of representative 3D models to catalogued objects. A match is a visual representation, never an identification of the real vehicle. Rules ported from the ICDCDT satellite model manifest onto the AeroDT visual asset library.",
+  "object_kinds": {
+    "debris": [
+      "\\bDEB\\b",
+      "DEBRIS",
+      "FRAGMENT"
+    ],
+    "rocket": [
+      "\\bR/B\\b",
+      "ROCKET BODY",
+      "\\bAKM\\b",
+      "\\bPLAT\\b"
+    ],
+    "station": [
+      "^ISS\\b",
+      "TIANGONG",
+      "\\bCSS\\b",
+      "SPACE STATION",
+      "^MIR$",
+      "^SKYLAB$"
+    ],
+    "cubesat": [
+      "CUBESAT",
+      "\\bFLOCK\\b",
+      "\\bLEMUR\\b",
+      "\\bSPACEBEE\\b",
+      "\\bDOVE\\b",
+      "\\b[1-6]U\\b"
+    ]
+  },
+  "representatives": {
+    "station": [
+      "iss"
+    ],
+    "cubesat": [
+      "cubesat_3u",
+      "cubesat_1u"
+    ],
+    "payload:LEO": [
+      "eo_1"
+    ],
+    "payload:MEO": [
+      "gnss_bus",
+      "ssl_1300",
+      "eo_1"
+    ],
+    "payload:GEO": [
+      "ssl_1300",
+      "eo_1"
+    ],
+    "payload:HEO": [
+      "van_allen",
+      "eo_1"
+    ],
+    "rocket": [],
+    "debris": []
+  },
+  "models": [
+    {
+      "asset_id": "iss",
+      "label": "국제우주정거장 ISS",
+      "exact": {
+        "norad": [
+          25544
+        ],
+        "names": [
+          "^ISS \\(ZARYA\\)$"
+        ]
+      }
+    },
+    {
+      "asset_id": "hubble",
+      "label": "허블 우주망원경",
+      "exact": {
+        "norad": [
+          20580
+        ],
+        "names": [
+          "^HST$"
+        ]
+      }
+    },
+    {
+      "asset_id": "landsat_7",
+      "label": "Landsat 7",
+      "exact": {
+        "norad": [
+          25682
+        ],
+        "names": [
+          "^LANDSAT 7$"
+        ]
+      }
+    },
+    {
+      "asset_id": "landsat_8",
+      "label": "Landsat 8",
+      "exact": {
+        "norad": [
+          39084
+        ],
+        "names": [
+          "^LANDSAT 8$"
+        ]
+      },
+      "series": {
+        "norad": [
+          49260
+        ],
+        "names": [
+          "^LANDSAT 9$"
+        ]
+      }
+    },
+    {
+      "asset_id": "terra",
+      "label": "Terra (EOS AM-1)",
+      "exact": {
+        "norad": [
+          25994
+        ],
+        "names": [
+          "^TERRA$"
+        ]
+      }
+    },
+    {
+      "asset_id": "aqua",
+      "label": "Aqua (EOS PM-1)",
+      "exact": {
+        "norad": [
+          27424
+        ],
+        "names": [
+          "^AQUA$"
+        ]
+      }
+    },
+    {
+      "asset_id": "aura",
+      "label": "Aura (EOS CH-1)",
+      "exact": {
+        "norad": [
+          28376
+        ],
+        "names": [
+          "^AURA$"
+        ]
+      }
+    },
+    {
+      "asset_id": "suomi_npp",
+      "label": "Suomi NPP / JPSS 계열",
+      "exact": {
+        "norad": [
+          37849
+        ],
+        "names": [
+          "^SUOMI NPP$"
+        ]
+      },
+      "series": {
+        "norad": [
+          43013,
+          54234
+        ],
+        "names": [
+          "^NOAA 2[01]( \\(JPSS-\\d\\))?$"
+        ]
+      }
+    },
+    {
+      "asset_id": "goes_r",
+      "label": "GOES-R 계열 (GOES 16~19)",
+      "exact": {
+        "norad": [
+          41866,
+          43226,
+          51850,
+          60133
+        ],
+        "names": [
+          "^GOES 1[6-9]$"
+        ]
+      }
+    },
+    {
+      "asset_id": "goes",
+      "label": "GOES 계열",
+      "series": {
+        "names": [
+          "^GOES \\d+$"
+        ]
+      }
+    },
+    {
+      "asset_id": "tdrs",
+      "label": "TDRS 데이터 중계위성",
+      "series": {
+        "names": [
+          "^TDRS \\d+$"
+        ]
+      }
+    },
+    {
+      "asset_id": "oco_2",
+      "label": "OCO-2",
+      "exact": {
+        "norad": [
+          40059
+        ],
+        "names": [
+          "^OCO[ -]?2$"
+        ]
+      }
+    },
+    {
+      "asset_id": "sdo",
+      "label": "Solar Dynamics Observatory",
+      "exact": {
+        "norad": [
+          36395
+        ],
+        "names": [
+          "^SDO$"
+        ]
+      }
+    },
+    {
+      "asset_id": "swift",
+      "label": "Swift 감마선 관측위성",
+      "exact": {
+        "norad": [
+          28485
+        ],
+        "names": [
+          "^SWIFT$"
+        ]
+      }
+    },
+    {
+      "asset_id": "tess",
+      "label": "TESS",
+      "exact": {
+        "norad": [
+          43435
+        ],
+        "names": [
+          "^TESS$"
+        ]
+      }
+    },
+    {
+      "asset_id": "icesat_2",
+      "label": "ICESat-2",
+      "exact": {
+        "norad": [
+          43613
+        ],
+        "names": [
+          "^ICESAT-2$"
+        ]
+      }
+    },
+    {
+      "asset_id": "grace",
+      "label": "GRACE / GRACE-FO 계열",
+      "series": {
+        "norad": [
+          43476,
+          43477
+        ],
+        "names": [
+          "^GRACE-FO"
+        ]
+      }
+    },
+    {
+      "asset_id": "jason",
+      "label": "Jason 계열 해양고도계 위성",
+      "exact": {
+        "norad": [
+          26997
+        ],
+        "names": [
+          "^JASON(-| )?1$"
+        ]
+      },
+      "series": {
+        "norad": [
+          33105,
+          41240
+        ],
+        "names": [
+          "^JASON"
+        ]
+      }
+    },
+    {
+      "asset_id": "sentinel_6",
+      "label": "Sentinel-6 Michael Freilich",
+      "exact": {
+        "norad": [
+          46984
+        ]
+      },
+      "series": {
+        "names": [
+          "^SENTINEL-6"
+        ]
+      }
+    },
+    {
+      "asset_id": "chandra",
+      "label": "찬드라 X선 관측위성",
+      "exact": {
+        "norad": [
+          25867
+        ],
+        "names": [
+          "^CHANDRA$",
+          "^CXO$"
+        ]
+      }
+    },
+    {
+      "asset_id": "van_allen",
+      "label": "Van Allen Probes (RBSP)",
+      "exact": {
+        "norad": [
+          38752,
+          38753
+        ],
+        "names": [
+          "^RBSP [AB]$"
+        ]
+      }
+    },
+    {
+      "asset_id": "poes",
+      "label": "NOAA POES 계열",
+      "series": {
+        "norad": [
+          25338,
+          28654,
+          33591
+        ],
+        "names": [
+          "^NOAA 1[5-9]$"
+        ]
+      }
+    },
+    {
+      "asset_id": "eo_1",
+      "label": "Earth Observing-1",
+      "exact": {
+        "norad": [
+          26619
+        ],
+        "names": [
+          "^EO-1$"
+        ]
+      }
+    },
+    {
+      "asset_id": "sac_c",
+      "label": "SAC-C",
+      "exact": {
+        "norad": [
+          26620
+        ],
+        "names": [
+          "^SAC-C$"
+        ]
+      }
+    },
+    {
+      "asset_id": "radarsat_1",
+      "label": "RADARSAT-1",
+      "exact": {
+        "norad": [
+          25260
+        ],
+        "names": [
+          "^RADARSAT-1$"
+        ]
+      }
+    },
+    {
+      "asset_id": "cubesat_1u",
+      "label": "1U 큐브샛 (일반형)",
+      "family": {
+        "names": [
+          "\\b1U\\b"
+        ]
+      }
+    },
+    {
+      "asset_id": "ssl_1300",
+      "label": "SSL-1300 정지궤도 통신위성 버스"
+    },
+    {
+      "asset_id": "mms",
+      "label": "MMS 자기권 관측위성",
+      "exact": {
+        "norad": [
+          40482,
+          40483,
+          40484,
+          40485
+        ],
+        "names": [
+          "^MMS [1-4]$"
+        ]
+      }
+    },
+    {
+      "asset_id": "cygnss",
+      "label": "CYGNSS",
+      "exact": {
+        "names": [
+          "^CYGNSS"
+        ]
+      }
+    },
+    {
+      "asset_id": "gpm",
+      "label": "GPM Core Observatory",
+      "exact": {
+        "norad": [
+          39574
+        ],
+        "names": [
+          "^GPM"
+        ]
+      }
+    },
+    {
+      "asset_id": "hinode",
+      "label": "Hinode (Solar-B)",
+      "exact": {
+        "norad": [
+          29479
+        ],
+        "names": [
+          "^HINODE"
+        ]
+      }
+    },
+    {
+      "asset_id": "calipso",
+      "label": "CALIPSO",
+      "exact": {
+        "norad": [
+          29108
+        ],
+        "names": [
+          "^CALIPSO"
+        ]
+      }
+    },
+    {
+      "asset_id": "cloudsat",
+      "label": "CloudSat",
+      "exact": {
+        "norad": [
+          29107
+        ],
+        "names": [
+          "^CLOUDSAT"
+        ]
+      }
+    },
+    {
+      "asset_id": "topex",
+      "label": "TOPEX/Poseidon",
+      "exact": {
+        "norad": [
+          22076
+        ],
+        "names": [
+          "^TOPEX"
+        ]
+      }
+    },
+    {
+      "asset_id": "ibex",
+      "label": "IBEX",
+      "exact": {
+        "norad": [
+          33401
+        ],
+        "names": [
+          "^IBEX"
+        ]
+      }
+    },
+    {
+      "asset_id": "fermi",
+      "label": "Fermi (GLAST)",
+      "exact": {
+        "norad": [
+          33053
+        ],
+        "names": [
+          "^FERMI",
+          "^FGST",
+          "GLAST"
+        ]
+      }
+    },
+    {
+      "asset_id": "aquarius",
+      "label": "SAC-D / Aquarius",
+      "exact": {
+        "norad": [
+          37673
+        ],
+        "names": [
+          "^SAC-D"
+        ]
+      }
+    },
+    {
+      "asset_id": "geotail",
+      "label": "Geotail",
+      "exact": {
+        "norad": [
+          22049
+        ],
+        "names": [
+          "^GEOTAIL"
+        ]
+      }
+    },
+    {
+      "asset_id": "themis",
+      "label": "THEMIS",
+      "exact": {
+        "norad": [
+          30580,
+          30583,
+          30584
+        ],
+        "names": [
+          "^THEMIS"
+        ]
+      }
+    },
+    {
+      "asset_id": "sorce",
+      "label": "SORCE",
+      "exact": {
+        "norad": [
+          27651
+        ],
+        "names": [
+          "^SORCE"
+        ]
+      }
+    },
+    {
+      "asset_id": "toms",
+      "label": "TOMS-EP",
+      "exact": {
+        "norad": [
+          23940
+        ],
+        "names": [
+          "TOMS"
+        ]
+      }
+    },
+    {
+      "asset_id": "polar",
+      "label": "Polar",
+      "exact": {
+        "norad": [
+          23802
+        ],
+        "names": [
+          "^POLAR$"
+        ]
+      }
+    },
+    {
+      "asset_id": "swas",
+      "label": "SWAS",
+      "exact": {
+        "norad": [
+          25560
+        ],
+        "names": [
+          "^SWAS"
+        ]
+      }
+    },
+    {
+      "asset_id": "fuse",
+      "label": "FUSE",
+      "exact": {
+        "norad": [
+          25791
+        ],
+        "names": [
+          "^FUSE"
+        ]
+      }
+    },
+    {
+      "asset_id": "wire",
+      "label": "WIRE",
+      "exact": {
+        "norad": [
+          25646
+        ],
+        "names": [
+          "^WIRE"
+        ]
+      }
+    },
+    {
+      "asset_id": "hete_2",
+      "label": "HETE-2",
+      "exact": {
+        "norad": [
+          26561
+        ],
+        "names": [
+          "^HETE"
+        ]
+      }
+    },
+    {
+      "asset_id": "starlink_flat",
+      "label": "Starlink형 평판 위성",
+      "family": {
+        "names": [
+          "^STARLINK"
+        ]
+      }
+    },
+    {
+      "asset_id": "gnss_bus",
+      "label": "GNSS 항법위성",
+      "family": {
+        "names": [
+          "^NAVSTAR",
+          "^GPS\\b",
+          "GLONASS",
+          "^BEIDOU",
+          "^GSAT",
+          "^GALILEO",
+          "^IRNSS",
+          "^NVS-",
+          "^QZS"
+        ]
+      }
+    },
+    {
+      "asset_id": "cubesat_3u",
+      "label": "3U 큐브샛",
+      "family": {
+        "names": [
+          "^FLOCK",
+          "^DOVE",
+          "^LEMUR",
+          "\\b3U\\b"
+        ]
+      }
+    },
+    {
+      "asset_id": "leo_comms_bus",
+      "label": "통신위성 대표 버스",
+      "family": {
+        "names": [
+          "^ONEWEB",
+          "^KUIPER",
+          "^IRIDIUM",
+          "^GLOBALSTAR",
+          "^ORBCOMM",
+          "^O3B",
+          "^QIANFAN",
+          "^SATNET",
+          "^GUOWANG",
+          "^HULIANWANG"
+        ]
+      }
+    },
+    {
+      "asset_id": "ace",
+      "label": "Advanced Composition Explorer",
+      "exact": {
+        "names": [
+          "^ACE$"
+        ]
+      }
+    },
+    {
+      "asset_id": "acrimsat",
+      "label": "Active Cavity Irradiance Monitor Satellite (AcrimSAT) (A)",
+      "exact": {
+        "names": [
+          "^ACRIMSAT$"
+        ]
+      }
+    },
+    {
+      "asset_id": "aim",
+      "label": "Aeronomy of Ice in the Mesosphere",
+      "exact": {
+        "names": [
+          "^AIM$"
+        ]
+      }
+    },
+    {
+      "asset_id": "cluster_ii",
+      "label": "Cluster II",
+      "exact": {
+        "names": [
+          "^CLUSTER II"
+        ]
+      }
+    },
+    {
+      "asset_id": "cnofs",
+      "label": "Communication and Navigation Outage Forecast System (CNOFS)",
+      "exact": {
+        "names": [
+          "^C/NOFS$"
+        ]
+      }
+    },
+    {
+      "asset_id": "dscovr",
+      "label": "Deep Space Climate Observatory (DSCOVR) (Triana)",
+      "exact": {
+        "names": [
+          "^DSCOVR$"
+        ]
+      }
+    },
+    {
+      "asset_id": "icesat",
+      "label": "Ice, Clouds, and Land Elevation Satellite (ICESat) (A)",
+      "exact": {
+        "names": [
+          "^ICESAT$"
+        ]
+      }
+    },
+    {
+      "asset_id": "jason_2",
+      "label": "Ocean Surface Topography Mission (OSTM Jason-2)",
+      "exact": {
+        "names": [
+          "^JASON-2$",
+          "^OSTM/JASON-2$"
+        ]
+      }
+    },
+    {
+      "asset_id": "kepler",
+      "label": "Kepler (A)",
+      "exact": {
+        "names": [
+          "^KEPLER$"
+        ]
+      }
+    },
+    {
+      "asset_id": "landsat_1_3",
+      "label": "Landsat 1, 2, and 3",
+      "exact": {
+        "names": [
+          "^LANDSAT [123]$"
+        ]
+      }
+    },
+    {
+      "asset_id": "landsat_4_5",
+      "label": "Landsat 4 and 5",
+      "exact": {
+        "names": [
+          "^LANDSAT [45]$"
+        ]
+      }
+    },
+    {
+      "asset_id": "mir",
+      "label": "Mir",
+      "exact": {
+        "names": [
+          "^MIR$"
+        ]
+      }
+    },
+    {
+      "asset_id": "quikscat",
+      "label": "Quick Scatterometer (QuikSCAT)",
+      "exact": {
+        "names": [
+          "^QUIKSCAT$"
+        ]
+      }
+    },
+    {
+      "asset_id": "rhessi",
+      "label": "HESSI-RHESSI",
+      "exact": {
+        "names": [
+          "^RHESSI$",
+          "^HESSI$"
+        ]
+      }
+    },
+    {
+      "asset_id": "seastar",
+      "label": "SeaStar",
+      "exact": {
+        "names": [
+          "^SEASTAR$",
+          "^ORBVIEW-2$"
+        ]
+      }
+    },
+    {
+      "asset_id": "skylab",
+      "label": "Skylab",
+      "exact": {
+        "names": [
+          "^SKYLAB$"
+        ]
+      }
+    },
+    {
+      "asset_id": "soho",
+      "label": "Solar and Heliospheric Observatory",
+      "exact": {
+        "names": [
+          "^SOHO$"
+        ]
+      }
+    },
+    {
+      "asset_id": "spitzer",
+      "label": "Spitzer Space Telescope",
+      "exact": {
+        "names": [
+          "^SPITZER$"
+        ]
+      }
+    },
+    {
+      "asset_id": "stereo",
+      "label": "Solar TErrestrial RElations Observatory (STEREO)",
+      "exact": {
+        "names": [
+          "^STEREO [AB]$"
+        ]
+      }
+    },
+    {
+      "asset_id": "suzaku",
+      "label": "Suzaku",
+      "exact": {
+        "names": [
+          "^SUZAKU$",
+          "^ASTRO-E2$"
+        ]
+      }
+    },
+    {
+      "asset_id": "trmm",
+      "label": "Tropical Rainfall Measuring Mission (TRMM)",
+      "exact": {
+        "names": [
+          "^TRMM$"
+        ]
+      }
+    },
+    {
+      "asset_id": "wind",
+      "label": "Wind",
+      "exact": {
+        "names": [
+          "^WIND$"
+        ]
+      }
+    },
+    {
+      "asset_id": "wmap",
+      "label": "Wilkinson Microwave Anisotropy Probe (WMAP)",
+      "exact": {
+        "names": [
+          "^WMAP$"
+        ]
+      }
+    },
+    {
+      "asset_id": "icecube",
+      "label": "CubeSat - ICECube",
+      "exact": {
+        "names": [
+          "^ICECUBE$"
+        ]
+      }
+    },
+    {
+      "asset_id": "mirata",
+      "label": "CubeSat - MiRaTa",
+      "exact": {
+        "names": [
+          "^MIRATA$"
+        ]
+      }
+    }
+  ],
+  "representatives_note": "Ordered fallbacks: the first asset the library actually publishes is used."
+}

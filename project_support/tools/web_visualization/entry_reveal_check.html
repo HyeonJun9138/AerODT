@@ -1,0 +1,44 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>첫 진입 페이드 검증</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>body{margin:0;background:#102029;color:white;font:13px sans-serif}#view{height:80vh}aside{padding:12px}pre{white-space:pre-wrap}</style>
+<div id="view"></div><aside><button id="run">첫 진입 검증</button><pre id="result">준비 중</pre></aside>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {LiveGlobe} from '/visualization/globe.js';
+const C=Cesium,g=new LiveGlobe(C,'view',{terrainEnabled:false}),v=g.viewer;
+g.setBuildingsEnabled(false);v.scene.globe.baseColor=C.Color.fromCssColorString('#12202a');
+const output=document.getElementById('result'),button=document.getElementById('run');
+const network={nodes:[{id:'a',name:'서쪽 지점',longitude:126.88,latitude:37.56,altitude_m:500},
+  {id:'b',name:'중앙 지점',longitude:126.98,latitude:37.56,altitude_m:500},
+  {id:'c',name:'동쪽 지점',longitude:127.08,latitude:37.56,altitude_m:500}],
+  links:[{id:'line',name:'연결선',from:'a',to:'b',segment:'C'},
+    {id:'corridor',name:'순항 구간',from:'b',to:'c',segment:'F',width_m:1200}]};
+v.scene.renderError.addEventListener((s,e)=>output.textContent=`FAIL ${e.message}`);
+output.textContent='실제 Cesium 1.143 · 늦게 생성되는 항로의 첫 렌더와 페이드 검사';
+button.onclick=async()=>{
+  button.disabled=true;let samples=[],start=null;
+  g.routeLayer.clear();g.routeLayer.network=null;
+  await g.entry();
+  await g.showRoutes(network);
+  // Keep the test annotations inside their band at the city-wide arrival view.
+  for(const entity of g.routeLayer.owned)if(entity.label)entity.label.distanceDisplayCondition=new C.DistanceDisplayCondition(0,260000);
+  start=performance.now();
+  const remove=v.scene.preRender.addEventListener(()=>{
+    const primitive=g.routeLayer.primitive;
+    const mesh=primitive.ready?primitive.getGeometryInstanceAttributes('link:corridor').color[3]
+      :primitive.geometryInstances.find(i=>i.id==='link:corridor').attributes.color.value[3];
+    const point=g.routeLayer.markers.get('a').entity.point.color.getValue(v.clock.currentTime).alpha;
+    const label=g.routeLayer.markers.get('a').entity.label.translucencyByDistance.getValue(v.clock.currentTime).nearValue;
+    const elapsed=performance.now()-start;
+    samples.push({ms:Math.round(elapsed),mesh,point,label});
+    if(elapsed>6500){
+      remove();const monotonic=key=>samples.every((s,i)=>!i || s[key]>=samples[i-1][key]-.001);
+      const pass=samples[0].mesh===0&&samples[0].point<.05&&samples[0].label<.05
+        &&['mesh','point','label'].every(monotonic)&&samples.at(-1).mesh>0&&samples.at(-1).point>.99;
+      output.textContent=JSON.stringify({pass,frames:samples.length,first:samples[0],
+        samples:samples.filter((s,i)=>i%15===0),last:samples.at(-1)},null,2);button.disabled=false;
+    }
+  });
+};
+window.addEventListener('pagehide',()=>g.destroy(),{once:true});
+</script></html>

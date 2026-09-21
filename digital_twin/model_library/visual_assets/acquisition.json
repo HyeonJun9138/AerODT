@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "checked_on": "2026-09-08",
+  "not_included_in_asset_count": true,
+  "pending": [
+    {
+      "source": "https://www.fab.com/listings/c7c90f53-50b8-4df2-8d29-9a45daf3be4e",
+      "title": "Commercial Long-Range Aircraft",
+      "provider": "attben",
+      "category": "aircraft/civilian",
+      "license_displayed": "Fab Standard License",
+      "format": "Unreal Engine asset package (4.24-4.27, 5.0-5.4)",
+      "status": "account_acquisition_and_export_required",
+      "reason": "Browser shows Sign in and Add to My Library. Original package not acquired. Unreal export and material/animation conversion remain untested.",
+      "public_export": false,
+      "ai_usage_displayed": "No",
+      "next_step": "User acquires package through Fab/Epic; supply source files and acquisition terms. Review web project distribution before exporting GLB."
+    },
+    {
+      "source": "https://www.fab.com/listings/f9509a39-c4a8-4288-96fb-a190ce7fc0e9",
+      "title": "RTS:Modern Combat Vehicle Pack Free",
+      "provider": "Raptor3D",
+      "category": "aircraft/military",
+      "license_displayed": "Fab Standard License",
+      "format": "FBX / Unity",
+      "status": "eula_confirmation_pending",
+      "reason": "Download opens an explicit Fab EULA acceptance checkbox and Accept button. Not accepted by agent.",
+      "requested_subset": ["fighter jet", "helicopter"],
+      "excluded_subset": ["armored transport"],
+      "public_export": false,
+      "ai_usage_displayed": "No",
+      "next_step": "User confirms EULA acceptance or supplies downloaded files; convert FBX and materials to GLB after rights review."
+    }
+  ]
+}

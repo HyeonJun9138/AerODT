@@ -1,0 +1,27 @@
+{
+  "title": "Joby S4 eVTOL",
+  "source": {
+    "provider": "Fab marketplace",
+    "url": "https://www.fab.com/",
+    "revision": "local working copy, 2026-09-09",
+    "original_file": "joby-aviation-s4-evtol/source/111.fbx",
+    "note": "Purchased on Fab by the operator. The copy in the working tree carries no licence, author or listing file, so the original author is not recorded here and should be filled in from the Fab receipt."
+  },
+  "rights": {
+    "label": "Fab licence (purchased)",
+    "url": "https://www.fab.com/eula",
+    "credit": "purchased on Fab by the AeroDT operator; original author as named on the Fab listing",
+    "public_export": true,
+    "note": "The operator holds a purchased Fab licence, which covers using the model in their own products. It does not generally cover handing the model file itself to third parties, so serving it from an AeroDT deployment is within that licence while exposing the visual-asset directory on a public site is not. Depicts a real manufacturer's aircraft; no endorsement is implied."
+  },
+  "representation": "specific",
+  "aliases": [
+    "joby",
+    "joby_s4"
+  ],
+  "reference_extent_m": 10.7,
+  "scale_basis": "metres. The FBX is authored in arbitrary units (0.82 across), so the export applies a uniform factor of 13.1024 chosen to put the wingspan at the published S4 figure of 10.7 m. The result measures 10.70 x 2.89 x 6.05 m against a real length of about 6.4 m. The factor is a display choice, not a measurement of the model.",
+  "forward_axis": "unverified (longitudinal axis is Z; nose direction not established)",
+  "up_axis": "+Y",
+  "conversion_note": "Imported from FBX as a combined static mesh and scaled to metres on export; materials were baked to 512 px texture sets by the exporter."
+}

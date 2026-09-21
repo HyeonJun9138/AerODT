@@ -1,0 +1,22 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>기체 이름표 위치 검증</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>html,body,#view{height:100%;width:100%;margin:0}nav{position:absolute;top:10px;left:10px;z-index:2;background:#ccc;padding:10px}button{padding:8px}</style>
+<div id="view"></div><nav>정지 기체 · 카메라만 변경<br><button id="far">멀리</button><button id="close">확대</button><button id="above">위에서</button><button id="distant">100 m</button><button id="city">500 m</button><pre id="report"></pre></nav>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {FlightLayer} from '/visualization/flight_layer.js';
+const C=Cesium,v=new C.Viewer('view',{baseLayer:false,globe:false,skyBox:false,skyAtmosphere:false,animation:false,timeline:false,baseLayerPicker:false,geocoder:false,homeButton:false,sceneModePicker:false,navigationHelpButton:false,selectionIndicator:false,infoBox:false});
+v.scene.backgroundColor=C.Color.fromCssColorString('#506779');
+const frame=C.Transforms.eastNorthUpToFixedFrame(C.Cartesian3.fromDegrees(126.94,37.526,1000));
+const layer=new FlightLayer(C,v,{assets:()=>({uri:'/airtaxi.glb',metadata_uri:'/airtaxi.json'})});
+layer.show({vehicle:{id:'UAM-VP001-VP005'},aircraft:{asset_id:'airtaxi'},legs:[]});
+layer.moveTo({position:{longitude:126.94,latitude:37.526,altitude_m:1000},heading_deg:0,stage_label:'지상 이동 (FATO → 게이트)',color:'#7fe0a3'});
+function camera(x,y,z){v.camera.lookAtTransform(frame,new C.Cartesian3(x,y,z));}
+document.querySelector('#distant').onclick=()=>camera(0,-100,10);
+document.querySelector('#city').onclick=()=>camera(0,-500,20);
+document.querySelector('#far').onclick=()=>camera(0,-30,5);
+document.querySelector('#close').onclick=()=>camera(0,-12,4);
+document.querySelector('#above').onclick=()=>camera(3,-3,12);
+camera(0,-12,4);
+v.scene.postRender.addEventListener(()=>{document.querySelector('#report').textContent=JSON.stringify({modelReady:layer.model?.ready,offset:layer.vehicle.marker.label.pixelOffset.getValue(),scale:layer.vehicle.marker.label.scale?.getValue(),shown:layer.vehicle.marker.label.show?.getValue(),depth:layer.vehicle.marker.label.disableDepthTestDistance.getValue()},null,2);});
+</script></html>

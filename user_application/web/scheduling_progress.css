@@ -1,0 +1,55 @@
+/* The word a day is built behind.
+   Two copies of the same text sit exactly on top of each other: a ghost that is
+   always there, and a copy clipped to how far along the run is. Clipping the
+   second one from the bottom is what makes the letters fill rather than a bar
+   beside them move — the progress is the word itself. */
+.scheduling{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:radial-gradient(120% 90% at 50% 42%,rgba(18,34,45,.88),rgba(5,9,13,.95) 68%);-webkit-backdrop-filter:blur(16px) saturate(.75);backdrop-filter:blur(16px) saturate(.75)}
+/* The tail of the g hangs below the baseline, and a line box of exactly 1em
+   ends at the baseline — so that tail fell outside the word's own box, below
+   where the fill starts, and was clipped away however full the word got. The
+   padding is the font's own descent, measured: 0.25em. */
+.sch-word{position:relative;display:block;line-height:1;font-size:clamp(48px,9vw,136px);font-weight:700;letter-spacing:.055em;padding:0 2px var(--sch-descent);user-select:none;--sch-descent:.25em}
+/* A faint fill as well as the stroke: a browser without text-stroke would
+   otherwise draw nothing at all where the word is. */
+.sch-ghost{display:block;color:#9fd8e61f;-webkit-text-stroke:1px #9fd8e640}
+.sch-fill{position:absolute;left:0;right:0;bottom:0;height:var(--fill,3%);overflow:hidden;transition:height .5s cubic-bezier(.4,0,.2,1)}
+/* The gradient is clipped to the glyphs, and a background only covers the box
+   it is painted on — so ink hanging below that box, which is exactly the tail
+   of the g, had no gradient to be clipped from and came out transparent. The
+   padding carries the background down past the baseline to cover the tail,
+   while the text itself still sits on the ghost's baseline: the two copies must
+   register exactly or the fill reads as a second, offset word. */
+.sch-fill-text{position:absolute;left:0;bottom:0;padding-bottom:var(--sch-descent);white-space:nowrap;background:linear-gradient(180deg,#e2f9fd,#6fcde1 52%,#2f9ec2);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 18px #58c6e055)}
+/* The waterline: a thin bright rule across the word at the level it reached. */
+.sch-line{position:absolute;left:-4%;right:-4%;bottom:var(--fill,3%);height:1px;background:linear-gradient(90deg,transparent,#9fe8f7cc 18%,#ffffffdd 50%,#9fe8f7cc 82%,transparent);opacity:.7;transition:bottom .5s cubic-bezier(.4,0,.2,1)}
+.sch-percent{margin:14px 0 0;font-size:14px;letter-spacing:.16em;color:#bfe0ea;font-variant-numeric:tabular-nums}
+.sch-figure{font-size:24px;font-weight:600;color:#eaf8fc;letter-spacing:.02em}
+.sch-unit{margin-left:3px;opacity:.55}
+.sch-message{margin:0;font-size:14px;color:#dceaf0;letter-spacing:.01em}
+.sch-note{margin:0;max-width:min(560px,80vw);font-size:12px;line-height:1.6;color:#9db3bd;text-align:center}
+.sch-note:empty{display:none}
+.sch-close{margin-top:14px}
+/* The stages, along the bottom: a chip each, lit as it runs, ticked as it is
+   done, and the time it took left under it so a slow stage is a number. */
+.sch-stages{position:absolute;left:50%;bottom:clamp(18px,5vh,44px);transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0;padding:0 16px;list-style:none;max-width:min(1100px,94vw);counter-reset:sch}
+.sch-stage{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:112px;padding:8px 12px 7px;border:1px solid #9fd8e626;border-radius:9px;background:#0b161d99;color:#8fa9b3;font-size:11px;letter-spacing:.02em;transition:border-color .3s,color .3s,background .3s}
+.sch-stage::before{counter-increment:sch;content:counter(sch);position:absolute;top:-8px;left:8px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#16303c;border:1px solid #9fd8e633;font-size:9px;line-height:16px;text-align:center;color:#9fd8e6}
+.sch-stage-label{font-weight:600}
+.sch-stage-meta{font-size:10px;font-variant-numeric:tabular-nums;color:#7f96a0;min-height:12px}
+.sch-stage[data-state=running]{border-color:#6fcde1aa;background:#12313d;color:#e6f8fc;box-shadow:0 0 0 1px #6fcde122,0 6px 18px #06131a66}
+.sch-stage[data-state=running] .sch-stage-meta{color:#9fe8f7}
+.sch-stage[data-state=done]{border-color:#7dd7a655;color:#c8f5d8}
+.sch-stage[data-state=done]::before{content:'✓';background:#1c3d2c;border-color:#7dd7a666;color:#9fe8b6}
+.sch-stage[data-state=done] .sch-stage-meta{color:#8fcfa8}
+.sch-stage[data-state=error]{border-color:#ff8a8a88;color:#ffc9c9}
+@media (max-height:560px){.sch-stages{display:none}}
+@media (prefers-reduced-motion:no-preference){.sch-stage[data-state=running]{animation:sch-stage-pulse 1.8s ease-in-out infinite}@keyframes sch-stage-pulse{0%,100%{box-shadow:0 0 0 1px #6fcde122}50%{box-shadow:0 0 0 1px #6fcde166,0 0 18px #6fcde133}}}
+.scheduling[data-state=done] .sch-message{color:#c8f5d8}
+.scheduling[data-state=error] .sch-fill-text{background:linear-gradient(180deg,#ffdede,#ef8f8f);-webkit-background-clip:text;background-clip:text}
+.scheduling[data-state=error] .sch-message{color:#ffc9c9}
+/* The fill is the reading, so it keeps moving under reduced motion; only the
+   decoration on the waterline is dropped. */
+@media (prefers-reduced-motion:no-preference){
+  .sch-line{animation:sch-shimmer 2.6s ease-in-out infinite}
+  @keyframes sch-shimmer{0%,100%{opacity:.4}50%{opacity:.95}}
+}

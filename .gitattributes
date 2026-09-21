@@ -10,3 +10,8 @@
 *.cmd text eol=crlf
 
 *.sln text eol=crlf
+
+# Runtime binary assets are versioned through Git LFS in clean AeroDT snapshots.
+*.glb filter=lfs diff=lfs merge=lfs -text
+*.onnx filter=lfs diff=lfs merge=lfs -text
+*.pt filter=lfs diff=lfs merge=lfs -text

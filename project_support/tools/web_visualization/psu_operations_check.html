@@ -1,0 +1,17 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>AeroDT PSU 협업 QA</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/app/styles.css">
+<style>body{--left-offset:406px;background:radial-gradient(ellipse at 65% 30%,#435d60,#182931);min-height:100vh}#qa-side{position:fixed;left:76px;top:18px;bottom:18px;width:330px;padding:14px;overflow:auto}#qa-tools{position:fixed;right:25px;top:20px;font-size:12px}#qa-tools button{font-size:11px}.qa-narrow .ops-console,.qa-narrow .vp-console{left:10px;right:auto;width:360px}.qa-narrow #qa-side{display:none}</style>
+</head><body><aside id="qa-side" class="glass"><h3>Stakeholders</h3><div id="panel"></div></aside>
+<div id="qa-tools">독립 공유 연습 검수 · 실제 비행 아님 <button id="narrow">360px 패널</button></div>
+<script type="module">
+import {OperationsSession} from '/app/operations_session.js';
+import {PsuPanel} from '/app/psu_panel.js';
+import {VertiportPanel} from '/app/vertiport_panel.js';
+import {StakeholderPanel} from '/app/stakeholder_panel.js';
+const records=await fetch('/fixture').then(r=>r.json()),session=new OperationsSession();
+const vp=new VertiportPanel({session,api:{list:async()=>records,weather:async()=>({points:[]})},onOpen:()=>psu.close()});
+const psu=new PsuPanel({session,onOpen:()=>vp.close()});
+const stakeholders=new StakeholderPanel({vertiportPanel:vp,psuPanel:psu});stakeholders.role='psu';stakeholders.render(document.querySelector('#panel'));
+document.querySelector('#narrow').onclick=()=>document.body.classList.toggle('qa-narrow');
+window.addEventListener('pagehide',()=>{vp.destroy();psu.destroy();session.destroy();},{once:true});
+</script></body></html>

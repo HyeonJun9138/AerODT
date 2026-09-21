@@ -1,0 +1,5 @@
+SpaceTwin 자체 제작
+
+
+Local project use only pending owner/provider permission review; not cleared for public redistribution.
+Changes: Original GLB bytes preserved.

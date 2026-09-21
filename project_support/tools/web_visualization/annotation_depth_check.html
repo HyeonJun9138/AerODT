@@ -1,0 +1,27 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>항로 주석 깊이 검사</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>html,body,#view{width:100%;height:100%;margin:0}nav{position:absolute;left:12px;top:12px;background:#ddd;padding:12px;z-index:2}button{padding:8px}pre{margin:8px 0}</style>
+<div id="view"></div><nav>실제 AirTaxi · 합성 위치 · 실시간 수집 없음<br>
+<button id="before">수정 전 (깊이 무시)</button><button id="after">수정 후</button><button id="hide">기체 숨기기</button><pre id="report">준비 중</pre></nav>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {RouteLayer} from '/visualization/route_layer.js';
+const C=Cesium,v=new C.Viewer('view',{baseLayer:false,globe:false,skyBox:false,skyAtmosphere:false,animation:false,timeline:false,baseLayerPicker:false,geocoder:false,homeButton:false,sceneModePicker:false,navigationHelpButton:false,selectionIndicator:false,infoBox:false});
+v.scene.backgroundColor=C.Color.fromCssColorString('#506779');
+const frame=C.Transforms.eastNorthUpToFixedFrame(C.Cartesian3.fromDegrees(126.94,37.526,1000));
+const at=(x,y,z)=>C.Matrix4.multiplyByPoint(frame,new C.Cartesian3(x,y,z),new C.Cartesian3());
+const model=await C.Model.fromGltfAsync({url:'/airtaxi.glb',modelMatrix:frame});v.scene.primitives.add(model);
+const layer=new RouteLayer(C,v),markers=[];
+// All three labels use the actual route label factory. Only the far marker is
+// behind the opaque fuselage; the foreground and side marker must survive.
+for(const [name,x,y,z,color] of [['BEHIND',0,8,.3,'#ff6060'],['FRONT',-1.5,-8,-.7,'#70ffb0'],['SIDE',7,5,0,'#ffffff']]) {
+ markers.push(v.entities.add({...layer.label(at(x,y,z),name,{size:22,color}),point:{pixelSize:10,color:C.Color.fromCssColorString(color),disableDepthTestDistance:0}}));
+}
+v.camera.lookAtTransform(frame,new C.Cartesian3(0,-22,2));
+let mode='fixed';
+function report(){document.querySelector('#report').textContent=JSON.stringify({mode,modelVisible:model.show,labelDepth:markers.map(e=>e.label.disableDepthTestDistance.getValue()),modelReady:model.ready},null,2);v.scene.requestRender();}
+document.querySelector('#before').onclick=()=>{mode='old';for(const e of markers){e.label.disableDepthTestDistance=Infinity;e.point.disableDepthTestDistance=Infinity;}report();};
+document.querySelector('#after').onclick=()=>{mode='fixed';for(const e of markers){e.label.disableDepthTestDistance=0;e.point.disableDepthTestDistance=0;}report();};
+document.querySelector('#hide').onclick=()=>{model.show=!model.show;report();};
+model.readyEvent.addEventListener(report);report();
+</script></html>

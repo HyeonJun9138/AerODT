@@ -1,0 +1,99 @@
+{
+  "title": "Kenney Blocky Person I — passenger prototype",
+  "representation": "representative",
+  "aliases": [
+    "passenger_prototype_i"
+  ],
+  "source": {
+    "provider": "Kenney",
+    "url": "https://kenney.nl/assets/blocky-characters",
+    "original_file": "Models/GLB format/character-i.glb",
+    "version": "2.0"
+  },
+  "rights": {
+    "label": "CC0-1.0",
+    "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "credit": "Kenney",
+    "public_export": true,
+    "note": "CC0 per included License.txt. Personal, educational and commercial use permitted."
+  },
+  "display": {
+    "scale_basis": "Original GLB coordinates retained; human height not calibrated.",
+    "browser_measured_extent": 2.7,
+    "proportion_basis": "Adult-proportioned boarding illustration; standing height normalized to 2.7 file units, rendered at 1.65–1.85 m. Original licensed model.glb retained.",
+    "native_height": 2.7,
+    "reference_height_m": 1.75
+  },
+  "conversion": {
+    "operation": "embed_texture",
+    "note": "Embedded the original PNG; positions, node transforms and animation channels unchanged."
+  },
+  "animation_clips": [
+    "static",
+    "idle",
+    "walk",
+    "sprint",
+    "sit",
+    "drive",
+    "die",
+    "pick-up",
+    "emote-yes",
+    "emote-no",
+    "holding-right",
+    "holding-left",
+    "holding-both",
+    "holding-right-shoot",
+    "holding-left-shoot",
+    "holding-both-shoot",
+    "attack-melee-right",
+    "attack-melee-left",
+    "attack-kick-right",
+    "attack-kick-left",
+    "interact-right",
+    "interact-left",
+    "wheelchair-sit",
+    "wheelchair-move-forward",
+    "wheelchair-move-back",
+    "wheelchair-move-left",
+    "wheelchair-move-right"
+  ],
+  "schema_version": 1,
+  "asset_id": "kenney_blocky_person_i",
+  "category": "people/civilian",
+  "purpose": "visual_only",
+  "model": {
+    "path": "boarding_model.glb",
+    "bytes": 128828,
+    "sha256": "d87052f591d598962aa74690b02dd6fa9f95bfca360d42fc93ae627b77c89065"
+  },
+  "geometry": {
+    "meshes": 6,
+    "materials": 1,
+    "animations": 27,
+    "skins": 0,
+    "required_extensions": [],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 72
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_sha256": "19ce59ce2b79fb39f0b53224040252660207dd5c01e3e6e3f43da71935fd8953",
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification."
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 7510,
+    "sha256": "659a05abe427147d5d2b5dcb392b021d1e0aeddd2ed37318d461ea4d06d2a105"
+  },
+  "original_model": {
+    "path": "model.glb",
+    "bytes": 127892,
+    "sha256": "19ce59ce2b79fb39f0b53224040252660207dd5c01e3e6e3f43da71935fd8953"
+  }
+}

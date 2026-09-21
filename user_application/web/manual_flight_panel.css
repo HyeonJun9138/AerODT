@@ -1,0 +1,54 @@
+.manual-flight-panel{position:fixed;inset:0;z-index:40;pointer-events:none;color:#dcebf3;font:12px 'Segoe UI','Malgun Gothic',sans-serif}
+.manual-toolbar{pointer-events:auto;background:var(--chrome-surface,#556067);border:1px solid #95b6c14d;border-radius:12px;box-shadow:0 8px 28px #0003}
+.manual-toolbar{width:max-content;position:absolute;top:80px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;padding:10px 14px;max-width:calc(100vw - 40px);flex-wrap:wrap}.manual-toolbar button,.manual-toolbar select{font:inherit;color:inherit;background:#ffffff08;border:1px solid #95b6c14d;border-radius:6px;padding:7px 10px}.manual-toolbar [aria-pressed=true]{background:#99e5d622;border-color:#99e5d6}.manual-status{font-size:11px;color:#b4cbd6}.manual-toolbar :focus-visible{outline:2px solid #99e5d6;outline-offset:2px}
+
+/* Compact controls: two selectors, resume/exit, with a separate quiet status line. */
+.manual-toolbar{top:70px;gap:6px;padding:8px 12px;max-width:min(580px,calc(100vw - 180px));justify-content:center}
+
+.manual-flight-panel{--manual-left:var(--rail-width,76px);left:var(--manual-left);right:0;top:0;bottom:0;outline:none}
+body[data-focus] .manual-flight-panel{--manual-left:0px}
+.manual-toolbar{left:50%;top:64px;box-sizing:border-box;width:max-content;max-width:calc(100% - 32px);overflow:visible}
+.manual-toolbar select{color-scheme:dark;background:#263b47;color:#f2f6f8;min-height:34px;cursor:pointer}
+.manual-toolbar select option{background:#263b47;color:#f2f6f8}
+
+
+/* One control carrying the state and, when there is one, the way out of it.
+   The dot is the glance; the word is the answer; pressing it is the fix. */
+.manual-state{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border-radius:999px;
+  border:1px solid #95b6c14d;background:#ffffff08;color:inherit;font:inherit;line-height:1;white-space:nowrap}
+.manual-state[aria-disabled=true]{cursor:default}
+.manual-state[aria-disabled=false]{cursor:pointer}
+.manual-state[aria-disabled=false]:hover{background:#ffd79a26;border-color:#ffcf7acc}
+.manual-badge{font-size:9px;font-weight:700;letter-spacing:1.3px;color:#9fbecb}
+.manual-dot{width:7px;height:7px;border-radius:50%;background:#8aa2ae;flex:none}
+/* A fixed box for the word. '조작 중' is wider than '재개', and letting the
+   chip breathe with it re-laid the whole action row every time the state
+   changed -- the strip flipped between one line and two while flying. */
+.manual-status{font-size:11px;color:#dceaf2;font-variant-numeric:tabular-nums;min-width:3.6em;text-align:center}
+.manual-state[data-state=active]{border-color:#7ee3c466;background:#7ee3c418}
+.manual-state[data-state=active] .manual-dot{background:#7ee3c4;box-shadow:0 0 8px #7ee3c480}
+.manual-state[data-state=active] .manual-status{color:#9defd2}
+.manual-state[data-state=held]{border-color:#ffcf7a8c;background:#ffcf7a1f}
+.manual-state[data-state=held] .manual-dot{background:#ffcf7a;box-shadow:0 0 8px #ffcf7a66}
+.manual-state[data-state=held] .manual-status{color:#ffdda6;font-weight:600}
+.manual-state[data-state=linking] .manual-dot,.manual-state[data-state=preparing] .manual-dot{background:#8fd0e6}
+.manual-state[data-state=linking] .manual-status,.manual-state[data-state=preparing] .manual-status{color:#b9dff0}
+.manual-state[data-state=closed] .manual-status{color:#a8b9c2}
+.manual-toolbar .manual-exit{color:#e8b6ae;border-color:#c9857c3d}
+.manual-toolbar .manual-exit:hover{background:#e0867c24;border-color:#e0867c8c;color:#ffd2ca}
+
+/* The joystick gear. Only present while a stick is the input source, so the
+   strip keeps the width it was measured at for everyone else. */
+.manual-toolbar .manual-tune{padding:6px 9px;line-height:1;font-size:13px;min-height:34px}
+.manual-toolbar .manual-tune[hidden]{display:none}
+.manual-toolbar .manual-tune[data-alert=true]{border-color:#e0867c8c;color:#ffd2ca;background:#e0867c24}
+@media(max-height:540px){.manual-toolbar{top:44px}}
+
+/* Before the cockpit is entered the strip has no dashboard to live in, so it
+   floats at the top -- which is exactly where the day's console sits. The
+   console already measures itself for everything else that wants that line. */
+body[data-scenario-console] .manual-toolbar{top:calc(var(--scenario-console-height,160px) + 78px)}
+
+.manual-locate{position:fixed;right:18px;top:100px;z-index:46;display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid #6fffe080;border-radius:9px;background:#163c3dee;color:#9dffe8;font:600 12px 'Segoe UI','Malgun Gothic',sans-serif;box-shadow:0 4px 16px #0004;cursor:pointer}
+.manual-locate[hidden]{display:none!important}.manual-locate:hover{background:#205653}.manual-locate:focus-visible{outline:2px solid #6fffe0;outline-offset:3px}
+@media(max-width:600px){.manual-locate{top:76px;right:10px;padding:9px 11px}}

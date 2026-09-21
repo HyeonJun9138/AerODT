@@ -1,0 +1,101 @@
+{
+  "title": "GNSS 항법위성",
+  "source": {
+    "provider": "spacetwin",
+    "url": "",
+    "revision": null,
+    "imported_from": "icdcdt",
+    "original_file": "gnss_bus.glb"
+  },
+  "rights": {
+    "label": "Project owner/provider review",
+    "credit": "SpaceTwin 자체 제작",
+    "url": "",
+    "public_export": false,
+    "note": "Local project use only pending owner/provider permission review; not cleared for public redistribution."
+  },
+  "representation": "generic",
+  "aliases": [
+    {
+      "key": "gnss_bus",
+      "label": "GNSS 항법위성",
+      "exact": {
+        "norad": [],
+        "names": []
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": [
+          "^NAVSTAR",
+          "^GPS\\b",
+          "GLONASS",
+          "^BEIDOU",
+          "^GSAT",
+          "^GALILEO",
+          "^IRNSS",
+          "^NVS-",
+          "^QZS"
+        ]
+      },
+      "size_m": 14,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 14
+    }
+  ],
+  "display": {
+    "native_extent": 14,
+    "reference_extent_m": 14,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 14
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "gnss_bus",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 43068,
+    "sha256": "caa606c93deae3608a8a7ddb2a66c88d266f9bf11b838e56df47a7f6130e5c7e"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 6,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 712
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "caa606c93deae3608a8a7ddb2a66c88d266f9bf11b838e56df47a7f6130e5c7e"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 5039,
+    "sha256": "1993a6d5a21e1fa583629d2d5c49886643bd70c55d4e3c9af51a4b8a52f9e585"
+  }
+}

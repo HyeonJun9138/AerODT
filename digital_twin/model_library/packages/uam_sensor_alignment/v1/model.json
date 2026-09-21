@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "model_id": "uam_covariance_alignment_v1",
+  "label": "센서 정렬 · 공분산 상태 추정",
+  "kind": "analytical",
+  "reference": "https://www.cs.unc.edu/~welch/media/pdf/kalman_intro.pdf",
+  "defaults": {
+    "enabled": true,
+    "coast_seconds": 2,
+    "gate_sigma": 5,
+    "attitude_seconds": 0.12,
+    "max_sigma_m": 20,
+    "max_alignment_skew_s": 0.5
+  },
+  "process_variance": {
+    "parked": 0.1,
+    "gate_out": 0.5,
+    "gate_in": 0.5,
+    "charge": 0.1,
+    "cruise": 1,
+    "hold": 4,
+    "default": 9
+  },
+  "reacquire_samples": 3,
+  "ground_constraints": {
+    "acquire_seconds": 1.5,
+    "acquire_speed_mps": 0.45,
+    "release_speed_mps": 0.65,
+    "max_angular_rate_radps": 0.015,
+    "max_sample_age_s": 2,
+    "hold_grace_s": 6,
+    "surface_gate_m": 8,
+    "attitude_gate_deg": 1.25,
+    "attitude_gate_sigma": 4,
+    "motion_confirm_samples": 3,
+    "position_gate_sigma": 4,
+    "minimum_position_gate_m": 2
+  },
+  "attitude_max_rate_dps": 150,
+  "expiry_seconds": 30
+}

@@ -1,0 +1,95 @@
+{
+  "title": "1U 큐브샛 (일반형)",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/CubeSat - 1 RU Generic/CubeSat - 1 RU Generic.glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "cubesat_1u.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "generic",
+  "aliases": [
+    {
+      "key": "cubesat_1u",
+      "label": "1U 큐브샛 (일반형)",
+      "exact": {
+        "norad": [],
+        "names": []
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": [
+          "\\b1U\\b"
+        ]
+      },
+      "size_m": 0.25,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 5.192776
+    }
+  ],
+  "display": {
+    "native_extent": 5.192776,
+    "reference_extent_m": 0.25,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 5.1927759647369385
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "cubesat_1u",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 149424,
+    "sha256": "bae308ea2e33778c93675909f7dc2e0d5d6916cd685668a463566c61224b1e85"
+  },
+  "geometry": {
+    "meshes": 1,
+    "materials": 18,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 23570
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "bae308ea2e33778c93675909f7dc2e0d5d6916cd685668a463566c61224b1e85"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 11856,
+    "sha256": "29e059a4f82ebc90e47fc07d35379a9d3cc7835373ae756de513722471ace0ba"
+  }
+}

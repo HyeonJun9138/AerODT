@@ -1,0 +1,67 @@
+{
+  "joby_s4": {
+    "binary_length": 405064,
+    "binary_sha256": "71194f5a188a5cf53f5d149c14d3fa55c6aa95dbf5aad6ca388ca2cac46f8f29",
+    "node_count": 36,
+    "nodes_sha256": "3432c5efebcc9a4c1f594c7f229eb3d7fe0a7e99e9d131117d88c95b24cf3261",
+    "mesh_count": 28,
+    "meshes_sha256": "11426328e15ce02a2d4054905e672e315b1d0f99b4c3d31ceda44110c39c423f",
+    "source_sha256": "0f73ce4a33c724dd80ee67e40eb8bdb7a1c0907f6b0e53eee470d1e3edd6a682",
+    "kp2_materials_sha256": null,
+    "material_count": 6
+  },
+  "projectairsim_airtaxi": {
+    "binary_length": 8147616,
+    "binary_sha256": "d2b2501b65d4e76ec607bc731913acabe6f74e2fec621bce630e422a5a6b3620",
+    "node_count": 9,
+    "nodes_sha256": "4c6bf7c5d7b3213fdb01bc8bde8ba6e2e9290f4be453ee7912be6e55eb53c356",
+    "mesh_count": 3,
+    "meshes_sha256": "7300eb47a8e5037c4168d42f952f0c1b9add84dbffc9d1b9af335a0861846c56",
+    "source_sha256": "f952934ade8037dd3df433159d531c829a8d5280ac0721ba1788ded6fbb4a1af",
+    "kp2_materials_sha256": null,
+    "material_count": 2
+  },
+  "kp2a": {
+    "binary_length": 5153424,
+    "binary_sha256": "264aadb60cf5953815c64ba47208dfca341362542648b49b9d4ec8e7ec069c24",
+    "node_count": 127,
+    "nodes_sha256": "b2256b6bfae9b2e1eedfb17c560768ea144d0accadc0894a727ee5e079e0dd8f",
+    "mesh_count": 29,
+    "meshes_sha256": "18e433b9d732a1171f42e265e595efc3837433aacb892a526b9f4edf9ce3d0a2",
+    "source_sha256": "86ed3f279648204da03017b02f9907ec45f994052434b5ffe122f6b665814c90",
+    "kp2_materials_sha256": "becd931adcab476e2bf36f2893e870f7fc087aa008c78b133d9b570796e869cd",
+    "material_count": 21
+  },
+  "amvlab_evtol": {
+    "binary_length": 277268,
+    "binary_sha256": "17c25aa5c87119eaf78bf33ba01066c0b61ad7706bd68a121d9c40d15fc07392",
+    "node_count": 28,
+    "nodes_sha256": "51def7c400acd394a8099740a444a5fccd39de620501d716ff1fad6789ad24f7",
+    "mesh_count": 19,
+    "meshes_sha256": "8ebc28a106334f120fb09b13fa797f5aafe4e8bb288c8bce0704535802b6729a",
+    "source_sha256": "fb6e73357e2b5c68d49c42f2726f7a8b985b91e5fe1680cd438d2ccab77191ba",
+    "kp2_materials_sha256": null,
+    "material_count": 1,
+    "partitioned_primitive": {
+      "attributes": {
+        "POSITION": 54,
+        "NORMAL": 55,
+        "TEXCOORD_0": 56
+      },
+      "mode": 4,
+      "material": 0,
+      "indices": 14
+    }
+  },
+  "x_57": {
+    "binary_length": 2723880,
+    "binary_sha256": "ac47c98a00ab9b8ca50084b39102ee44d347c7fc18acdf6cd6cf5367c1337168",
+    "node_count": 26,
+    "nodes_sha256": "4cc8868989840f71de88d87311189ed7077271f3dd86fb017f29fb4828006d9a",
+    "mesh_count": 23,
+    "meshes_sha256": "d50d0d3d6a315b63cea5931d8b80b334ec1363a67e580c24874cefc75368e8c2",
+    "source_sha256": "f7e36ef23425ab2aae808a2f19883b8d52a5c8b46fb7d92deb3449431f04333a",
+    "kp2_materials_sha256": null,
+    "material_count": 5
+  }
+}

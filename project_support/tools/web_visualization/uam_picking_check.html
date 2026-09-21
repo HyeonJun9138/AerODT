@@ -1,0 +1,59 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>UAM 선택 범위 검증 — 시험 데이터</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<style>html,body,#view{margin:0;width:100%;height:100%;overflow:hidden;background:#101d25;color:white;font:13px sans-serif}#tools{position:fixed;z-index:10;top:12px;left:12px;max-width:480px;background:#10242fe8;padding:14px;border-radius:12px}button{padding:8px;margin:4px;cursor:pointer}pre{white-space:pre-wrap;max-height:340px;overflow:auto}#target{position:fixed;border:1px solid #fd4;width:8px;height:8px;pointer-events:none;border-radius:50%;transform:translate(-50%,-50%)}</style>
+<div id="view"></div><div id="target"></div><section id="tools"><b>시험 UAM / 운항 상태 변경 없음</b><br>
+<button id="small">작은 UAM 경계 검사</button><button id="large">3D 모델 외곽 검사</button><button id="blocked">가려진 UAM 검사</button><button id="map">2D 경계 검사</button><pre id="out">준비 중</pre></section>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {LiveGlobe} from '/visualization/globe.js?v=20260911-uam-picking';
+const C=Cesium,out=document.getElementById('out'),target=document.getElementById('target'),errors=[],reports=[];
+addEventListener('error',e=>errors.push(String(e.message)));addEventListener('unhandledrejection',e=>errors.push(String(e.reason)));
+let hovered=null,clicked=null;
+const g=new LiveGlobe(C,'view',{terrainEnabled:false,onWarning:m=>errors.push(m),onHover:e=>hovered=e?.entity_id??null});
+g.setBuildingsEnabled(false);g.setSunEnabled(false);
+const catalog=await (await fetch('/api/visual-assets')).json();g.setAssets(catalog);
+const pos=C.Cartesian3.fromDegrees(126.978,37.5665,100),t=Date.now()/1000;
+g.replace({sequence:1,state_time:t,entities:[{entity_id:'qa:uam',kind:'uam',source:'scenario',name:'TEST UAM',quality:'valid',state_time:t,observation_time:t,received_time:t,latitude_deg:37.5665,longitude_deg:126.978,altitude_m:100,position_ecef_m:[pos.x,pos.y,pos.z],velocity_ecef_mps:[0,0,0],heading_deg:0,flight_phase:'parked',visual_asset_id:'joby_s4'}]});
+g.select=id=>clicked=id; // Test only the actual click resolver, without starting a camera flight.
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const project=p=>C.SceneTransforms.worldToWindowCoordinates(g.viewer.scene,p);
+let obstacle;
+function output(report){reports.push(report);out.textContent=JSON.stringify({reports,errors},null,2);}
+async function setup(models){
+ g.clearHover();
+ if(obstacle){g.viewer.entities.remove(obstacle);obstacle=null;}
+ g.setLayerVisible('uam',true);g.entityScene.setDisplayOptions('uam',{models,labels:false,status:false});
+ if(!g.is2D())g.viewer.camera.setView({destination:C.Cartesian3.fromDegrees(126.978,37.5665,models?200:1600),orientation:{heading:0,pitch:-Math.PI/2,roll:0}});
+ await wait(600);g.entityScene.updateLod(null,performance.now());await wait(600);
+}
+async function small(){
+ await setup(false);const item=g.items.get('qa:uam'),p=project(item.position),tests=[];
+ for(const dx of [0,20,25,26,35]){const point=new C.Cartesian2(p.x+dx,p.y);clicked=null;g.handleClick(point);tests.push({dx,selected:clicked});}
+ const point=new C.Cartesian2(p.x+24,p.y);g.hoverPointer=point;g.hoverDirty=true;target.style.left=`${point.x}px`;target.style.top=`${point.y}px`;
+ await wait(300);output({mode:g.is2D()?'2D':'glyph',tests,hovered,sceneHovered:g.entityScene.hoveredId,canvas:[g.viewer.canvas.clientWidth,g.viewer.canvas.clientHeight],drawingBuffer:[g.viewer.scene.drawingBufferWidth,g.viewer.scene.drawingBufferHeight]});
+}
+document.getElementById('small').onclick=small;
+document.getElementById('map').onclick=async()=>{await g.setSceneMode('2d');g.viewer.camera.setView({destination:C.Cartesian3.fromDegrees(126.978,37.5665,2200)});await wait(1000);await small();};
+document.getElementById('large').onclick=async()=>{
+ if(g.is2D()){await g.setSceneMode('3d');await wait(1200);}await setup(true);
+ const item=g.items.get('qa:uam');for(let n=0;n<80&&!item.model?.ready;n++)await wait(100);
+ if(!item.model?.ready){output({mode:'model',ready:false});return;}
+ obstacle=g.viewer.entities.add({id:'vertiport:qa:deck',polygon:{hierarchy:C.Cartesian3.fromDegreesArray([126.977,37.5655,126.979,37.5655,126.979,37.5675,126.977,37.5675]),height:10,material:C.Color.DARKSLATEGRAY}});
+ for(const ratio of [.5,1,2]){
+  g.clearHover();g.displayResolution.applyMotion=()=>g.viewer.resolutionScale=ratio;
+  await wait(500);const p=project(item.model.boundingSphere.center),scene=g.viewer.scene;let edge=null;
+  for(let dx=0;dx<Math.min(380,scene.canvas.clientWidth/2-40);dx+=4){const hit=scene.pick(new C.Cartesian2(p.x+dx,p.y),1,1);if(hit?.id==='qa:uam')edge=dx;}
+  const point=new C.Cartesian2(p.x+edge+20,p.y);clicked=null;g.handleClick(point);g.hoverPointer=point;g.hoverDirty=true;
+  target.style.left=`${point.x}px`;target.style.top=`${point.y}px`;await wait(300);
+  const narrow=scene.pick(point,15,15)?.id;
+  output({mode:'model over deck',ratio,ready:true,edge,extra:20,narrow:typeof narrow==='string'?narrow:narrow?.id??null,selected:clicked,hovered,sceneHovered:g.entityScene.hoveredId,silhouette:item.model.silhouetteSize,drawingBuffer:[scene.drawingBufferWidth,scene.drawingBufferHeight]});
+ }
+ g.displayResolution.applyMotion=()=>g.viewer.resolutionScale=1;
+};
+document.getElementById('blocked').onclick=async()=>{
+ if(g.is2D()){await g.setSceneMode('3d');await wait(1200);}await setup(false);
+ obstacle=g.viewer.entities.add({id:'qa:opaque-building',position:C.Cartesian3.fromDegrees(126.978,37.5665,250),box:{dimensions:new C.Cartesian3(70,70,50),material:C.Color.DARKSLATEGRAY}});
+ await wait(500);const p=project(g.items.get('qa:uam').position),point=new C.Cartesian2(p.x+24,p.y);clicked=null;g.handleClick(point);output({mode:'occluded',selected:clicked});
+};
+out.textContent='준비 완료';
+</script></html>

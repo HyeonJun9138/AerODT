@@ -1,0 +1,32 @@
+#welcome .welcome-center{width:min(720px,88vw)}
+#welcome[data-phase="ready"] .welcome-content{transform:none}
+#welcome[data-phase="leaving"] .welcome-content{opacity:0;transform:translateY(-8px) scale(.985);animation:none;transition:opacity .42s ease,transform .42s ease}
+#welcome[data-phase="leaving"]::backdrop{opacity:0;animation:none;transition:opacity .42s ease}
+.domain-choices{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:30px 0}
+.domain-choices button{display:flex;flex-direction:column;gap:14px;min-height:150px;padding:24px;border:1px solid #56768c;border-radius:12px;background:linear-gradient(135deg,#172b3e,#0c1b29);text-align:left;color:#dceefa;cursor:pointer;font:inherit}
+.domain-choices button:hover{border-color:#7bded1;background:#1c3a4a}
+.domain-choices button:focus-visible{outline:3px solid #7bded1;outline-offset:5px}
+.domain-choices strong{font-size:25px;letter-spacing:.02em}
+.domain-choices small{line-height:1.8;color:#a9c3d4}
+.domain-choices button:disabled{opacity:.5;cursor:wait}
+#domain-badge{position:fixed;top:var(--edge);right:var(--edge);z-index:6;box-sizing:border-box;min-height:var(--top-bar);padding:0 18px;border-radius:var(--top-bar-radius);color:#e2edf1;font-family:inherit;font-size:12px;font-weight:600;line-height:1.4;cursor:pointer;transition:filter .18s ease}
+#domain-badge:hover{filter:brightness(1.1)}
+#domain-badge:focus-visible{outline:2px solid #c0dce8;outline-offset:3px}
+#domain-badge[hidden]{display:none}
+@media(max-width:700px){#domain-badge{top:68px;min-height:38px;padding:0 14px;font-size:11px}}
+
+/* One cheap composited veil reveals the already-running Cesium scene. It does
+   not reload terrain, entities or models just to animate domain entry. */
+#domain-reveal{position:fixed;inset:0;z-index:9;background:#080e13;opacity:0;pointer-events:none}
+#domain-reveal[data-phase="covered"]{opacity:1;transition:none}
+#domain-reveal[data-phase="revealing"]{opacity:0;transition:opacity .95s cubic-bezier(.22,.61,.36,1)}
+#domain-reveal[hidden]{display:none}
+
+.satellite-workspace{box-sizing:border-box;height:100%;overflow:auto;padding:22px;background:#142635;color:#d6eaf5;font:13px/1.8 sans-serif}
+.satellite-workspace small{color:#7ddccb;letter-spacing:.15em}
+.satellite-workspace h2{margin-top:6px}
+body[data-domain=satellite] [data-domain-only=uam]{display:none!important}
+body[data-domain=uam] [data-domain-only=satellite]{display:none!important}
+[data-domain-only][hidden]{display:none!important}
+@media(max-width:540px){.domain-choices{grid-template-columns:1fr;gap:10px}.domain-choices button{min-height:100px;padding:16px}#welcome .welcome-content{padding:25px 18px}#welcome-title{font-size:45px}}
+@media(prefers-reduced-motion:reduce){#welcome[data-phase="leaving"] .welcome-content,#welcome[data-phase="leaving"]::backdrop,#domain-reveal[data-phase="revealing"]{transition-duration:.01ms;transform:none}}

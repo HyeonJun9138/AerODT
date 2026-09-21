@@ -1,0 +1,97 @@
+{
+  "title": "IBEX",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Interstellar Boundary Explorer (IBEX)/Interstellar Boundary Explorer (IBEX).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "ibex.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "ibex",
+      "label": "IBEX",
+      "exact": {
+        "norad": [
+          33401
+        ],
+        "names": [
+          "^IBEX"
+        ]
+      },
+      "series": {
+        "norad": [],
+        "names": []
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 1,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 1.526959
+    }
+  ],
+  "display": {
+    "native_extent": 1.526959,
+    "reference_extent_m": 1,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 1.52695889672578
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "ibex",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 1306616,
+    "sha256": "6ce15c60467673f599c7085ed5152a07d0335628109741848ce64835e3786406"
+  },
+  "geometry": {
+    "meshes": 5,
+    "materials": 5,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 8976
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 3,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "6ce15c60467673f599c7085ed5152a07d0335628109741848ce64835e3786406"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 11697,
+    "sha256": "dcb86932d465cb32887d0b55e533b1090a8f73e1ad0104164bcfd6359cbc1201"
+  }
+}

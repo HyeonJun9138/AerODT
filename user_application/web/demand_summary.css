@@ -1,0 +1,100 @@
+/* The window that says what is about to be generated. It stands immediately
+   beside the settings it is summarising rather than across the map, so the
+   operator can change a step and read the result without their eyes crossing
+   the whole screen. It follows the drawer the way every other left-anchored
+   panel does, so opening or closing that does not leave it stranded. */
+.demand-summary{position:fixed;top:calc(var(--top-bar) + var(--edge) + 8px);
+  left:calc(var(--left-offset) + var(--edge));transition:left .22s ease;
+  width:min(460px,calc(100vw - var(--left-offset) - var(--edge) * 2));
+  max-height:calc(100vh - var(--top-bar) - var(--edge) * 3);z-index:6;
+  display:flex;flex-direction:column;color:#e9f1f5;font-size:12px;
+  border:1px solid var(--glass-border);border-radius:12px;background:var(--panel-glass);
+  box-shadow:inset 0 1px 0 #ffffff12,0 12px 38px #0d161d66;
+  -webkit-backdrop-filter:blur(14px) saturate(.8);backdrop-filter:blur(14px) saturate(.8);
+  font-variant-numeric:tabular-nums}
+
+.ds-header{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 16px;border-bottom:1px solid #9cbcca1f}
+.ds-eyebrow{display:block;font-size:9px;font-weight:650;letter-spacing:1.6px;color:#94cddc}
+.ds-header strong{font-size:15px;font-weight:650}
+/* A column rather than a grid: as a scrolling grid the rows were squeezed and
+   the first block came out zero tall with its contents clipped away. */
+.ds-body{flex:1;min-height:0;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:16px}
+.ds-body>*{flex:none}
+
+.ds-figures{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:#9cbcca1f;
+  border-radius:9px;overflow:hidden}
+.ds-figure{display:grid;gap:1px;padding:9px 12px;background:#2f4d5e}
+.ds-figure span{font-size:9px;font-weight:650;letter-spacing:1.1px;color:#94cddc}
+.ds-figure strong{font-size:17px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ds-figure[data-wide=true] strong{font-size:12px;letter-spacing:-.1px}
+.ds-figure small{font-size:10px;color:#a9bfcb}
+
+.ds-block{display:flex;flex-direction:column;gap:7px}
+.ds-block h3{margin:0;font-size:11px;font-weight:650;letter-spacing:.6px;color:#dcecf3}
+.ds-note{margin:0;font-size:10px;line-height:1.5;color:#8fa6b3}
+.ds-warn{margin:0;font-size:10px;line-height:1.5;color:#ffd166}
+.ds-empty{margin:0;font-size:11px;color:#8fa6b3}
+.ds-key{display:inline-block;margin-right:6px;padding:1px 6px;border-radius:999px;font-weight:650}
+.ds-key-departure{background:#7fe9f52e;color:#a9f0fa}
+.ds-key-arrival{background:#5fd6a42e;color:#a7ecce}
+
+/* One row per deck, both directions on it: "sends a lot but receives little" is
+   the thing worth seeing, and two separate lists hide it. The bars are drawn
+   against the biggest share rather than against 100%, because with seventeen
+   decks every bar would otherwise be a sliver. */
+.ds-bars,.ds-pairs,.ds-fleet,.ds-problems{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.ds-bar-row{display:grid;grid-template-columns:64px 1fr 1fr;gap:6px;align-items:center;
+  padding:4px 6px;border-radius:6px;background:#2d4b5c26}
+.ds-bar-row[data-changed=true]{background:#ffd1660f;box-shadow:inset 2px 0 0 #ffd16688}
+.ds-bar-row[data-off=true]{opacity:.5}
+.ds-bar-name{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ds-bar{position:relative;display:flex;align-items:center;height:16px;border-radius:4px;
+  background:#7fa9bd1f;overflow:hidden}
+.ds-bar-fill{display:block;height:100%;border-radius:4px}
+.ds-bar-departure{background:linear-gradient(90deg,#4fb9cc,#7fe9f5)}
+.ds-bar-arrival{background:linear-gradient(90deg,#3fae86,#5fd6a4)}
+.ds-bar-pair{background:linear-gradient(90deg,#5a7fd6,#9cb4f5)}
+.ds-bar b{position:absolute;right:5px;font-size:9px;font-weight:650;color:#0d1a20;mix-blend-mode:screen}
+.ds-pair-row{display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:center;
+  padding:4px 6px;border-radius:6px;background:#2d4b5c26;font-size:11px}
+.ds-pair-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ds-pair-row b{font-size:11px;font-weight:650;color:#cfe2ea;min-width:52px;text-align:right}
+.ds-fleet li{display:flex;justify-content:space-between;gap:8px;padding:4px 6px;border-radius:6px;
+  background:#2d4b5c26;font-size:11px}
+.ds-fleet-more{color:#8fa6b3;justify-content:flex-start}
+
+.ds-block-problem{padding:9px 11px;border-radius:9px;border:1px solid #ff6b6b48;background:#ff6b6b12}
+.ds-block-problem h3{color:#ffc9c9}
+.ds-problems li{font-size:11px;color:#ffd7d7;padding-left:12px;position:relative}
+.ds-problems li::before{content:'·';position:absolute;left:3px}
+
+.ds-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:11px 16px;border-top:1px solid #9cbcca1f}
+.ds-footer-end{display:flex;gap:6px}
+.ds-footer button{font:inherit;color:#dcecf3;background:#2d4b5c4d;border:1px solid #9cbcca33;
+  border-radius:8px;padding:7px 14px;cursor:pointer;white-space:nowrap;
+  transition:background .15s ease,border-color .15s ease}
+.ds-footer button:hover:not(:disabled){background:#3a607666;border-color:#9cbcca55}
+.ds-footer button:disabled{opacity:.45;cursor:default}
+.ds-run{background:#5fd6a42e !important;border-color:#5fd6a466 !important;color:#bff5dd !important;
+  font-weight:650}
+.ds-run:hover:not(:disabled){background:#5fd6a444 !important}
+.ds-save{font-size:11px}
+
+/* The per-deck weights in the settings panel: a number to set and a bar showing
+   what it comes to once every deck is counted. */
+.dm-row-weight{display:grid;grid-template-columns:1fr 96px 96px;gap:8px;align-items:center}
+.dm-row-weight.dm-row-head{font-size:9px;font-weight:650;letter-spacing:1.1px;color:#94cddc}
+.dm-row-weight[data-changed=true]{box-shadow:inset 2px 0 0 #ffd16688}
+.dm-row-weight[data-state=off]{opacity:.55}
+.dm-weight-cell{display:grid;gap:3px}
+.dm-weight-cell input{width:100%}
+.dm-weight-bar{display:block;height:4px;border-radius:2px;background:#7fa9bd24;overflow:hidden}
+.dm-weight-fill{display:block;height:100%;border-radius:2px;background:linear-gradient(90deg,#4fb9cc,#7fe9f5)}
+.dm-weight-share{color:#8fa6b3}
+
+@media (max-width:1400px){
+  .demand-summary{width:min(400px,calc(100vw - var(--left-offset) - var(--edge) * 2))}
+  .ds-bar-row{grid-template-columns:56px 1fr 1fr}
+}

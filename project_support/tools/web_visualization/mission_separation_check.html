@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>비행계획 분리 검증</title><link rel="stylesheet" href="/web/styles.css">
+<style>
+body{overflow:auto;padding:24px;background:#172431}main{width:min(100%,420px);margin:auto;padding:18px;font-size:12px;line-height:1.6}
+#qa-status{white-space:pre-wrap;overflow-wrap:anywhere;color:#b9e6f2}h1{font-size:18px}
+</style></head><body><main class="glass"><h1>비행계획 분리 검증</h1>
+<p>독립 시험 데이터 / 운영 서버 변경 없음</p><output id="qa-status">계획 0 / 실행 0 / 지도 전달 0</output><div id="panel"></div></main>
+<script type="module">
+import {PlanPanel} from '/web/plan_panel.js';
+let preparations=0,executions=0,displayed=0;
+const update=()=>document.querySelector('#qa-status').textContent=`계획 ${preparations} / 실행 ${executions} / 지도 전달 ${displayed}`;
+async function request(url,body){
+  const response=await fetch(url,body ? {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)} : {});
+  const data=await response.json();if(!response.ok)throw Object.assign(new Error('request failed'),{data});return data;
+}
+const panel=new PlanPanel({api:{options:()=>request('/api/simulation/plans/options'),
+  prepare:async body=>{const result=await request('/api/simulation/plans',body);preparations++;update();return result;},
+  fly:async body=>{const result=await request('/api/simulation/runs',{...body,rate_hz:5});executions++;update();return result;}},
+  deckTop:()=>20,groundHeights:async points=>points.map(()=>0),onPlan:()=>{displayed++;update();}});
+await panel.render(document.querySelector('#panel'));
+</script></body></html>

@@ -1,0 +1,35 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>TEST — 첫 렌더 프레임</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Widgets/widgets.css">
+<link rel="stylesheet" href="/static/loading.css">
+<style>body{margin:0}#view{position:fixed;inset:0}aside{position:fixed;z-index:101;top:12px;left:12px;background:#14232de8;color:white;padding:12px;font:12px sans-serif;max-width:90vw}pre{white-space:pre-wrap}button,a{margin:8px;color:inherit}#loading{pointer-events:none}#loading-progress{font-size:32px}</style>
+<div id="view"></div><div id="loading"><div><div id="loading-progress">AERODT</div><p id="loading-step">검증용 로딩</p><button id="retry">재시도</button></div></div>
+<aside>TEST — 실제 LiveGlobe의 첫 프레임 / 외부 실시간 자료 없음<br><button id="run">시작 전환 검증</button><a href="?reduced=1">모션 줄임 검증</a><a href="?reduced=0">기본 검증</a><pre id="result">첫 렌더 기다리는 중</pre></aside>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.143/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import {LiveGlobe} from '/visualization/globe.js';
+import {LoadingScreen} from '/static/loading_screen.js';
+const reducedMotion=new URLSearchParams(location.search).get('reduced')==='1';
+const g=new LiveGlobe(Cesium,'view',{terrainEnabled:false,reducedMotion}),root=document.getElementById('loading'),result=document.getElementById('result');
+g.viewer.scene.globe.baseColor=Cesium.Color.fromCssColorString('#34718e');
+const loading=new LoadingScreen({root,progress:document.getElementById('loading-progress'),status:document.getElementById('loading-step'),retry:document.getElementById('retry')});
+let started=false,firstFrame=null,firstFadeFrame=null,beforeMin=Infinity,frames=0,error=null;
+g.viewer.scene.renderError.addEventListener((_s,e)=>{error=e.message;result.textContent=error;});
+const remove=g.viewer.scene.postRender.addEventListener(()=>{
+ const height=g.viewer.camera.positionCartographic.height;frames++;
+ if(firstFrame===null){firstFrame=height;result.textContent=JSON.stringify({reducedMotion,firstFrame});}
+ if(!started)beforeMin=Math.min(beforeMin,height);
+ if(started && firstFadeFrame===null)firstFadeFrame=height;
+});
+document.getElementById('run').onclick=()=>{
+ document.getElementById('run').disabled=true;
+ loading.finish(100,'시작 시점 준비 완료',{reducedMotion,onLeave:()=>{
+  const handoverHeight=g.viewer.camera.positionCartographic.height;started=true;
+  g.entry({reducedMotion}).then(()=>{
+   const finalHeight=g.viewer.camera.positionCartographic.height;
+   result.textContent=JSON.stringify({pass:!error&&firstFrame>20000000&&beforeMin>20000000&&handoverHeight>20000000&&firstFadeFrame>15000000&&Math.abs(finalHeight-120000)<1,
+    reducedMotion,frames,firstFrame,beforeMin,handoverHeight,firstFadeFrame,finalHeight,error},null,2);
+  }).catch(e=>{result.textContent=e.stack;});
+ }});
+};
+window.addEventListener('pagehide',()=>{remove();loading.destroy();g.destroy();},{once:true});
+</script></html>

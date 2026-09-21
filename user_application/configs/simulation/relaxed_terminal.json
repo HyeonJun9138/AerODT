@@ -1,0 +1,8 @@
+{
+  "psu": {
+    "terminal_horizontal_m": 30,
+    "terminal_vertical_m": 20,
+    "entry_spacing_s": 60,
+    "approach_headway_s": 15
+  }
+}

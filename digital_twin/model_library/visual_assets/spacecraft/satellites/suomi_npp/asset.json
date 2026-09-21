@@ -1,0 +1,102 @@
+{
+  "title": "Suomi NPP / JPSS 계열",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Suomi National Polar-orbiting Partnership (Suomi NPP)/Suomi National Polar-orbiting Partnership (Suomi NPP).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "suomi_npp.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "suomi_npp",
+      "label": "Suomi NPP / JPSS 계열",
+      "exact": {
+        "norad": [
+          37849
+        ],
+        "names": [
+          "^SUOMI NPP$"
+        ]
+      },
+      "series": {
+        "norad": [
+          43013,
+          54234
+        ],
+        "names": [
+          "^NOAA 2[01]( \\(JPSS-\\d\\))?$"
+        ]
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 9.5,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 8.958837
+    }
+  ],
+  "display": {
+    "native_extent": 8.958837,
+    "reference_extent_m": 9.5,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 8.958837032318115
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "suomi_npp",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 2283576,
+    "sha256": "885278277ed8fa864368803b7da2046292754bff01033055d56fe86e8b951ee4"
+  },
+  "geometry": {
+    "meshes": 6,
+    "materials": 6,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 4024
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 2,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "885278277ed8fa864368803b7da2046292754bff01033055d56fe86e8b951ee4"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 8843,
+    "sha256": "85b24a7e6e53f756bd0cfe1d569498119b40549597f5ddcd6de23febf102cbed"
+  }
+}

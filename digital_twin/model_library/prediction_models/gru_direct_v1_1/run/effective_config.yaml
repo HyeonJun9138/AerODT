@@ -1,0 +1,60 @@
+plugin_id: gru_direct_v1_1
+model:
+  hidden_size: 128
+  num_layers: 2
+  dropout: 0.1
+  head_hidden_size: 256
+  huber_delta: 1
+  behavior_loss_weight: 0.001
+  min_history_samples: 16
+  max_history_samples: 16
+  axis_loss_weights:
+  - 1.0
+  - 1.0
+  - 1.0
+data:
+  dataset_path: D:\projects\KSAS\2026_autumn_KSAS\outputs\data_generation\v1\VTOL_corpus_16000episodes_seeds1-100_365e47bc7a1b
+  variant_id: sigma_1m
+  train_windows_per_episode: 64
+  evaluation_stride_samples: 75
+  window_policy: full_flight_plus_core_v1
+  train_stride_samples: 15
+training:
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  batch_size: 64
+  max_epochs: 300
+  early_stopping_patience: 20
+  scheduler: cosine
+  warmup_ratio: 0.05
+  max_grad_norm: 1
+  seed: 17
+  precision: fp32
+  device: cuda:0
+  cudnn_enabled: false
+evaluation:
+  mode: validation_only
+diagnostics:
+  enabled: false
+behavior:
+  supervision: per_observation_v1
+  classes:
+  - ground
+  - takeoff
+  - hover
+  - transition_out
+  - transition_in
+  - climb_straight
+  - climb_turn
+  - climb_s_turn
+  - climb_spiral
+  - cruise_straight
+  - cruise_turn
+  - cruise_s_turn
+  - cruise_orbit
+  - descent_straight
+  - descent_turn
+  - descent_s_turn
+  - descent_spiral
+  - landing
+  - alignment

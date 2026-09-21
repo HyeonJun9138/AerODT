@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "model_id": "prism_2d_v1",
+  "source_project": "PRISM",
+  "source_run": "20260815_010810_full5x_s6",
+  "selection_reason": "Most recent finished non-ablation full5x run: 26 epochs, 3 modes, 10 agent slots, all interaction and type heads retained. Not selected by test performance; seed 6 is not claimed superior.",
+  "source_checkpoint": "best.pt",
+  "best_validation_nll": {
+    "value": 1.0708803424835205,
+    "epoch": 26
+  },
+  "model_cfg": {
+    "d_model": 160,
+    "n_modes": 3,
+    "temporal_layers": 3,
+    "agent_layers": 2,
+    "n_heads": 8,
+    "d_ff": 384,
+    "dropout": 0.1,
+    "cumulative_mu": true
+  },
+  "data_cfg": {
+    "max_agents": 10,
+    "t0_stride": 4,
+    "min_obs": 3,
+    "min_future_valid": 27,
+    "val_fraction": 0.1,
+    "max_samples_per_epoch": 0
+  },
+  "weights_file": "model.pt",
+  "weights_sha256": "d0e9e1504e1f3ff9c2fb405c81818835fad312447a13cbf90b4980511ba5bae9",
+  "source_files": {
+    "modelTraining/model/network.py": "65d48dc1edca2b5ea79de2585bb4c7ccbcbe2c04f8b82596d0187df80c0592f3",
+    "modelTraining/data/dataset.py": "79c445fd7b1e47694c99e7112484d49caf2657822fbd6f7ef977f5cd78a625a8",
+    "modelTraining/common/constants.py": "bde760ea6488ba4d9b6fb964abd9b24ac379790eeda308afdb6cfb05feee3dd8",
+    "Logs/Models/20260815_010810_full5x_s6/final/model_final.pt": "d0e9e1504e1f3ff9c2fb405c81818835fad312447a13cbf90b4980511ba5bae9",
+    "Logs/Models/20260815_010810_full5x_s6/config.json": "1a2aab9259cfa1fb4814334165d205ec0d0f91ded39a852d601f01e60463f064",
+    "Logs/Models/20260815_010810_full5x_s6/job.json": "fdd8f5ad16709c940768898d15db9ef3192685a9d21df3b7b7e22a54964f76e0"
+  },
+  "port_changes": [
+    "relative constants import",
+    "observation-only feature transform with all GT label and metadata access removed",
+    "weights_only=True loading; original checkpoint bytes retained"
+  ],
+  "limitations": [
+    "2D synthetic observations; not calibrated on live AeroDT traffic",
+    "No altitude forecast or collision probability",
+    "Missing observation covariance uses declared 10 m isotropic sigma; ownship uses original assumed 0.5 m sigma",
+    "20 logged samples span 9.5 s, cadence 0.5 s; gaps never interpolated"
+  ]
+}

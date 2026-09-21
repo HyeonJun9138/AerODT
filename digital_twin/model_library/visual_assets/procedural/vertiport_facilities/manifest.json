@@ -1,0 +1,24 @@
+{
+  "visual_only": true,
+  "bounds": [
+    -0.5,
+    0.5
+  ],
+  "node": "Facility",
+  "assets": [
+    {
+      "file": "boarding_pavilion.glb",
+      "bytes": 820716,
+      "sha256": "d3185a6b011a36441f43b26e883f4dc9747fd3de4603036e9702c70607b90159",
+      "triangles": 852,
+      "primitives": 8
+    },
+    {
+      "file": "charging_station.glb",
+      "bytes": 614480,
+      "sha256": "bf734e392ade6051216c0cc05f22c4fa50654a91e107f900ab70f748956652ce",
+      "triangles": 676,
+      "primitives": 6
+    }
+  ]
+}

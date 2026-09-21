@@ -1,0 +1,4 @@
+AeroDT contributors; original procedural placeholder geometry; CC0-1.0.
+Original geometry and thumbnail generated locally; no third-party assets.
+CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/
+Temporary display asset only. +X forward, +Y up, right-handed; metres.

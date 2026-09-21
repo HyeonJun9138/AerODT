@@ -1,0 +1,99 @@
+{
+  "title": "NOAA POES 계열",
+  "source": {
+    "provider": "nasa",
+    "url": "https://github.com/nasa/NASA-3D-Resources/blob/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Polar Operational Environmental Satellite (POES)/Polar Operational Environmental Satellite (POES).glb",
+    "revision": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+    "imported_from": "icdcdt",
+    "original_file": "poes.glb"
+  },
+  "rights": {
+    "label": "NASA media guidelines",
+    "credit": "NASA 3D Resources",
+    "url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "public_export": true,
+    "note": "NASA attribution; no endorsement. Trademarks and third-party rights remain separate."
+  },
+  "representation": "mission_visualization",
+  "aliases": [
+    {
+      "key": "poes",
+      "label": "NOAA POES 계열",
+      "exact": {
+        "norad": [],
+        "names": []
+      },
+      "series": {
+        "norad": [
+          25338,
+          28654,
+          33591
+        ],
+        "names": [
+          "^NOAA 1[5-9]$"
+        ]
+      },
+      "family": {
+        "names": []
+      },
+      "size_m": 8,
+      "orientation": {
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "extent": 408.283832
+    }
+  ],
+  "display": {
+    "native_extent": 408.283832,
+    "reference_extent_m": 8,
+    "scale_basis": "ICDCDT approximate display dimensions; not certified measurements",
+    "orientation": {
+      "heading": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "browser_measured_extent": 408.283832424359
+  },
+  "conversion": {
+    "operation": "none",
+    "note": "Original GLB bytes preserved."
+  },
+  "schema_version": 1,
+  "asset_id": "poes",
+  "category": "spacecraft/satellites",
+  "purpose": "visual_only",
+  "model": {
+    "path": "model.glb",
+    "bytes": 1158944,
+    "sha256": "30a8bfdb6585bb87e27d8a847046a55f8c299456e3752d1b00786942c59035aa"
+  },
+  "geometry": {
+    "meshes": 19,
+    "materials": 19,
+    "animations": 0,
+    "skins": 0,
+    "required_extensions": [
+      "KHR_draco_mesh_compression"
+    ],
+    "native_coordinates": "glTF right-handed +Y up; forward axis is asset-specific",
+    "physical_dimensions_verified": false,
+    "rendered_triangles": 245834
+  },
+  "validation": {
+    "container": "passed",
+    "gltf_validator": "passed",
+    "browser": "passed",
+    "gltf_validator_version": "2.0.0-dev.3.10",
+    "gltf_errors": 0,
+    "gltf_warnings": 0,
+    "browser_scope": "Default scene load, shader compilation and one rendered frame. No animation/scale/flight-direction certification.",
+    "browser_sha256": "30a8bfdb6585bb87e27d8a847046a55f8c299456e3752d1b00786942c59035aa"
+  },
+  "thumbnail": {
+    "path": "thumbnail.jpg",
+    "bytes": 4318,
+    "sha256": "aa8f9d2dca822cbe56bea228083b579be43044506b129dc1c320bba31c358290"
+  }
+}

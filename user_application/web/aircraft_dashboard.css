@@ -1,0 +1,163 @@
+/* The summary strip along the bottom of the map for the selected aircraft.
+   One glass surface, centred between the rail and the right edge, above the
+   attribution line; a row of instrument tiles between the identity on the
+   left and the leg on the right, and the actions under them. */
+.aircraft-dashboard{position:fixed;left:calc(var(--left-offset) + var(--edge));right:var(--edge);bottom:0;z-index:5;display:flex;justify-content:center;pointer-events:none;transition:left .22s ease;font-size:12px;font-variant-numeric:tabular-nums}
+.aircraft-dashboard[hidden]{display:none}
+.adb-surface{pointer-events:auto;width:min(1040px,100%);display:grid;grid-template-columns:minmax(150px,auto) 1fr minmax(200px,auto);grid-template-areas:"identity tiles route" "actions actions actions";gap:10px 18px;padding:12px 16px 10px;color:#e9f1f5;border:1px solid var(--glass-border);border-radius:12px 12px 0 0;background:var(--chrome-surface);box-shadow:inset 0 1px 0 #ffffff14,0 14px 40px #0a141b73;-webkit-backdrop-filter:blur(16px) saturate(.85);backdrop-filter:blur(16px) saturate(.85);transform:translateY(0);opacity:1;transition:transform .22s ease,opacity .2s ease}
+.aircraft-dashboard[data-open=false] .adb-surface{transform:translateY(12px);opacity:0}
+.adb-identity{grid-area:identity;display:flex;flex-direction:column;justify-content:center;gap:6px;min-width:0}
+.adb-title{display:flex;align-items:center;gap:8px;min-width:0}
+.adb-kind{font-size:9px;font-weight:700;letter-spacing:1.6px;color:#0b1b24;background:#93d8e8;border-radius:5px;padding:2px 6px;flex:none}
+.adb-name{font-size:20px;font-weight:650;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adb-quality{font-size:10px;color:#b6ead3;white-space:nowrap}
+.adb-quality::before{content:'●';font-size:7px;margin-right:4px}
+.adb-quality:not([data-quality=nominal]):not([data-quality=valid]){color:#ffd69d}
+.adb-state{display:flex;align-items:baseline;gap:9px;min-width:0}
+.adb-phase{font-size:14px;font-weight:600;color:#a4e4ed;white-space:nowrap}
+.adb-phase::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 9px currentColor;margin-right:7px;vertical-align:1px}
+.adb-phase[data-phase=parked],.adb-phase[data-phase=charge]{color:#c9d6dc}
+.adb-phase[data-phase=hold],.adb-phase[data-phase=hold_exit],.adb-phase[data-phase=hold_return]{color:#ffd28a}
+.adb-mode{font-size:11px;color:#b8cbd5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adb-tiles{grid-area:tiles;display:flex;gap:0;min-width:0;overflow:hidden;align-items:stretch}
+.adb-tile{flex:1 1 0;min-width:0;padding:2px 14px 0;border-left:1px solid #9cbcca24;display:flex;flex-direction:column;gap:3px}
+.adb-tile[hidden]{display:none}
+.adb-tile:first-child{border-left:0;padding-left:0}
+.adb-label{font-size:10px;letter-spacing:.4px;color:#adc1cc;white-space:nowrap}
+.adb-reading{display:flex;align-items:baseline;gap:3px;white-space:nowrap}
+.adb-value{font-size:22px;font-weight:600;letter-spacing:-.5px;line-height:1.15;color:#f0f7fb}
+.adb-unit{font-size:11px;color:#b8cbd5}
+.adb-arrow-mark{font-style:normal;font-size:13px;color:#93d8e8;margin-left:4px;display:inline-block;transform-origin:center}
+.adb-arrow-mark[hidden]{display:none}
+.adb-gauge{display:none;height:4px;border-radius:2px;background:#0c1a2266;overflow:hidden;margin-top:1px}
+.adb-tile[data-gauge=true] .adb-gauge{display:block}
+.adb-gauge-fill{display:block;height:100%;width:0;border-radius:2px;background:#93d8e8;transition:width .3s ease}
+.adb-tile[data-level=caution] .adb-gauge-fill{background:#f2c766}
+.adb-tile[data-level=caution] .adb-value{color:#ffe1a1}
+.adb-tile[data-level=low] .adb-gauge-fill{background:#ff8b85}
+.adb-tile[data-level=low] .adb-value{color:#ffb1ae}
+.adb-sub{font-size:10px;color:#9fb8c6;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adb-route{grid-area:route;display:flex;flex-direction:column;justify-content:center;gap:5px;min-width:0;padding-left:16px;border-left:1px solid #9cbcca24}
+.adb-route[hidden]{display:none}
+.adb-route-ends{display:flex;align-items:center;gap:8px;font-size:13px;min-width:0}
+.adb-route-ends strong{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adb-arrow{color:#93d8e8}
+.adb-progress{position:relative;height:5px;border-radius:3px;background:#0c1a2266;overflow:visible}
+.adb-progress[hidden]{display:none}
+.adb-progress-done{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,#6fcde1,#a4ecf5);width:0;transition:width .4s ease}
+.adb-progress-planned{position:absolute;top:-3px;bottom:-3px;width:2px;background:#ffffffb0;border-radius:1px}
+.adb-progress-planned[hidden]{display:none}
+.adb-route-meta{display:flex;gap:10px;font-size:11px;color:#adc1cc;white-space:nowrap;overflow:hidden}
+.adb-timing[data-level=late]{color:#ffd28a}
+.adb-warning{font-size:11px;color:#ffc9c9}
+.adb-warning[hidden]{display:none}
+.adb-actions{grid-area:actions;position:static;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding-top:8px;border-top:1px solid #9cbcca1f}
+/* One line, and it stays one line. The window controls dropping to a second
+   row is what read as a two-line strip, and it happened on a few pixels: a
+   longer status word was enough to tip it. Above the narrow breakpoint the
+   row does not wrap at all and the manual group gives up width instead. */
+.aircraft-dashboard[data-manual=true] .adb-actions{flex-wrap:nowrap}
+.aircraft-dashboard[data-manual=true] .adb-actions>*{flex:none}
+.aircraft-dashboard[data-manual=true] .adb-manual{flex:0 1 auto;min-width:0;overflow:hidden}
+/* The controls are fixed-size tools; the aircraft name is the text that can
+   ellipsise. So the action column takes what it needs and the identity takes
+   the rest -- squeezing the selects down to their arrows was the wrong way
+   round, and left a mode picker nobody could read. */
+.aircraft-dashboard[data-manual=true][data-minimised=true] .adb-surface{grid-template-columns:minmax(0,1fr) max-content}
+.adb-manual .manual-toolbar{min-width:0}
+.adb-manual .manual-toolbar select{flex:0 1 auto;min-width:76px;text-overflow:ellipsis}
+.adb-manual .manual-state,.adb-manual .manual-exit{flex:none}
+.aircraft-dashboard button{font:inherit;border:1px solid #86b5ce30;border-radius:7px;color:#dcebf3;background:#9ec7df0a;cursor:pointer;white-space:nowrap;min-height:30px;padding:4px 11px;transition:background .15s,border-color .15s}
+.aircraft-dashboard button:hover{background:#89c9e424;border-color:#9cdcf080}
+.aircraft-dashboard button:focus-visible{outline:2px solid #93e6ff;outline-offset:2px}
+.aircraft-dashboard button[hidden]{display:none}
+.aircraft-dashboard button:disabled{opacity:.4;cursor:default}
+.aircraft-dashboard button[aria-pressed=true]{background:#244755;color:#b1edee;border-color:#92dbe899}
+.adb-button[data-action=expand]{background:#93d8e8;color:#102532;border-color:#b1effa;font-weight:700}
+.adb-button[data-action=expand]:hover{background:#b1effa}
+.adb-icon{width:30px;min-width:30px;padding:0;font-size:16px}
+.adb-icon.adb-close{background:transparent;border-color:transparent;color:#dca7a3;font-size:20px}
+.adb-icon.adb-close:hover{background:#e4877e22;border-color:#dcaaa54d;color:#ffcbc4}
+/* Minimised: identity, phase and the actions only; the instruments fold away. */
+.aircraft-dashboard[data-minimised=true] .adb-surface{grid-template-columns:auto 1fr;grid-template-areas:"identity actions";padding:8px 14px}
+.aircraft-dashboard[data-minimised=true] .adb-tiles,.aircraft-dashboard[data-minimised=true] .adb-route{display:none}
+.aircraft-dashboard[data-minimised=true] .adb-actions{border-top:0;padding-top:0;justify-content:flex-end}
+.aircraft-dashboard[data-minimised=true] .adb-name{font-size:15px}
+@media(max-width:1100px){.adb-surface{grid-template-columns:1fr 1fr;grid-template-areas:"identity route" "tiles tiles" "actions actions"}.adb-route{border-left:0;padding-left:0}}
+@media(max-width:700px){.adb-surface{grid-template-columns:1fr;grid-template-areas:"identity" "tiles" "route" "actions"}.adb-tiles{flex-wrap:wrap}.adb-tile{flex:1 1 30%}}
+
+/* Window controls remain adjacent at the far right, with centred vector shapes. */
+.adb-window-controls{display:flex;align-items:center;gap:6px;margin-left:auto;flex:none}
+.aircraft-dashboard .adb-icon{display:grid;place-items:center;box-sizing:border-box;width:32px;height:32px;min-width:32px;padding:0;line-height:1;font-size:20px;color:#e9f1f5}
+.adb-chevron{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid currentColor}
+.aircraft-dashboard[data-minimised=true] .adb-chevron{border-top:0;border-bottom:6px solid currentColor}
+.adb-controls{display:contents}
+.adb-controls .cockpit-toolbar{position:static;transform:none;width:auto;max-width:none;z-index:auto}
+.aircraft-dashboard .adb-controls .cockpit-dock-handle{width:auto;height:32px;min-height:32px;padding:0 11px;gap:7px;border-radius:7px;background:var(--chrome-button);box-shadow:none;border-color:var(--chrome-border);color:inherit}
+.adb-controls .cockpit-dock-body{left:auto;right:0;bottom:calc(100% + 12px);transform:translateY(7px);max-height:calc(100dvh - var(--aircraft-dashboard-height,80px) - 24px)}
+.adb-controls .cockpit-toolbar[data-expanded=true] .cockpit-dock-body{transform:translateY(0)}
+.aircraft-dashboard:has(.cockpit-toolbar[data-expanded=true]){z-index:46}
+body:has(.aircraft-dashboard[data-open=true]) .ww-shelf{bottom:0;box-sizing:border-box;width:300px;max-width:300px;border-radius:9px 9px 0 0}
+
+@media(max-width:900px){.aircraft-dashboard[data-minimised=true] .adb-surface{grid-template-columns:minmax(0,1fr);grid-template-areas:"identity" "actions";gap:8px}.adb-actions{gap:5px}.aircraft-dashboard{left:calc(var(--rail-width,76px) + 8px);right:8px}.adb-surface{box-sizing:border-box;max-height:75dvh;overflow-y:auto}.adb-surface:has(.cockpit-toolbar[data-expanded=true]){overflow:visible}}
+@media(prefers-reduced-motion:reduce){.aircraft-dashboard,.adb-surface,.aircraft-dashboard button{transition:none}}
+
+.adb-surface{position:relative}
+
+/* Three independent bottom lanes. Folding the centre must never lift either side. */
+body:has(.aircraft-dashboard[data-open=true]) #attribution{bottom:0;right:8px;left:auto;box-sizing:border-box;width:300px;max-width:300px;min-height:36px;gap:5px;border-radius:9px 9px 0 0;flex-wrap:nowrap}
+body:has(.aircraft-dashboard[data-open=true]) #map-credits{min-width:0;max-width:100%}
+body:has(.aircraft-dashboard[data-open=true]) #camera{right:8px;bottom:56px}
+@media(min-width:1601px){body:has(.aircraft-dashboard[data-open=true]) .aircraft-dashboard{left:max(calc(var(--left-offset) + var(--edge)),calc(var(--rail-width,76px) + 324px));right:320px}}
+@media(max-width:1600px){
+ body:has(.aircraft-dashboard[data-open=true]) .aircraft-dashboard{left:calc(var(--rail-width,76px) + 12px);right:56px;bottom:52px}
+ body:has(.aircraft-dashboard[data-open=true]) .ww-shelf{right:auto;width:calc((100vw - var(--rail-width,76px) - 36px)/2);max-width:400px;height:44px;min-width:0}
+ body:has(.aircraft-dashboard[data-open=true]) #attribution{width:calc((100vw - var(--rail-width,76px) - 36px)/2);max-width:300px;height:44px;font-size:8px}
+ body:has(.aircraft-dashboard[data-open=true]) #attribution .maker span{display:inline}
+ body:has(.aircraft-dashboard[data-open=true]) .ww-tabs{min-width:0}
+ body:has(.aircraft-dashboard[data-open=true]) .cockpit-dock-body{max-height:calc(100dvh - var(--aircraft-dashboard-height,80px) - 76px)}
+}
+body[data-focus]:has(.aircraft-dashboard[data-open=true]) #attribution{bottom:0}
+/* Group secondary actions instead of a row of unrelated buttons. */
+.adb-menu{position:relative;color:#edf5f8}
+.adb-menu>summary{cursor:pointer;list-style:none;padding:7px 13px;border:1px solid var(--chrome-border,#8ca1ac55);border-radius:7px;background:var(--chrome-button,#ffffff08);font-size:12px}
+.adb-menu>summary::after{content:' ▴';color:#b4d4dc}.adb-menu>summary::-webkit-details-marker{display:none}
+.adb-menu[open]>summary{background:#304b58}.adb-menu-items{position:absolute;bottom:calc(100% + 8px);left:0;z-index:60;display:grid;gap:6px;min-width:150px;padding:8px;border:1px solid #8ca1ac77;border-radius:9px;background:var(--chrome-surface,#556067);box-shadow:0 8px 30px #0005}
+.adb-menu-items .adb-button{text-align:left;min-height:36px}
+.adb-cockpit-extra:empty,.adb-cockpit-extra:has(>[hidden]){display:none}
+.adb-cockpit-extra .cockpit-dock-group{border-top:1px solid #ffffff1c;margin-top:3px;padding:10px 0 2px}
+.adb-cockpit-extra .cockpit-dock-group[hidden]{display:none}
+.adb-cockpit-extra .cockpit-dock-actions{display:grid;gap:6px}
+.adb-cockpit-extra button{text-align:left;white-space:nowrap;min-height:34px}
+.adb-menu-items{max-height:calc(100dvh - 170px);overflow:auto;min-width:180px;max-width:min(260px,calc(100vw - 32px))}
+.cockpit-active .adb-button[data-action=cockpit]{display:none}
+/* Manual control rides in the action row rather than taking a row of its own:
+   four tight controls next to the menus, marked off by a rule so it reads as
+   one group instead of four more buttons. It wraps with the row when narrow. */
+.adb-manual[hidden]{display:none}
+.adb-manual{display:flex;align-items:center;min-width:0;margin-left:2px;padding-left:10px;border-left:1px solid #acbec333}
+.adb-manual .manual-toolbar{position:static;transform:none;box-shadow:none;border:0;background:none;
+  width:auto;max-width:none;padding:0;display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
+.adb-manual .manual-toolbar select{font-size:11px;min-height:28px;padding:3px 7px;max-width:112px}
+.adb-manual .manual-toolbar button{font-size:11px;min-height:28px;padding:3px 10px}
+.adb-manual .manual-state{padding:4px 9px;min-height:28px}
+/* The dashboard paints every button the same; the state chip and the exit
+   carry their own meaning and keep it. */
+.aircraft-dashboard .adb-manual .manual-state{background:#ffffff08;border-radius:999px}
+.aircraft-dashboard .adb-manual .manual-state[data-state=active]{background:#7ee3c418;border-color:#7ee3c466}
+.aircraft-dashboard .adb-manual .manual-state[data-state=held]{background:#ffcf7a1f;border-color:#ffcf7a8c}
+.aircraft-dashboard .adb-manual .manual-exit{color:#e8b6ae;border-color:#c9857c3d}
+.aircraft-dashboard .adb-manual .manual-exit:hover{background:#e0867c24;border-color:#e0867c8c;color:#ffd2ca}
+.adb-manual .manual-status{font-size:11px}
+@media(max-width:900px){.aircraft-dashboard[data-manual=true] .adb-actions{flex-wrap:wrap}
+  .aircraft-dashboard[data-manual=true] .adb-manual{flex:1 1 100%;margin-left:0;padding-left:0;border-left:0;border-top:1px solid #acbec333;padding-top:6px}
+  .adb-manual .manual-toolbar{flex-wrap:wrap;justify-content:flex-start}}
+
+/* Focus mode is opt-in chrome: one bottom-centred handle, no status strip. */
+.aircraft-dashboard .adb-focus-handle{display:none}
+body[data-focus]:has(.aircraft-dashboard[data-open=true]) .aircraft-dashboard{left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:0;z-index:45;transition:none}
+body[data-focus] .aircraft-dashboard[data-focus-expanded=false] .adb-surface{display:none}
+body[data-focus] .aircraft-dashboard .adb-focus-handle{display:grid;place-items:center;pointer-events:auto;width:48px;min-width:48px;height:26px;min-height:26px;padding:0;border-radius:9px 9px 0 0;background:var(--chrome-surface,#556067);border:1px solid #9db5bf88;border-bottom:0;color:#effaff;box-shadow:0 -3px 12px #0002}
+.adb-focus-triangle{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:7px solid currentColor}
+.aircraft-dashboard[data-focus-expanded=true] .adb-focus-triangle{border-bottom:0;border-top:7px solid currentColor}
+body[data-focus] .aircraft-dashboard[data-focus-expanded=true] .adb-surface{max-height:65dvh;max-width:calc(100vw - 24px);border-radius:12px;pointer-events:auto}
