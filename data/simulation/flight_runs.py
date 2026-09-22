@@ -21,6 +21,10 @@ SCHEMA_VERSION = 1
 MANIFEST = "manifest.json"
 STATES = "states.jsonl"
 PLAN = "plan.json"
+# A downloaded long sortie remains easy to extract and inspect when its raw
+# state log is divided at this boundary.  This is an uncompressed boundary;
+# ZIP compression happens in the delivery adapter afterwards.
+STATE_EXPORT_CHUNK_BYTES = 8 * 1024 * 1024
 
 
 def _now():
@@ -128,6 +132,32 @@ class FlightRuns:
         except OSError:
             return []
         return found
+
+    def state_chunks(self, run_id, *, max_bytes=STATE_EXPORT_CHUNK_BYTES):
+        """Yield the persisted JSONL log in bounded byte chunks.
+
+        This is deliberately a storage-level operation: callers that archive
+        a long sortie do not need to deserialize every StateSnapshot, nor do
+        they need to hold the complete run in memory.  A JSONL row is never
+        divided between chunks, so every yielded value is independently
+        readable as JSON Lines.
+        """
+        if not self._safe(run_id):
+            return
+        if not isinstance(max_bytes, int) or max_bytes <= 0:
+            raise ValueError("max_bytes must be a positive integer")
+        pending = bytearray()
+        try:
+            with open(self.directory / run_id / STATES, "rb") as file:
+                for line in file:
+                    if pending and len(pending) + len(line) > max_bytes:
+                        yield bytes(pending)
+                        pending.clear()
+                    pending.extend(line)
+        except OSError:
+            return
+        if pending:
+            yield bytes(pending)
 
     def delete(self, run_id):
         """Remove one run; True when there was one."""

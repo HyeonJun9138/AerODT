@@ -122,6 +122,19 @@ def test_a_half_written_run_is_skipped_and_an_id_cannot_reach_outside_the_shelf(
     assert FlightRuns(tmp_path / "absent").list() == []
 
 
+def test_state_export_chunks_preserve_jsonl_rows_without_loading_the_full_run(tmp_path):
+    runs = FlightRuns(tmp_path)
+    manifest = runs.create(plan(), [{"t": index, "note": "x" * 18} for index in range(5)], {})
+    run_id = manifest["run_id"]
+    chunks = list(runs.state_chunks(run_id, max_bytes=50))
+    stored = (tmp_path / run_id / "states.jsonl").read_bytes()
+    assert b"".join(chunks) == stored
+    assert len(chunks) > 1
+    assert all(chunk.endswith(b"\n") for chunk in chunks), "a JSONL row never straddles parts"
+    with pytest.raises(ValueError):
+        list(runs.state_chunks(run_id, max_bytes=0))
+
+
 # ---------------------------------------------------------------- the wire
 
 def client(tmp_path):

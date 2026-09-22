@@ -8,7 +8,7 @@ downloads folder under the name given here. Nothing is written on the server.
 import json
 
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 
 _NO_STORE = {"Cache-Control": "no-store"}
 
@@ -40,14 +40,20 @@ def create_export_router(exports):
         filename, media_type, document = built
         # ASCII in the header and the same name again as UTF-8, so a browser
         # that reads only one of the two still gets a usable name.
+        headers = {
+            **_NO_STORE,
+            "Content-Disposition": f'attachment; filename="{filename}"; filename*=UTF-8\'\'{filename}',
+        }
+        # A long flight's archive is a bounded iterator.  ZIP must finish
+        # before it can be read, but its spooled body is streamed to the
+        # browser rather than copied into one response-sized byte string.
+        if media_type == "application/zip":
+            return StreamingResponse(document, media_type=media_type, headers=headers)
         # A document that is already text — a CSV, a line-delimited log — is
         # sent as it is. Only a structure is encoded.
         body = (document.encode("utf-8") if isinstance(document, str)
                 else document if isinstance(document, (bytes, bytearray))
                 else json.dumps(document, ensure_ascii=False, indent=2).encode("utf-8"))
-        return Response(body, media_type=media_type, headers={
-            **_NO_STORE,
-            "Content-Disposition": f'attachment; filename="{filename}"; filename*=UTF-8\'\'{filename}',
-        })
+        return Response(body, media_type=media_type, headers=headers)
 
     return router

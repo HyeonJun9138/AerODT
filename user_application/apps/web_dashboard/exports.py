@@ -12,12 +12,52 @@ somebody reading it a month later does not have to ask which version of the
 generator drew those taxiways. Nothing here reaches for storage or the
 network: the callables it is given answer for those.
 """
+import json
+import tempfile
+import zipfile
 from datetime import datetime, timezone
+
+from data.simulation.flight_runs import STATE_EXPORT_CHUNK_BYTES
 
 SCHEMA_VERSION = 1
 SOURCE = "AeroDT Live Twin"
 JSON_MEDIA = "application/json; charset=utf-8"
 GEOJSON_MEDIA = "application/geo+json; charset=utf-8"
+ZIP_MEDIA = "application/zip"
+_ZIP_READ_BYTES = 64 * 1024
+
+
+class ZipArchive:
+    """A ZIP body built on a spooled temporary file and then streamed once.
+
+    ZIP needs its central directory at the end, so it cannot be made directly
+    from an HTTP iterator.  `SpooledTemporaryFile` keeps a small export in
+    memory but transparently rolls a long sortie onto the server's temporary
+    disk.  The file is closed and removed after the response iterator ends.
+    """
+
+    def __init__(self, entries):
+        self._entries = entries
+
+    @staticmethod
+    def _write_entry(archive, name, content):
+        with archive.open(name, "w") as output:
+            if isinstance(content, (bytes, bytearray)):
+                output.write(content)
+                return
+            for block in content:
+                if block:
+                    output.write(block)
+
+    def __iter__(self):
+        with tempfile.SpooledTemporaryFile(max_size=1024 * 1024, mode="w+b") as file:
+            with zipfile.ZipFile(file, "w", compression=zipfile.ZIP_DEFLATED,
+                                 compresslevel=6) as archive:
+                for name, content in self._entries():
+                    self._write_entry(archive, name, content)
+            file.seek(0)
+            while block := file.read(_ZIP_READ_BYTES):
+                yield block
 
 # The files on offer, in the order the Library lists them. `stem` names the
 # file, `format` decides the extension and the media type.
@@ -31,9 +71,9 @@ EXPORTS = [
     {"id": "network", "label": "전체 묶음 (스케줄링 전달용)", "stem": "network", "format": "json",
      "note": "버티포트와 항로를 한 파일로. 스케줄링·비행계획 담당자에게 넘기는 형태이며, "
              "각 필드의 뜻은 project_support/docs/uam_network_data_handoff.md에 적혀 있습니다."},
-    {"id": "flight_run", "label": "비행 시뮬레이션 기록", "stem": "flight-run", "format": "json",
-     "note": "가장 최근 시뮬레이션 비행의 상태 기록. 매 틱의 위치·자세·로터 틸트·속도·배터리와, "
-             "그 비행이 따른 계획이 함께 들어 있습니다. 분석이나 다른 도구로 넘길 때 씁니다."},
+    {"id": "flight_run", "label": "비행 시뮬레이션 기록", "stem": "flight-run", "format": "zip",
+     "note": "가장 최근 시뮬레이션 비행의 ZIP 기록입니다. 비행 정보와 계획, 매 틱 상태를 담되, "
+             "긴 비행의 상태는 8 MiB 이하 JSONL 조각으로 나눕니다. 압축을 풀어 필요한 조각만 분석할 수 있습니다."},
     {"id": "airspace", "label": "공역 (GeoJSON)", "stem": "airspace", "format": "geojson",
      "note": "지도에 그리는 비행금지·제한·위험구역과 관제권 등을 GeoJSON으로. "
              "QGIS 같은 GIS 도구에서 바로 열립니다. 공역 자료를 받아둔 뒤에만 내려받을 수 있습니다."},
@@ -69,7 +109,7 @@ def filename(kind, when):
     return f"aerodt-{item['stem']}-{when.strftime('%Y%m%d')}.{item['format']}"
 
 
-MEDIA_TYPES = {"geojson": GEOJSON_MEDIA, "json": JSON_MEDIA,
+MEDIA_TYPES = {"geojson": GEOJSON_MEDIA, "json": JSON_MEDIA, "zip": ZIP_MEDIA,
                "csv": "text/csv; charset=utf-8", "jsonl": "application/x-ndjson; charset=utf-8"}
 
 
@@ -208,8 +248,8 @@ class Exports:
             if latest is None:
                 return None
             run_id = latest["run_id"]
-            return {**head, "run": latest, "plan": self._flight_runs.plan(run_id),
-                    "states": self._flight_runs.states(run_id)}
+            plan = self._flight_runs.plan(run_id)
+            return ZipArchive(lambda: self._flight_run_entries(head, latest, plan))
         if kind == "network":
             network = self._routes()
             records = self._vertiports()
@@ -233,3 +273,56 @@ class Exports:
     def _counts(network):
         return {"nodes": len(network.get("nodes") or ()), "links": len(network.get("links") or ()),
                 "fatos": len(network.get("fatos") or ())}
+
+    def _flight_run_entries(self, head, run, plan):
+        """The files inside a single-sortie archive.
+
+        State chunks deliberately retain JSONL rather than becoming JSON
+        arrays: tools can consume one chunk line by line and an archival run
+        never expands to one enormous object in browser or server memory.
+        """
+        run_id = run["run_id"]
+        manifest = {**head, "run": run, "plan_file": "plan.json",
+                    "state_format": "JSON Lines (UTF-8; one state per row)",
+                    "state_files": "states/part-*.jsonl",
+                    "state_chunk_max_bytes": STATE_EXPORT_CHUNK_BYTES}
+        guide = (
+            "AeroDT 비행 시뮬레이션 기록\n\n"
+            "manifest.json: 내보내기 시각, 비행 정보, 파일 형식\n"
+            "plan.json: 이 소티가 따른 비행 계획\n"
+            "states/part-*.jsonl: 시간 순 StateSnapshot. 한 줄이 한 상태입니다.\n\n"
+            f"상태 파일은 비압축 기준 최대 {STATE_EXPORT_CHUNK_BYTES // (1024 * 1024)} MiB씩 나뉩니다. "
+            "각 조각은 독립적인 JSONL 파일이므로 필요한 구간만 읽을 수 있습니다.\n"
+        )
+        yield "README.txt", guide.encode("utf-8")
+        yield "manifest.json", self._json_bytes(manifest)
+        yield "plan.json", self._json_bytes(plan)
+        chunks = iter(self._state_chunks(run_id))
+        first = next(chunks, None)
+        if first is None:
+            yield "states/part-00001.jsonl", b""
+            return
+        yield "states/part-00001.jsonl", first
+        for number, chunk in enumerate(chunks, start=2):
+            yield f"states/part-{number:05d}.jsonl", chunk
+
+    def _state_chunks(self, run_id):
+        chunked = getattr(self._flight_runs, "state_chunks", None)
+        if callable(chunked):
+            yield from chunked(run_id, max_bytes=STATE_EXPORT_CHUNK_BYTES)
+            return
+        # Kept for small test/demonstration stores that predate state_chunks.
+        # Production FlightRuns always takes the bounded, on-disk route above.
+        pending = bytearray()
+        for state in self._flight_runs.states(run_id):
+            line = json.dumps(state, ensure_ascii=False, separators=(",", ":")).encode("utf-8") + b"\n"
+            if pending and len(pending) + len(line) > STATE_EXPORT_CHUNK_BYTES:
+                yield bytes(pending)
+                pending.clear()
+            pending.extend(line)
+        if pending:
+            yield bytes(pending)
+
+    @staticmethod
+    def _json_bytes(document):
+        return (json.dumps(document, ensure_ascii=False, indent=2) + "\n").encode("utf-8")

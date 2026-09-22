@@ -398,6 +398,12 @@
 - 루트 `AGENTS.md`, 코드 경계 문서와 웹 GUI 전용 `user_application/web/AGENTS.md`의 적용 위치를 README에 명시했다.
 - GUI 변경 시 도메인 격리와 생명주기 정리, 불변 snapshot 표현, 공용 시각 토큰, 접근성·성능·실제 화면 검증 규칙을 요약해 연결했다.
 - 검증: README 링크와 Markdown 구조를 육안 검토했다. 코드와 실행 동작은 변경하지 않았다.
+## 2026-09-22 단일 소티 기록 ZIP 분할 내보내기
+
+- Library의 `비행 시뮬레이션 기록` 내보내기를 단일 JSON에서 ZIP으로 바꿨다. ZIP에는 `manifest.json`, `plan.json`, 안내문과 `states/part-*.jsonl`이 들어간다.
+- 상태 JSONL은 비압축 기준 최대 8 MiB 조각으로 유지한다. Data Layer가 원본 상태 파일을 줄 단위로 읽고, ZIP은 1 MiB를 넘으면 임시 디스크로 전환한 뒤 응답으로 스트리밍한다. 전체 상태를 하나의 JSON 배열이나 응답 바이트열로 만들지 않는다.
+- 검증: `node --test project_support/tests/web_live/browser/library.test.mjs` 15 PASS. `python -m pytest project_support/tests/web_live/test_exports.py project_support/tests/web_live/test_flight_runs.py project_support/tests/web_live/test_library.py -q` 49 PASS. `py_compile` PASS.
+- 남은 위험: ZIP 형식은 새 내보내기 형식이다. 기존 단일 JSON을 자동으로 받던 외부 도구는 `states/part-*.jsonl`을 순서대로 읽도록 바꿔야 한다.
 기준일: 2026-09-21
 
 ## 현재 제품 기준선

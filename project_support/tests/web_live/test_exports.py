@@ -3,12 +3,14 @@ that makes the browser save it on the computer that asked."""
 import csv
 import io
 import json
+import zipfile
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from communication.web.export_routes import create_export_router
+from data.simulation.flight_runs import STATE_EXPORT_CHUNK_BYTES
 from user_application.apps.web_dashboard.exports import EXPORT_IDS, Exports, filename, media_type
 
 VERTIPORTS = [{"id": "VP001", "name": "여의도", "latitude": 37.52, "longitude": 126.93, "gates": 4,
@@ -64,9 +66,11 @@ def test_a_filename_says_what_it_is_and_the_day_it_left():
     when = datetime(2026, 9, 10, tzinfo=timezone.utc)
     assert filename("routes", when) == "aerodt-routes-20260910.json"
     assert filename("network", when) == "aerodt-network-20260910.json"
+    assert filename("flight_run", when) == "aerodt-flight-run-20260910.zip"
     assert filename("airspace", when) == "aerodt-airspace-20260910.geojson", "GIS tools read the extension"
     assert media_type("airspace").startswith("application/geo+json")
     assert media_type("vertiports").startswith("application/json")
+    assert media_type("flight_run") == "application/zip"
     with pytest.raises(ValueError) as error:
         filename("everything", when)
     assert str(error.value).startswith("kind:")
@@ -122,10 +126,18 @@ def test_each_file_carries_when_it_left_what_it_holds_and_the_rules_it_was_built
     assert bundle["vertiports"] == VERTIPORTS and bundle["routes"]["links"] == NETWORK["links"]
     assert bundle["reference"].endswith("uam_network_data_handoff.md"), "the field-by-field description"
 
-    # A recorded run travels with the plan it flew and every state it produced.
-    _, _, run = exports.build("flight_run")
-    assert run["run"]["run_id"] == RUN["run_id"] and run["states"] == RUN_STATES
-    assert run["plan"]["vehicle"]["id"] == "UAM-1"
+    # A recorded run travels as a bounded ZIP: metadata and plan are small
+    # JSON documents, while states remain independently readable JSONL parts.
+    name, media, archive = exports.build("flight_run")
+    assert name.endswith(".zip") and media == "application/zip"
+    with zipfile.ZipFile(io.BytesIO(b"".join(archive))) as package:
+        assert set(package.namelist()) == {"README.txt", "manifest.json", "plan.json", "states/part-00001.jsonl"}
+        manifest = json.loads(package.read("manifest.json"))
+        assert manifest["run"]["run_id"] == RUN["run_id"]
+        assert manifest["state_chunk_max_bytes"] == STATE_EXPORT_CHUNK_BYTES
+        assert json.loads(package.read("plan.json"))["vehicle"]["id"] == "UAM-1"
+        states = [json.loads(line) for line in package.read("states/part-00001.jsonl").splitlines()]
+        assert states == RUN_STATES
 
     name, kind, geo = exports.build("airspace")
     assert name.endswith(".geojson") and kind.startswith("application/geo+json")
@@ -171,6 +183,9 @@ def test_every_export_can_be_read_by_whatever_its_format_promises():
             assert isinstance(document, str) and media.startswith("application/x-ndjson")
             lines = [line for line in document.splitlines() if line.strip()]
             assert lines and all(json.loads(line) for line in lines), "one object per line"
+        elif name.endswith(".zip"):
+            with zipfile.ZipFile(io.BytesIO(b"".join(document))) as package:
+                assert "manifest.json" in package.namelist()
         else:
             json.loads(json.dumps(document, ensure_ascii=False))
 
@@ -207,6 +222,33 @@ def test_the_download_is_saved_by_the_computer_that_asked_under_the_name_the_cat
         assert response.headers["content-type"].startswith("application/json")
         assert json.loads(response.text)["counts"]["nodes"] == 1
         assert response.text.count("\n") > 1, "indented, so the file opens readably"
+
+        flight = http.get("/api/library/exports/flight_run")
+        assert flight.status_code == 200
+        assert flight.headers["content-type"].startswith("application/zip")
+        assert 'filename="aerodt-flight-run-20260910.zip"' in flight.headers["content-disposition"]
+        with zipfile.ZipFile(io.BytesIO(flight.content)) as package:
+            assert json.loads(package.read("manifest.json"))["run"]["run_id"] == RUN["run_id"]
+
+
+def test_a_long_run_keeps_its_state_parts_separate_inside_the_zip():
+    class ChunkedRuns(Runs):
+        def __init__(self):
+            super().__init__()
+            self.max_bytes = None
+
+        def state_chunks(self, run_id, *, max_bytes):
+            self.max_bytes = max_bytes
+            yield b'{"t":0}\n'
+            yield b'{"t":1}\n'
+
+    runs = ChunkedRuns()
+    _, _, archive = library(flight_runs=runs).build("flight_run")
+    with zipfile.ZipFile(io.BytesIO(b"".join(archive))) as package:
+        assert package.namelist()[-2:] == ["states/part-00001.jsonl", "states/part-00002.jsonl"]
+        assert package.read("states/part-00001.jsonl") == b'{"t":0}\n'
+        assert package.read("states/part-00002.jsonl") == b'{"t":1}\n'
+    assert runs.max_bytes == STATE_EXPORT_CHUNK_BYTES
 
 
 def test_an_unknown_or_empty_export_says_so_and_a_broken_store_never_leaks_its_words():
