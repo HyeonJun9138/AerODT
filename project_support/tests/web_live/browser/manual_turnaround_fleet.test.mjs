@@ -16,7 +16,7 @@ function fixture(){
   Color:class{constructor(...rgba){this.rgba=rgba;}},ColorGeometryInstanceAttribute:{fromColor:c=>c}};
  const viewer={scene:{primitives:new Collection(),camera:{positionWC:{}},requestRender(){}},entities:new Collection()};
  const plan={vehicle:{id:'A1',passengers:2}},walk={count:2,path:[[127,37,80],[127.0001,37,80]],distances_m:[0,10],walk_mps:1,walk_s:10,enter_s:1,release_s:[0,2],duration_s:14,asset_id:'person',height_m:1.75};
- const g={start_s:10,position:[127,37,80],vertiport:'VP1',gate:'G2',walk,crew_path:null,crew_start_s:16,crew_walk_s:10,charge_requested_s:null,socket:[127.0001,37,80],phase:'alighting',door_open:1};
+ const g={start_s:10,alighting_start_s:12,position:[127,37,80],vertiport:'VP1',gate:'G2',walk,crew_path:null,crew_start_s:16,crew_walk_s:10,charge_requested_s:null,socket:[127.0001,37,80],phase:'alighting',door_open:1};
  const scene=Object.create(EntityScene.prototype);Object.assign(scene,{C,viewer,items:new Map([['scenario:A1',{entity:{entity_id:'scenario:A1',kind:'uam'},assetId:'aircraft',model:{ready:false}}]]),assets:new Map([['person',{uri:'/person.glb'}],['kenney_blocky_person_q',{uri:'/worker.glb'}]]),layers:{uam:{visible:true}},onWarning:()=>{}});
  return {scene,g,plan,C,viewer};
 }

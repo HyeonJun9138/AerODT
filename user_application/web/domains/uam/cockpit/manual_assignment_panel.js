@@ -25,6 +25,7 @@ export class ManualAssignmentPanel {
     this.request = request?.want ? {...request} : {want: false};
     this.last = null;
     this.refused = null;
+    this.waiting = false;
     if (!this.request.want) {this.assignment = null; this.offers = {models: [], flights: []};}
     return this.request;
   }
@@ -68,7 +69,13 @@ export class ManualAssignmentPanel {
       this.offers = await this.api.offers();
       // Standing there, ready, and matching what was asked for. Nothing else
       // needs to happen for the operator to be flying it.
-      if (!this.assignment && this.matching().length) await this.assign();
+      if (!this.assignment && this.matching().length) {
+        this.waiting = false;
+        await this.assign();
+      } else if (!this.assignment && this.request.want && !this.waiting) {
+        this.waiting = true;
+        this.notify('warning', `수동 배정 대기 · ${this.describe()} 조건의 출발 예정편이 없습니다. 기체·출발지를 확인하거나 시간이 진행될 때까지 기다려 주세요.`);
+      }
     } catch (error) {
       const reason=error?.message||'수동 배정 후보를 읽지 못했습니다';
       if(this.refused!==reason){this.refused=reason;this.notify('warning',`수동 배정 확인 실패 · ${reason}`);}

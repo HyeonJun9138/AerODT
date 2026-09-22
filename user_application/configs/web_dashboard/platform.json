@@ -4,5 +4,6 @@
   "vworld_domain": "http://103.218.162.73:8766",
   "tick_seconds": 1.0,
   "stream_seconds": 1.0,
-  "fixture_mode": false
+  "fixture_mode": false,
+  "conditioned_dem_directory": "data/workspace/terrain/conditioned_urban_riverside_20260921/package"
 }

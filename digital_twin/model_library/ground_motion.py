@@ -16,7 +16,29 @@ def turn_delta(a, b):
     return (b - a + 180) % 360 - 180
 
 
+# Profiles already built, by the path and speed they were built for. A deck
+# has a few dozen stand-to-pad paths and a day's routes taxi them thousands
+# of times; the profile of a path is the same each time. The path and the
+# profile are handed out as fresh containers, since `align_start` and
+# `prepare_pushback` write into the profile they are given.
+_PROFILES = {}
+_PROFILE_KEEP = 4096
+
+
 def prepare(points, max_speed, hold_s):
+    key = (tuple(tuple(point) for point in points), float(max_speed), float(hold_s))
+    found = _PROFILES.get(key)
+    if found is None:
+        if len(_PROFILES) >= _PROFILE_KEEP:
+            _PROFILES.clear()
+        found = _PROFILES[key] = _prepare(points, max_speed, hold_s)
+    path, profile, distance, duration = found
+    # Lists too: `prepare_pushback` writes into the heading list it is given.
+    copied = {key: (list(value) if isinstance(value, list) else value) for key, value in profile.items()} if profile is not None else None
+    return list(path), copied, distance, duration
+
+
+def _prepare(points, max_speed, hold_s):
     if len(points)<2 or max_speed<=0:
         return points, None, 0.0, hold_s
     lat,lon=points[0]; scale=111194.92664455874; east=scale*math.cos(math.radians(lat))
@@ -164,7 +186,12 @@ def advance(profile, distance, speed, stop_distance, speed_limit, seconds):
         bound = 2*ACCEL_MPS2*remaining
         for j in range(i+1,len(marks)):
             if marks[j] > end: break
-            bound = min(bound, speeds[j]**2+2*ACCEL_MPS2*(marks[j]-distance))
+            reach = 2*ACCEL_MPS2*(marks[j]-distance)
+            # Marks never decrease and a speed squared is never negative, so
+            # once the distance term alone reaches the bound no later knot can
+            # lower it: the min over the rest of the path is already known.
+            if reach >= bound: break
+            bound = min(bound, speeds[j]**2+reach)
         a_dt = ACCEL_MPS2*dt
         safe = max(0.0,(-a_dt+math.sqrt(max(0.0,a_dt*a_dt+4*(bound-a_dt*speed))))/2)
         next_speed = min(speed+a_dt,cap,safe)

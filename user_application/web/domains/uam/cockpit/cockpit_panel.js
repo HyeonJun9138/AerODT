@@ -1,4 +1,4 @@
-import {flightProgress,navClock,navDuration} from './cockpit_flight_progress.js';
+import {flightProgress,navClock,navDuration} from './cockpit_flight_progress.js?v=20260921-psu-eta';
 import {routeGuidance,angleDelta} from './cockpit_route.js?v=20260914-cabin';
 import {fitGroundRangeKm,GROUND_RANGES_KM,surfaceOrigin,surfaceDistance} from './cockpit_surface.js';
 import {buildFlightDisplay,buildNavigationDisplay,buildCameraDisplay,paintInstruments} from './cockpit_instruments.js?v=20260921-lower';
@@ -242,9 +242,9 @@ export class CockpitPanel {
     for(const [key,value] of Object.entries(values)){this.readouts[key].textContent=value;this.readouts[key].setAttribute('title',value);}
     this.originName.textContent=mission.origin_name||mission.origin||'—';this.originId.textContent=mission.origin_id||'';
     this.originBox.setAttribute('title',[this.originName.textContent,this.originId.textContent].filter(Boolean).join(' / '));
-    const notes={'DATA STALE':'수신 지연 · 예상 시간 계산 보류','NO ROUTE':'경로 미수신 · 예상 시간 계산 불가','HOLD':'대기 중 · 예상 시간 계산 보류','GROUND / NO AIR DATA':'지상 / 비행 상태 미수신 · 예상 시간 대기','NO GROUND SPEED':'지상속도 미수신 · 예상 시간 대기','LOW GROUND SPEED':'지상속도 부족 · 예상 시간 계산 보류'};
+    const notes={'PSU ROUTE ETA':'접근 순번 활성화와 동일한 남은 항로 ETA · 감속·하강 포함','DATA STALE':'수신 지연 · 예상 시간 계산 보류','NO ROUTE':'경로 미수신 · 예상 시간 계산 불가','HOLD':'대기 중 · 예상 시간 계산 보류','GROUND / NO AIR DATA':'지상 / 비행 상태 미수신 · 예상 시간 대기','NO GROUND SPEED':'지상속도 미수신 · 예상 시간 대기','LOW GROUND SPEED':'지상속도 부족 · 예상 시간 계산 보류'};
     this.progressNote.textContent=notes[progress.note]??`현재 GS ${progress.speed.toFixed(1)} m/s 기준 · 경로 끝까지 · 착륙/대기 제외`;
-    this.progressNote.setAttribute('title','남은 경로는 현재 위치부터 다음 WP와 이후 모든 경유점까지 재계산합니다. ETA는 일정이나 허가가 아닌 현재 지상속도 기준 근사값입니다.');
+    this.progressNote.setAttribute('title',progress.note==='PSU ROUTE ETA'?'접근 순번 요청 버튼도 이 ETA가 설정된 요청 시점 이하가 될 때 활성화됩니다.':'남은 경로는 현재 위치부터 다음 WP와 이후 모든 경유점까지 재계산합니다. ETA는 일정이나 허가가 아닌 현재 지상속도 기준 근사값입니다.');
     this.planClockLabel.textContent=mission.timing?(timing.elapsed_clock?'ELAPSED':'SIM KST'):'STATE';
     // Operational schedule seconds and native elapsed seconds must not be mixed.
     if(mission.timing)this.readouts.time.textContent=clock(timing.now_s);

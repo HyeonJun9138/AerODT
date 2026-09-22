@@ -33,7 +33,7 @@ import inspect
 import threading
 import time
 
-from digital_twin.model_library import demand_profile, flight_plan, flight_scheduler
+from digital_twin.model_library import demand_profile, flight_plan, flight_scheduler, schedule_planning
 
 SCHEMA_VERSION = 1
 
@@ -146,9 +146,26 @@ def validate_request(raw):
     fleet = [row for row in (raw.get("fleet") or []) if isinstance(row, dict)]
     if not fleet:
         raise GenerationError("배치된 기체가 없습니다", "fleet")
+    try:
+        planning = schedule_planning.validate(raw.get("planning"))
+    except ValueError as error:
+        raise GenerationError(str(error), "planning") from error
+    manual = raw.get("manual") or {}
+    if not isinstance(manual, dict):
+        raise GenerationError("수동 배정 조건이 올바르지 않습니다", "manual")
+    preference = None
+    if manual.get("want") is True:
+        seats = manual.get("seats")
+        if seats not in (None, "", 4, 6, 8, "4", "6", "8") or isinstance(seats, bool):
+            raise GenerationError("수동 기체는 4·6·8인승을 선택하세요", "manual.seats")
+        origin = manual.get("vertiport") or None
+        if origin is not None and origin not in scope:
+            raise GenerationError("수동 출발지를 선택한 범위에 포함하세요", "manual.vertiport")
+        preference = {"seats": int(seats) if seats else None, "vertiport": origin}
     return {"vertiports": scope, "pairs": pairs, "daily_trips": trips, "weights": weights,
             "start_minutes": start, "end_minutes": end, "seed": drawn, "fleet": fleet,
-            "scenario_date": str(raw.get("scenario_date") or "")}
+            "scenario_date": str(raw.get("scenario_date") or ""), "planning": planning,
+            "manual_preference": preference}
 
 
 def _first_fato(layout, role, network=None, vertiport_id=None):
@@ -165,7 +182,14 @@ def _first_gate(layout):
     return str(gates[0]["id"]) if gates else None
 
 
-def _leg_seconds(plan):
+def _fato_options(layout, role, network, vertiport_id):
+    connected = flight_plan.linked_fatos(network, vertiport_id, role)
+    allowed = {"both", role}
+    return [str(item["id"]) for item in (layout or {}).get("fatos") or ()
+            if str(item.get("role") or "both").lower() in allowed and str(item.get("id")) in connected]
+
+
+def _leg_seconds(plan, planning=None):
     """One built plan as the seconds the scheduler needs.
 
     The air is everything between the lift and the touchdown, whatever the route
@@ -177,13 +201,16 @@ def _leg_seconds(plan):
         by_stage[leg["stage"]] += float(leg.get("duration_s") or 0.0)
     air = sum(value for stage, value in by_stage.items()
               if stage in ("climb", "cruise", "descent"))
-    return {"gate_out_s": by_stage.get("gate_out", 0.0), "takeoff_s": by_stage.get("takeoff", 0.0),
-            "air_s": air, "landing_s": by_stage.get("landing", 0.0),
-            "gate_in_s": by_stage.get("gate_in", 0.0),
-            "turnaround_s": by_stage.get("charge", 0.0)}
+    raw = {"gate_out_s": by_stage.get("gate_out", 0.0), "takeoff_s": by_stage.get("takeoff", 0.0),
+           "climb_s": by_stage.get("climb", 0.0), "cruise_s": by_stage.get("cruise", 0.0),
+           "descent_s": by_stage.get("descent", 0.0), "air_s": air,
+           "landing_s": by_stage.get("landing", 0.0), "gate_in_s": by_stage.get("gate_in", 0.0),
+           "turnaround_s": by_stage.get("charge", 0.0)}
+    return schedule_planning.apply_phase_floors(raw, planning)
 
 
-def build_timings(pairs, records, network, profile, *, on_step=None):
+def build_timings(pairs, records, network, profile, *, on_step=None, all_options=False,
+                  planning=None):
     """One flight plan per ordered pair, as the seconds each leg takes.
 
     Built once and reused: the route between two decks does not change because a
@@ -210,36 +237,44 @@ def build_timings(pairs, records, network, profile, *, on_step=None):
             notes.append(f"{origin} → {destination}: 버티포트를 찾지 못했습니다")
             blocked.add((origin, destination))
             continue
-        from_fato = _first_fato(start_record.get("layout"), "takeoff", network, origin)
-        to_fato = _first_fato(end_record.get("layout"), "landing", network, destination)
+        from_fatos = _fato_options(start_record.get("layout"), "takeoff", network, origin)
+        to_fatos = _fato_options(end_record.get("layout"), "landing", network, destination)
         from_gate = _first_gate(start_record.get("layout"))
         to_gate = _first_gate(end_record.get("layout"))
-        if not (from_fato and to_fato and from_gate and to_gate):
+        if not (from_fatos and to_fatos and from_gate and to_gate):
             notes.append(f"{origin} → {destination}: 주기장 또는 FATO가 없습니다")
             blocked.add((origin, destination))
             continue
-        request = {"from_vertiport": origin, "to_vertiport": destination,
-                   "from_gate": from_gate, "to_gate": to_gate,
-                   "from_fato": from_fato, "to_fato": to_fato,
-                   "seat_capacity": 4, "passengers": 4,
-                   "battery_start_pct": flight_plan.DEFAULT_BATTERY_START_PCT,
-                   "charge_target_pct": flight_plan.DEFAULT_CHARGE_TARGET_PCT}
-        try:
-            plan = flight_plan.build_plan(request, records, network, profile=profile)
-        except (ValueError, KeyError) as error:
-            notes.append(f"{origin} → {destination}: 연결된 항로 없음 또는 계획 오류 ({error}). 직항으로 대체하지 않습니다")
+        options, errors = [], []
+        fato_pairs = ((from_fato, to_fato) for from_fato in from_fatos for to_fato in to_fatos)
+        for from_fato, to_fato in fato_pairs:
+            request = {"from_vertiport": origin, "to_vertiport": destination,
+                       "from_gate": from_gate, "to_gate": to_gate,
+                       "from_fato": from_fato, "to_fato": to_fato,
+                       "seat_capacity": 4, "passengers": 4,
+                       "battery_start_pct": flight_plan.DEFAULT_BATTERY_START_PCT,
+                       "charge_target_pct": flight_plan.DEFAULT_CHARGE_TARGET_PCT}
+            try:
+                plan = flight_plan.build_plan(request, records, network, profile=profile)
+            except (ValueError, KeyError) as error:
+                errors.append(str(error))
+                continue
+            legs = _leg_seconds(plan, planning)
+            route = []
+            for leg in plan["legs"]:
+                for waypoint in leg.get("waypoints", ()):
+                    if not route or route[-1] != waypoint:
+                        route.append(waypoint)
+            legs.update(from_fato=from_fato, to_fato=to_fato, route_path=route)
+            options.append(legs)
+            if not all_options:
+                break
+        if not options:
+            detail = errors[0] if errors else "연결된 항로 없음"
+            notes.append(f"{origin} → {destination}: 연결된 항로 없음 또는 계획 오류 ({detail}). 직항으로 대체하지 않습니다")
             blocked.add((origin, destination))
             continue
-        legs = _leg_seconds(plan)
-        # Persist the exact endpoint IDs, not only durations or display names.
-        # Adjacent C/F/G legs repeat their shared endpoint once at the join.
-        route = []
-        for leg in plan["legs"]:
-            for waypoint in leg.get("waypoints", ()):
-                if not route or route[-1] != waypoint:
-                    route.append(waypoint)
-        legs.update(from_fato=from_fato, to_fato=to_fato, route_path=route)
-        timings[(origin, destination)] = legs
+        timings[(origin, destination)] = options if all_options else options[0]
     return timings, notes, blocked
 
 
@@ -262,19 +297,22 @@ def generate(request, *, vertiports, network, profile=None, on_progress=None):
     stands = {str(record["id"]): [str(gate["id"]) for gate in (record.get("layout") or {}).get("gates") or ()]
               for record in records}
     fatos = {str(record["id"]): (record.get("layout") or {}).get("fatos") or [] for record in records}
-    demand = demand_profile.demand_rows(
-        daily_trips=request["daily_trips"], weights=request["weights"], pairs=request["pairs"],
-        start_minutes=request["start_minutes"], end_minutes=request["end_minutes"])
     say("demand")
 
     span = PHASE_END["routes"] - PHASE_END["demand"]
     def route_step(step, total):
         say("routes", PHASE_END["demand"] + span * step / max(1, total),
             f"항로를 계산하는 중입니다 · {step}/{total}")
-    timings, notes, blocked = build_timings(request["pairs"], records, network(), profile,
-                                           on_step=route_step)
+    timings, notes, blocked = build_timings(
+        request["pairs"], records, network(), profile,
+        on_step=route_step, all_options=True, planning=request["planning"])
     if not timings:
         raise GenerationError("연결된 운항 항로가 없습니다. 이륙(C), 순항(F), 착륙(G) 연결을 확인하세요. 직항으로 대체하지 않습니다", "pairs")
+    allocation = demand_profile.demand_plan(
+        daily_trips=request["daily_trips"], weights=request["weights"], pairs=request["pairs"],
+        start_minutes=request["start_minutes"], end_minutes=request["end_minutes"],
+        available_legs=timings)
+    demand = allocation["rows"]
     say("routes")
 
     fleet = _fleet_rows(request, stands)
@@ -282,10 +320,10 @@ def generate(request, *, vertiports, network, profile=None, on_progress=None):
         raise GenerationError("배치된 기체가 없습니다", "fleet")
 
     def timing(origin, destination, _from_gate, _to_gate):
-        legs = timings.get((origin, destination))
-        if legs is None:
+        options = timings.get((origin, destination))
+        if options is None:
             raise ValueError("항로를 계산하지 못했습니다")
-        return legs
+        return options
 
     dispatch_span = PHASE_END["dispatch"] - PHASE_END["routes"]
     def dispatch_step(done, total):
@@ -294,12 +332,26 @@ def generate(request, *, vertiports, network, profile=None, on_progress=None):
         demand=demand, fleet=fleet, stands=stands, timing=timing,
         start_minutes=request["start_minutes"], end_minutes=request["end_minutes"],
         seed=request["seed"], names=names, fatos=fatos,
-        scenario_date=request["scenario_date"], on_progress=dispatch_step)
+        scenario_date=request["scenario_date"], on_progress=dispatch_step,
+        planning=request["planning"], manual_preference=request.get("manual_preference"))
     say("dispatch")
 
     say("file", PHASE_END["dispatch"] + 3)
     text = flight_scheduler.to_csv(answer)
     answer["notes"] = sorted(set(list(answer.get("notes") or []) + notes))
+    in_window = int(allocation["summary"]["operating_window_demand_passengers"])
+    full_day = int(request["daily_trips"])
+    answer["summary"].update(
+        allocation["summary"],
+        full_day_demand_passengers=full_day,
+        out_of_window_demand_passengers=max(0, full_day - in_window),
+        operating_window_demand_pct=round(in_window / full_day * 100, 2) if full_day else 0.0,
+    )
+    if allocation["summary"]["network_lost_demand_passengers"]:
+        answer["notes"].append(
+            f"연결되지 않은 OD 수요 {allocation['summary']['disconnected_od_demand_passengers']}명 중 "
+            f"{allocation['summary']['redistributed_demand_passengers']}명은 대체 항로로 분산하고 "
+            f"{allocation['summary']['network_lost_demand_passengers']}명은 UAM 수요에서 이탈했습니다")
     answer["summary"]["seed"] = request["seed"]
     answer["summary"]["pairs"] = len(request["pairs"])
     answer["summary"]["vertiports"] = len(records)
@@ -307,6 +359,7 @@ def generate(request, *, vertiports, network, profile=None, on_progress=None):
     answer["summary"]["direct_pairs"] = 0
     answer["summary"]["routed_pairs"] = len(timings)
     answer["summary"]["blocked_pairs"] = len(blocked)
+    answer["summary"]["planning_parameters"] = request["planning"]
     say("file")
     return {"answer": answer, "csv": text, "summary": answer["summary"], "notes": answer["notes"]}
 

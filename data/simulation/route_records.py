@@ -23,6 +23,10 @@ class RouteRecords:
         self._path = Path(path)
         self._lock = threading.Lock()
         self._nodes, self._links, self._issued = self._load()
+        # How many times this store has saved since it was opened. Every
+        # change goes through `_save`, so a reader that remembers what it
+        # derived from the records can tell, for nothing, whether they moved.
+        self.version = 0
 
     def _load(self):
         if not self._path.is_file():
@@ -51,6 +55,7 @@ class RouteRecords:
                                          "nodes": self._nodes, "links": self._links},
                                         ensure_ascii=False, indent=2), encoding="utf-8")
         temporary.replace(self._path)
+        self.version += 1
 
     @staticmethod
     def _now():

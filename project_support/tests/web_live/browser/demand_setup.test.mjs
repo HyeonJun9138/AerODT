@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {fakeDocument} from './fake_dom.mjs';
 import {SEOUL_DAILY_TRIPS, allPairs, buildRequest, clockMinutes, dailyTrips, defaultState, describeHours,
   clampMix, fitMix, fleetRows, fleetTotals, initialStateDocument, livePairs, mixSeats, mixTotal,
-  operatingMinutes, pairCounts, pairKey, resolveSeed, seatCapacity, spreadMix, togglePair,
+  operatingMinutes, operatingTrips, pairCounts, pairKey, resolveSeed, seatCapacity, spreadMix, togglePair,
   DEFAULT_SEAT_CLASS, SEAT_CHOICES}
   from '../../../../user_application/web/demand_setup.js';
 import {DemandPanel} from '../../../../user_application/web/domains/uam/planning/demand_panel.js';
@@ -115,6 +115,14 @@ test('the operating day is read from the clock and may run past midnight', () =>
   assert.match(describeHours({start: '06:30', end: '21:30'}), /15시간/);
 });
 
+test('the operating window clips the 24-hour UAM demand instead of compressing it', () => {
+  const curve = [1.9581,1.3959,1.0857,.8918,1.2796,2.7142,4.2458,5.3509,5.6223,5.3121,5.1764,5.1377,
+    5.0407,5.1764,5.2927,5.4672,5.7387,5.8938,5.7774,5.2540,4.7111,4.4785,4.0132,2.9857];
+  assert.equal(operatingTrips(67500, {start: '06:30', end: '21:30'}, curve), 53537);
+  assert.equal(operatingTrips(67500, {start: '23:00', end: '01:00'}, curve), 3337);
+  assert.equal(operatingTrips(67500, {start: '06:30', end: '06:30'}, curve), 0);
+});
+
 test('a fixed seed must be a whole number of at least one; random has none', () => {
   assert.equal(resolveSeed({mode: 'random', value: 7}), null);
   assert.equal(resolveSeed({mode: 'fixed', value: '7'}), 7);
@@ -173,7 +181,8 @@ test('the seat ceiling is the fleet against the length of the day', () => {
 
 test('the request carries the scope, the live pairs, the demand, the day, the seed and the fleet', () => {
   const state = {...scopeOf('vp-1', 'vp-2', 'vp-3'), broken: [pairKey('vp-1', 'vp-3')],
-    seed: {mode: 'fixed', value: 12}, fleet: {fill: 'all', seat_class: 'seat4', overrides: {}}};
+    seed: {mode: 'fixed', value: 12}, fleet: {fill: 'all', seat_class: 'seat4', overrides: {}},
+    schedule_planning: {calibration_id: 'seoul_uam_20260921', fato_headway_s: 60}};
   const {request, errors} = buildRequest(state, RECORDS);
   assert.equal(errors, undefined);
   assert.deepEqual(request.vertiports, ['vp-1', 'vp-2', 'vp-3']);
@@ -184,6 +193,7 @@ test('the request carries the scope, the live pairs, the demand, the day, the se
   assert.equal(request.fleet.reduce((sum, row) => sum + row.aircraft, 0), 12);
   assert.deepEqual(request.fleet[0].aircraft_by_class, {seat4: 4, seat6: 0, seat8: 0});
   assert.equal(request.fleet[0].seats, 16);
+  assert.deepEqual(request.planning, state.schedule_planning);
 });
 
 test('a setup that cannot be generated says why instead of being sent', () => {
@@ -218,12 +228,12 @@ test('the saved file holds the request, the vertiports it names and every pair w
 
 // ---- the panel ---------------------------------------------------------
 
-function mount({records = RECORDS, generate = null, plans = null} = {}) {
+function mount({records = RECORDS, generate = null, plans = null, demandDefaults = null} = {}) {
   const calls = {pairs: [], editor: [], scrap: [], notices: [], saved: [], quiet: [], controls: []};
   const panel = new DemandPanel({document: fakeDocument,
     // The dashboard's own endpoint answers {vertiports: [...]}, which is what
     // this hands over; a bare list is accepted as well.
-    api: {list: async () => ({vertiports: records}), ...(generate ? {generate} : {})},
+    api: {list: async () => ({vertiports: records}), ...(generate ? {generate} : {}), ...(demandDefaults ? {demandDefaults} : {})},
     notify: (status, message) => calls.notices.push([status, message]),
     onPairs: (pairs, options) => calls.pairs.push({pairs, options}),
     onDemandEditor: editor => calls.editor.push(editor),
@@ -245,9 +255,8 @@ test('a vertiport the map has not placed is not offered for a flight day', async
 test('the scope list offers every saved vertiport and a scrap takes several at once', async () => {
   const {panel, root, calls, ready} = mount();
   await ready;
-  // Six: the five that shape the day, and the one that says whether the
-  // operator wants to fly one of its aircraft themselves.
-  assert.equal(root.querySelectorAll('.dm-step').length, 6);
+  // Seven: demand, resources, planning criteria and manual flight.
+  assert.equal(root.querySelectorAll('.dm-step').length, 7);
   assert.ok(root.querySelector('#demand-manual-want'));
   assert.equal(root.querySelector('#demand-scope-table').querySelectorAll('.dm-row').length, 3);
   // Arming the scrap hands the map a handler; the map answers with what the
@@ -455,13 +464,17 @@ test('a request that produced no day leaves the setup where it is', async () => 
 
 test('generating asks for the run, and says so plainly when the generator is not there yet', async () => {
   const asked = [];
-  const {panel, root, ready} = mount({generate: async request => {asked.push(request); return {flights: 128};}});
+  const {panel, root, ready} = mount({generate: async request => {asked.push(request); return {flights: 128,
+    summary: {operating_window_demand_passengers: 53537, out_of_window_demand_passengers: 13963,
+      capacity_delayed_flights: 18, capacity_delay_seconds_max: 125, turnaround_recovery_seconds: 120}};}});
   await ready;
   root.querySelector('#demand-scope-all').click();
   await panel.generate();
   assert.equal(asked.length, 1);
   assert.equal(asked[0].vertiports.length, 3);
   assert.match(panel.result, /생성 완료 · 비행 128편/);
+  assert.match(panel.result, /운항시간 수요 53,537명 · 항로 반영 53,537명 · 시간 외 13,963명/);
+  assert.match(panel.result, /계획 슬롯 조정 18편 \(최대 3분\) · 회항 회복여유 2분/);
   // Pressing it again simply asks for another one.
   await panel.generate();
   assert.equal(asked.length, 2);
@@ -496,7 +509,7 @@ test('a disconnected pair is visibly excluded rather than silently flown direct'
   await ready;
   root.querySelector('#demand-scope-all').click();
   await panel.generate();
-  assert.match(panel.result, /항로 미연결 2개 방향 제외/);
+  assert.match(panel.result, /항로 미연결 2개 방향 \(직항 대체 없음\)/);
   assert.match(panel.result, /직항 대체 없음/);
   assert.equal(calls.notices.at(-1)[0], 'warn');
 });
@@ -558,4 +571,55 @@ test('the map holds the camera still while a scrap is drawn and gives it back af
   assert.match(globe, /destroy\(\) \{\r?\n\s*this\.cancelScrap\(\);/);
   assert.match(css, /\.map-scrap\{/);
   assert.match(css, /\.dm-step\{/);
+});
+
+const PLANNING_DEFAULTS = {fato_headway_s: 60, turnaround_recovery_s: 120,
+  phase_floor_s: {gate_out: 177.5, takeoff: 13.7, climb: 46.1, descent: 45.1, landing: 22.8, gate_in: 160.7},
+  phase_mean_s: {gate_out: 146.3}};
+
+test('planning controls load server values, preserve edits and reset only planning', async () => {
+  const {panel, root, ready} = mount({demandDefaults: async () => ({schedule_planning: PLANNING_DEFAULTS})});
+  await ready;
+  panel.setScope(['vp-1', 'vp-2']);
+  panel.goto('planning');
+  const input = root.querySelector('#dm-planning-fato_headway_s');
+  assert.equal(input.value, '60');
+  input.oninput({target: {value: '90'}});
+  root.querySelector('#dm-planning-gate_out').oninput({target: {value: '200.5'}});
+  assert.equal(panel.state.schedule_planning.fato_headway_s, 90);
+  assert.equal(panel.state.schedule_planning.phase_floor_s.gate_out, 200.5);
+  assert.equal(PLANNING_DEFAULTS.phase_floor_s.gate_out, 177.5);
+  await panel.readWeightDefaults();
+  assert.equal(panel.state.schedule_planning.fato_headway_s, 90);
+  const result = buildRequest(panel.state, RECORDS);
+  assert.equal(result.errors, undefined);
+  assert.equal(result.request.planning.fato_headway_s, 90);
+  assert.equal(result.request.planning.phase_floor_s.gate_out, 200.5);
+  root.querySelector('#dm-planning-reset').click();
+  assert.deepEqual(panel.state.scope, ['vp-1', 'vp-2']);
+  assert.deepEqual(panel.state.schedule_planning, PLANNING_DEFAULTS);
+  panel.reset();
+  assert.deepEqual(panel.state.schedule_planning, PLANNING_DEFAULTS);
+});
+
+test('invalid planning values cannot become a generated request', async () => {
+  const {panel, root, ready} = mount({demandDefaults: async () => ({schedule_planning: PLANNING_DEFAULTS})});
+  await ready;
+  panel.setScope(['vp-1', 'vp-2']);
+  const input = root.querySelector('#dm-planning-fato_headway_s');
+  for (const value of ['', '-1', '3601', 'NaN']) {
+    input.oninput({target: {value}});
+    assert.equal(input.getAttribute('aria-invalid'), 'true');
+    assert.ok(buildRequest(panel.state, RECORDS).errors.some(error => error.includes('스케줄링 기준')));
+  }
+  input.oninput({target: {value: '0'}});
+  assert.equal(buildRequest(panel.state, RECORDS).errors, undefined);
+  assert.equal(input.getAttribute('aria-invalid'), 'false');
+});
+
+test('unavailable planning defaults remain explicit and retryable', async () => {
+  const {root, ready} = mount({demandDefaults: async () => {throw new Error('offline');}});
+  await ready;
+  assert.ok(root.querySelector('#dm-planning-retry'));
+  assert.match(root.textContent, /서버 기본값을 사용/);
 });

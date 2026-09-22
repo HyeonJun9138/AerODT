@@ -12,6 +12,9 @@ import {boundsOf, cornerRadius, facadeHeight, facadeRepeats, facadeWall, offsetO
   paintFacade, roundedOutline, rotatePoints, shellMesh, spanLength} from './vertiport_shell.js?v=20260914-realism';
 import {BaseStructures, baseMesh, basePlan, cladHeight} from './vertiport_base.js?v=20260917-base';
 import {VertiportPilotDetail} from './vertiport_pilot_detail.js?v=20260917-realism';
+import {TerminalShells} from './terminal_shell.js?v=20260922-terminal';
+import {gateSigns, paintBoard, peopleOn} from './terminal_board.js?v=20260922-life';
+import {TerminalPeople} from './terminal_people.js?v=20260922-life';
 
 export {rotateLayout};
 
@@ -481,6 +484,54 @@ export class VertiportLayer {
     // The colonnade, terrace and steps of every placed building.
     this.bases = viewer.scene?.primitives && C.Primitive ? new BaseStructures(C, viewer.scene) : null;
     this.pilotDetail = viewer.scene?.primitives && typeof C.Material === 'function' ? new VertiportPilotDetail(C, viewer.scene, createCanvas) : null;
+    // The storey under each deck, stood up only while somebody is there to walk it.
+    this.terminals = new TerminalShells(C, this.entities);
+    // ...and the life in it: the schedule on the wall and the people it puts
+    // in the room. Both are fed from one answer, so they cannot disagree.
+    this.terminalPeople = null; this.terminalBoard = null;
+  }
+
+  // Stand this deck's interior up, or take it down. Answers whether it is up.
+  //
+  // On demand rather than on distance: it is hidden under its own deck, so
+  // nothing above ground can see it, and the caller knows the one thing
+  // proximity cannot -- that a person is about to be inside it.
+  showTerminal(id, on = true) {
+    const up = this.terminals.set(id, on, {layout: this.records.get(id)?.layout, deckTop: this.deckTop(id)});
+    if (!on || !up) {this.terminalPeople?.hide(); this.terminalBoard = null;}
+    else if (!this.terminalPeople && this.scene?.primitives && this.C.Model?.fromGltfAsync) {
+      this.terminalPeople = new TerminalPeople(this.C, this.scene,
+        {assets: this.personAsset ?? (() => null), warning: this.onWarning ?? (() => {})});
+      void this.terminalPeople.fill();
+    }
+    return up;
+  }
+
+  // What the deck's board says, and therefore who is standing where. One
+  // answer drives both: a second reading of 'who is waiting' would drift
+  // from the first within a minute.
+  showTerminalLife(id, board, waiting) {
+    const record = this.records.get(id), plan = record?.layout?.terminal?.plan;
+    if (!this.terminals.has(id) || !plan) return 0;
+    this.terminalBoard = board ?? null;
+    const face = this.entities.getById(`vertiport:${id}:terminal:board:face`);
+    if (face?.wall) {
+      this.boardCanvas ??= this.createCanvas(1, 1);
+      if (paintBoard(this.boardCanvas, board, {title: record.name || '운항 시간표', now: board?.clock ?? ''}) >= 0) {
+        // A fresh material each time: Cesium uploads the canvas when the
+        // material is replaced, and the same object is not re-read.
+        face.wall.material = new this.C.ImageMaterialProperty({image: this.boardCanvas});
+      }
+    }
+    // Each gate says which flight it is boarding, so standing at one tells
+    // you what the wall a hundred metres away would have.
+    const signs = gateSigns(board);
+    for (const lounge of plan.lounges ?? []) {
+      const sign = this.entities.getById(`vertiport:${id}:terminal:lounge:${lounge.id}:sign`);
+      if (sign?.label) sign.label.text = signs.get(lounge.gate) ?? `${lounge.gate} 탑승 대기`;
+    }
+    const people = peopleOn(plan, {waiting});
+    return this.terminalPeople?.show(people, record.layout.frame, this.deckTop(id) - (Number(record.layout.terminal?.floor_drop_m) || 0)) ?? 0;
   }
   // The vertiport a scene pick landed on, or null for anything else. Entity
   // ids are `vertiport:<id>:<part>`; the preview is not a vertiport to pick.
@@ -904,6 +955,54 @@ export class VertiportLayer {
     }
     return decks;
   }
+  // Every surface a person may stand on here, and every way between them.
+  //
+  // The deck is the one the aircraft lands on -- the same polygon as
+  // `contactDecks`, so a pilot can only walk where their aircraft could have
+  // stood. Under it is the terminal storey the layout derives, and the stair
+  // cores are the structures already standing beside each charger. A level is
+  // carried because the two floors are the same longitude and latitude: which
+  // one you are on is a fact about the person, not about the point.
+  walkWorld() {
+    const C=this.C,surfaces=[],links=[],blocks=[];
+    for(const [id,record] of this.records){
+      const deckTop=this.deckTop(id),shell=shellOf(record.layout);
+      if(!Number.isFinite(deckTop)||!shell)continue;
+      const frame=record.layout.frame;
+      const ring=(points,height)=>localToWorld(C,frame,points,height).map(point=>{
+        const at=C.Cartographic.fromCartesian(point);
+        return [C.Math.toDegrees(at.longitude),C.Math.toDegrees(at.latitude)];
+      });
+      const place=(point,height)=>{const [lon,lat]=ring([point],height)[0];return {longitude:lon,latitude:lat};};
+      surfaces.push({id,level:0,height_m:deckTop,outline:ring(shell.points,deckTop)});
+      const terminal=record.layout.terminal;
+      if(!Array.isArray(terminal?.outline_m)||terminal.outline_m.length<3)continue;
+      const floor=deckTop-(Number(terminal.floor_drop_m)||0);
+      surfaces.push({id:`${id}:terminal`,level:-1,height_m:floor,outline:ring(terminal.outline_m,floor)});
+      // The fit-out is solid where it stands: shops, benches, the screening
+      // wall. The cores are deliberately not in here -- they are the way
+      // between floors, and a walker has to be able to step into one.
+      (terminal.plan?.blocks_m??[]).forEach((outline,index)=>{
+        if(!Array.isArray(outline)||outline.length<3)return;
+        blocks.push({id:`${id}:block:${index}`,level:-1,outline:ring(outline,floor)});
+      });
+      for(const core of terminal.cores??[]){
+        if(!Array.isArray(core?.center_m)||!Array.isArray(core?.size_m))continue;
+        // A square of the door's longer side, square to east and north. The
+        // footprint is a turned rectangle, but this is a threshold rather than
+        // a wall: slightly generous is a door nobody can miss, and the extra
+        // is under a metre on one axis.
+        const half=Math.max(core.size_m[0],core.size_m[1])/2;
+        const foot=[[-half,-half],[half,-half],[half,half],[-half,half]]
+          .map(([x,y])=>[core.center_m[0]+x,core.center_m[1]+y]);
+        links.push({id:`${id}:${core.id}:down`,from:0,to:-1,core:core.id,gate:core.gate,
+          outline:ring(foot,deckTop),exit:place(core.landing_m??core.center_m,floor)});
+        links.push({id:`${id}:${core.id}:up`,from:-1,to:0,core:core.id,gate:core.gate,
+          outline:ring(foot,floor),exit:place(core.deck_exit_m??core.center_m,deckTop)});
+      }
+    }
+    return {surfaces,links,blocks};
+  }
   deckTop(id) {
     const record = this.records.get(id), ground = this.grounds.get(id);
     // Per-frame registration must not rebuild every outline, FATO and gate
@@ -974,6 +1073,8 @@ export class VertiportLayer {
     this.lights?.setVisible(this.visible);
     this.bases?.setVisible(this.visible);
     this.pilotDetail?.setVisible(this.visible);
+    this.terminals?.setVisible(this.visible);
+    if (!this.visible) this.terminalPeople?.hide();
   }
   // The lamps burn brighter and dimmer as the seconds pass; the beacon flashes.
   tickLights(seconds) {
@@ -996,6 +1097,7 @@ export class VertiportLayer {
     this.lights?.clear(id);
     this.bases?.clear(id);
     this.pilotDetail?.clear(id);
+    this.terminals?.clear(id);
     if (!keepRecord) {
       if (this.hovered === id) this.hovered = null;
       this.records.delete(id); this.grounds.delete(id); this.versions.set(id, (this.versions.get(id) ?? 0) + 1);
@@ -1004,5 +1106,5 @@ export class VertiportLayer {
     }
   }
   clear() {for (const id of [...new Set([...this.owned.keys(), ...this.records.keys()])]) this.remove(id);}
-  destroy() {this.clear(); this.lights?.destroy(); this.bases?.destroy(); this.pilotDetail?.destroy();}
+  destroy() {this.clear(); this.lights?.destroy(); this.bases?.destroy(); this.pilotDetail?.destroy(); this.terminals?.destroy(); this.terminalPeople?.destroy();}
 }

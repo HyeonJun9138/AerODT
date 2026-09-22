@@ -15,11 +15,13 @@ from project_support.tests.web_live.test_scenario_engine import schedule_of, row
 
 
 def engine(policy=None):
-    return ScenarioEngine(schedule_of(row('F', 'A', 'VP1', 'VP2', '06:30:00'),
+    result=ScenarioEngine(schedule_of(row('F', 'A', 'VP1', 'VP2', '06:30:00'),
                                       row('G', 'B', 'VP1', 'VP2', '06:30:00',
                                           stand='G3', arrival_stand='G4')),
                           vertiports=VERTIPORTS, network=NETWORK,
                           elevation=lambda lon, lat: 0, policy=policy)
+    result.psu.tuning.manual_arrival_priority=True
+    return result
 
 
 def pair(e):
@@ -112,6 +114,33 @@ def test_what_the_priority_skips_is_a_reservation_and_never_traffic():
     forecasts, _, traffic = body.partition('for other in self.aircraft.values():')
     assert 'waiting_only' in forecasts, '예약 루프에 조건이 있다'
     assert 'waiting_only' not in traffic, '교통 루프에는 조건이 없다'
+
+
+def test_later_ground_departures_cannot_reverse_a_mature_manual_entry_booking():
+    """A taxiing follower keeps its later slot; it is not an earlier arrival."""
+    e = engine()
+    try:
+        a, b, f, g, first, second = pair(e)
+        a.external = {'since_s': e.time_s, 'flight_id': f['flight_id'],
+                      'departed': False, 'violations': [], 'departure_pending': True}
+        assert e._meter_arrival_entry(a, f, first, e.time_s)
+        own = dict(e._entry_forecasts[f['flight_id']])
+        assert not e._meter_arrival_entry(b, g, second, e.time_s)
+        later = e._entry_forecasts[g['flight_id']]
+        assert later['entry_s'] > own['entry_s']
+
+        # It has started its metered ground leg at another origin, but has not
+        # taken off and does not gain permission to displace the first slot.
+        b.flight, b.route, b.phase, b.index = g, second, 'gate_out', 0
+        assert e._meter_arrival_entry(a, f, first, own['departure_s'] + .1)
+        assert e._entry_forecasts[f['flight_id']] == own
+
+        # Once physically airborne, observation is authoritative and the
+        # existing traffic branch may delay the still-grounded manual flight.
+        b.phase = 'cruise'
+        e._meter_arrival_entry(a, f, first, own['departure_s'] + .2)
+    finally:
+        e.close()
 
 
 def test_turning_the_priority_off_puts_the_pilot_back_in_the_queue():

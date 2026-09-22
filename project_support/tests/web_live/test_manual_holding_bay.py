@@ -14,6 +14,8 @@ from project_support.tests.web_live.test_scenario_engine import engine_of, row
 
 def flying(engine, aircraft_id='A1'):
     """Hand the aircraft over, get it away and put it in the air."""
+    # Holding-bay tests start after the pilot request trigger.
+    engine.policy['pilot']['arrival_request_lead_s'] = 1800
     manual_takeover.hand_over(engine, aircraft_id)
     manual_takeover.request(engine, aircraft_id, 'departure')
     manual_takeover.request(engine, aircraft_id, 'takeoff')

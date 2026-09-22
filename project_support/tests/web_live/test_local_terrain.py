@@ -51,6 +51,9 @@ def test_router_bounds_payload_cache_and_same_origin(tmp_path):
     assert all(130<h<160 for h in heights[:4225])
     assert all(w==1 for w in heights[4225:])
     assert client.get(path).content==response.content
+    assert client.get(path+'?v=test').content==response.content
+    stale=client.get(path+'?v=old-dataset')
+    assert stale.status_code==409 and stale.headers['cache-control']=='no-store'
     assert len(tiles.cache)==1
     assert client.get(f'{base}/14/0/0').status_code==204
     for level,x,y in [(15,1,1),(5,1,1),(10,-1,1),(10,2048,1),(10,1,1024)]:
@@ -83,7 +86,10 @@ def test_disabled_package_and_provider_settings():
     assert settings['sources']['terrain']['enabled'] is True
     with pytest.raises(ValueError):validate_settings({'sources':{'terrain':{'provider':'file:///private'}}})
     terrain=next(s for s in describe_library()['sources'] if s['id']=='terrain')
-    assert len(next(f for f in terrain['fields'] if f['name']=='provider')['choices'])==2
+    choices=next(f for f in terrain['fields'] if f['name']=='provider')['choices']
+    assert {c['id'] for c in choices}=={'world_terrain','local_dem','conditioned_dem'}
+    assert next(c for c in choices if c['id']=='conditioned_dem')['label']=='보정 DEM 사용'
+    assert validate_settings({'sources':{'terrain':{'provider':'conditioned_dem'}}})['sources']['terrain']['provider']=='conditioned_dem'
 
 
 def test_adjacent_source_boundary_not_feathered(tmp_path):
@@ -96,3 +102,41 @@ def test_adjacent_source_boundary_not_feathered(tmp_path):
         assert dem.sample(127,37.5)[1]==1
         assert dem.sample(127.001,37.5)[1]==1
     finally:dem.close()
+
+
+def test_conditioned_endpoint_is_separate_and_does_not_expose_paths(tmp_path):
+    dem=package(tmp_path)
+    try:
+        app=FastAPI()
+        app.include_router(create_local_terrain_router(None))
+        app.include_router(create_local_terrain_router(LocalTerrainTiles(dem),source='conditioned'))
+        client=TestClient(app);base='/api/visualization/terrain/conditioned'
+        assert client.get('/api/visualization/terrain/local').json()['enabled'] is False
+        assert client.get(base).json()['enabled'] is True
+        assert str(tmp_path) not in client.get(base).text
+        step=180/2**12;x=int((126.5+180)/step);y=int((90-37.5)/step)
+        assert len(client.get(f'{base}/12/{x}/{y}').content)==33800
+        assert client.get(base,headers={'Origin':'https://elsewhere.test'}).status_code==403
+        assert client.get(base+'/15/0/0').status_code==400
+        with pytest.raises(ValueError):create_local_terrain_router(None,source='../private')
+    finally:dem.close()
+
+
+def test_app_loads_conditioned_package_from_deployment_setting(tmp_path):
+    from user_application.apps.web_dashboard.application import create_app
+    directory=tmp_path/'conditioned';directory.mkdir();package(directory).close()
+    app=create_app({'workspace_directory':str(tmp_path/'workspace'),'cache_directory':str(tmp_path/'cache'),
+                    'conditioned_dem_directory':str(directory),'local_dem_directory':str(tmp_path/'missing'),
+                    'fixture_mode':True},sources=[])
+    with TestClient(app) as client:
+        assert client.get('/api/visualization/terrain/conditioned').json()['enabled'] is True
+        assert client.get('/api/visualization/terrain/local').json()['enabled'] is False
+
+
+def test_app_missing_conditioned_package_does_not_break_dashboard(tmp_path):
+    from user_application.apps.web_dashboard.application import create_app
+    app=create_app({'workspace_directory':str(tmp_path),'cache_directory':str(tmp_path/'cache'),
+                    'conditioned_dem_directory':str(tmp_path/'missing'),'fixture_mode':True},sources=[])
+    with TestClient(app) as client:
+        assert client.get('/api/visualization/terrain/conditioned').json()['enabled'] is False
+        assert client.get('/api/visualization/terrain/conditioned/12/1/1').status_code==404

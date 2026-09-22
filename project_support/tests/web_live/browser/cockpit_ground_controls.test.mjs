@@ -35,7 +35,7 @@ test('console mirrors actual input, labels plan versus PSU, and forwards request
  // left here is the number and a note saying whose hand is on it.
  assert.equal(p.throttle,undefined);assert.equal(p.throttleNote,undefined);
  p.ground.click();assert.deepEqual(actions,[]);p.source.click();assert.deepEqual(actions.pop(),['source','screen']);
- p.update({controls:{...controls,source:'screen'},ground:{available:true}});p.ground.click();assert.equal(actions.pop(),'disembark');
+ p.update({controls:{...controls,source:'screen'},ground:{available:true}});p.ground.click();assert.equal(actions.pop(),'open_door');
  p.update({controls:{...controls,source:'joystick'},ground:{available:true}});assert.equal(p.sourceValue.textContent,'조이스틱');
  p.update({controls:null});assert.equal(p.ground.disabled,true);assert.equal(p.source.disabled,true);p.destroy();
 });
@@ -70,7 +70,7 @@ test('lower MFDs own ground and display actions while simulation settings stay i
  assert.equal(p.controlsRoot.querySelectorAll('button').includes(p.ground),false);
  p.update({controls:{enabled:true,active:true},ground:{phase:'charging',passengers_remaining:0,reason:'연결됨'},telemetry:{passengers:4,battery_pct:87.2},chart:{name:'여의도',assigned:true,liveFato:'F2',liveGate:'G3',plannedFato:'F1',plannedGate:'G1'}});
  assert.equal(p.passengers.textContent,'0');assert.equal(p.energy.textContent,'87 %');
- assert.equal(p.releaseButton.disabled,false);p.releaseButton.click();assert.equal(requests.pop(),'release');
+ assert.equal(p.ground.textContent,'문 닫기');assert.equal(p.ground.disabled,false);p.ground.click();assert.equal(requests.pop(),'close_door');
  p.update({ground:{phase:'complete'},stale:true});assert.equal(p.charger.textContent,'NOT AVAILABLE');assert.equal(p.phase.textContent,'STALE');
  p.focusButtons.turnaround.click();assert.equal(p.focusScreen,'turnaround');assert.equal(p.focused,true);p.close();assert.equal(p.focused,false);p.destroy();
 });
@@ -79,7 +79,7 @@ test('ground MFD never sends stale, paused, pending or unsupported procedure req
  const sent=[],p=new CockpitConsole({document:fakeDocument,onGround:a=>sent.push(a)});
  for(const change of [{stale:true},{controls:{active:false}},{controls:{pending:true}},{controls:{groundSupported:false}}]){
   p.update({controls:{active:true,enabled:true,...change.controls},ground:{available:true,phase:'charging'},stale:change.stale});
-  p.ground.click();p.releaseButton.click();assert.deepEqual(sent,[]);
+  p.ground.click();p.passengerButton.click();p.chargeButton.click();p.releaseButton.click();assert.deepEqual(sent,[]);
  }
  p.destroy();
 });
@@ -89,15 +89,29 @@ test('manual charging waits for a separate request and no phantom cable is drawn
  const controls={active:true,groundSupported:true,groundChargeSupported:true};
  const ground={phase:'awaiting_charge',available:false,door_open:1,charge_requested_s:null,
   start_s:10,position:[127,37,80],crew_start_s:20,crew_walk_s:10,socket:[127,37,80],crew_path:null};
- p.update({controls,ground});assert.equal(p.ground.textContent,'충전 연결 요청');assert.equal(p.ground.disabled,false);
+ p.update({controls,ground});assert.equal(p.ground.textContent,'문 닫기');assert.equal(p.ground.disabled,false);
+ assert.equal(p.passengerButton.textContent,'승객 하차');assert.equal(p.passengerButton.disabled,true);
+ assert.equal(p.chargeButton.textContent,'충전 요청');assert.equal(p.chargeButton.disabled,false);
  assert.equal(p.door.textContent,'OPEN');assert.equal(p.charger.textContent,'STANDBY');
- assert.equal(p.releaseButton.textContent,'문 닫기');p.ground.click();assert.deepEqual(sent,['charge']);
+ p.chargeButton.click();assert.deepEqual(sent,['charge']);
  const v=turnaroundVisual({time_s:5000,ground_handling:ground});assert.equal(v.cable,false);assert.equal(v.open,1);
- p.update({controls:{...controls,groundChargeSupported:false},ground});assert.equal(p.ground.disabled,true);
- p.update({controls,ground:{...ground,readOnly:true}});assert.equal(p.ground.disabled,true);assert.equal(p.releaseButton.disabled,true);
+ p.update({controls:{...controls,groundChargeSupported:false},ground});assert.equal(p.chargeButton.disabled,true);
+ p.update({controls,ground:{...ground,readOnly:true}});assert.equal(p.ground.disabled,true);assert.equal(p.chargeButton.disabled,true);
  const charged={...ground,charge_requested_s:4999,crew_start_s:4989,crew_path:[[127,37,80],[127.001,37,80]]};
  assert.equal(turnaroundVisual({time_s:5000,ground_handling:charged}).cable,true);
  assert.equal(turnaroundVisual({time_s:5001,ground_handling:{...ground,release_s:5000,door_open:.5}}).open,.5);
+ p.destroy();
+});
+
+test('a door closed before charging can be reopened from the turnaround screen',()=>{
+ const sent=[],p=new CockpitConsole({document:fakeDocument,onGround:a=>sent.push(a)});
+ const controls={active:true,enabled:true,groundSupported:true,groundChargeSupported:true,nextFlightSupported:true};
+ const ground={phase:'released',reopen_allowed:true,release_s:100,charge_requested_s:null,
+  flight_completed:true,next_flight:{flight_id:'F2',origin:'VP2',destination:'VP1',target_soc_pct:95}};
+ p.update({controls,ground,telemetry:{battery_pct:84}});
+ assert.equal(p.ground.textContent,'문 열기');assert.equal(p.ground.disabled,false);
+ assert.equal(p.releaseButton.textContent,'다음 비행 이어가기');assert.equal(p.releaseButton.disabled,true);
+ p.ground.click();assert.deepEqual(sent,['reopen']);
  p.destroy();
 });
 
@@ -108,11 +122,48 @@ test('turnaround shows the scheduled next flight during charging and continues a
  p.update({controls,ground:{phase:'charging',flight_completed:true,next_flight:next,passengers_remaining:0},telemetry:{battery_pct:88}});
  assert.equal(p.nextSchedule.hidden,false);assert.match(p.nextFlight.textContent,/F2.*VP2.*VP1/);
  assert.match(p.nextDeparture.textContent,/ETD.*목표 90%/);
- p.update({controls,ground:{phase:'released',flight_completed:true,next_flight:next},telemetry:{battery_pct:89.9}});
+ p.update({controls,ground:{phase:'released',turnaround_complete:true,flight_completed:true,next_flight:next},telemetry:{battery_pct:89.9}});
  assert.equal(p.releaseButton.textContent,'다음 비행 이어가기');assert.equal(p.releaseButton.disabled,true);
- p.update({controls,ground:{phase:'released',flight_completed:true,next_flight:next},telemetry:{battery_pct:90}});
+ p.update({controls,ground:{phase:'released',turnaround_complete:true,flight_completed:true,next_flight:next},telemetry:{battery_pct:90}});
  assert.equal(p.releaseButton.disabled,false);p.releaseButton.click();assert.equal(sent.pop(),'next_flight');
  p.update({controls,ground:{phase:'released',flight_completed:true,next_flight:null},telemetry:{battery_pct:100}});
  assert.equal(p.nextFlight.textContent,'오늘 남은 예정 비행 없음');assert.equal(p.releaseButton.disabled,true);
  p.destroy();
+});
+
+test('door, passenger alighting and charging are the only turnaround requests',()=>{
+ const sent=[],p=new CockpitConsole({document:fakeDocument,onGround:a=>sent.push(a)});
+ const controls={active:true,enabled:true,groundSupported:true,groundChargeSupported:true};
+ p.update({controls,ground:{phase:'idle',available:true}});
+ assert.equal(p.ground.textContent,'문 열기');assert.equal(p.passengerButton.disabled,true);assert.equal(p.chargeButton.disabled,true);
+ p.ground.click();assert.deepEqual(sent,['open_door']);
+ p.update({controls,ground:{phase:'door_open',alight_allowed:true}});
+ assert.equal(p.ground.textContent,'문 닫기');assert.equal(p.passengerButton.disabled,false);assert.equal(p.chargeButton.disabled,true);
+ p.passengerButton.click();assert.equal(sent.pop(),'disembark');
+ p.update({controls,ground:{phase:'awaiting_charge'}});
+ assert.equal(p.passengerButton.disabled,true);assert.equal(p.chargeButton.disabled,false);
+ p.chargeButton.click();assert.equal(sent.pop(),'charge');
+ assert.equal(p.crewButton,undefined);
+ p.destroy();
+});
+
+test('door control stays available through ground work and never substitutes release',()=>{
+ const sent=[],p=new CockpitConsole({document:fakeDocument,onGround:a=>sent.push(a)});
+ const controls={active:true,enabled:true,groundSupported:true,groundChargeSupported:true};
+ for(const [phase,door_state,label,action] of [
+  ['opening','opening','문 닫기','close_door'],['alighting','open','문 닫기','close_door'],
+  ['connecting','closed','문 열기','open_door'],['charging','closed','문 열기','open_door']]){
+   p.update({controls,ground:{phase,door_state,door_control_available:true}});
+   assert.equal(p.ground.disabled,false,phase);assert.equal(p.ground.textContent,label,phase);
+   p.ground.click();assert.equal(sent.pop(),action,phase);
+  }
+  p.update({controls,ground:{phase:'charging',door_state:'closed',door_control_available:true,
+   turnaround_complete:true,next_flight:{flight_id:'F2',origin:'A',destination:'B'}}});
+  assert.equal(p.chargeButton.disabled,true);
+  assert.equal(p.releaseButton.hidden,false,'문 닫기는 별도이고 다음 비행 버튼은 완료 조건이 연다');
+  const visual=turnaroundVisual({time_s:50,ground_handling:{start_s:10,phase:'charging',door_open:0,
+   position:[127,37,80],crew_start_s:10,crew_walk_s:5,charge_requested_s:20,
+   crew_path:[[127,37,80],[127.0001,37,80]],socket:[127,37,80]}});
+  assert.equal(visual.cable,true,'닫힌 문은 연결된 케이블을 분리하지 않는다');
+  p.destroy();
 });

@@ -53,7 +53,7 @@ export class EntityScene {
   constructor(C,viewer,onWarning=()=>{},{surfaceOffset=()=>0}={}) {
     Object.assign(this,{C,viewer,onWarning,surfaceOffset});this.samples=new DisplaySamples();this.items=new Map();this.assets=new Map();
     this.labelOcclusion=new WholeLabelOcclusion(C,viewer,this.items,()=>this.layers.uam?.labels);
-    this.removeLabelOcclusion=viewer.scene?.postRender?.addEventListener(()=>this.labelOcclusion.update(undefined,{moving:this.modelsMoving===true}));
+    this.removeLabelOcclusion=viewer.scene?.postRender?.addEventListener(()=>this.labelOcclusion.schedule({moving:()=>this.modelsMoving===true}));
     this.array=[0,0,0];this.frameItems=[];this.candidates=[];this.residentModels=new Set();this.pendingModels=0;
     this.lastPointUpdate=-Infinity;this.pointInterval=50;this.disposed=false;this.needsLod=true;
     this.performance={...ENTITY_PERFORMANCE_DEFAULTS};this.modelsMoving=false;
@@ -400,8 +400,8 @@ export class EntityScene {
     if(!asset?.uri)return false;
     const entry={model:null,pending:true,showUntil:0};
     this.warmed.set(assetId,entry);
-    (this.warmQueue??=Promise.resolve()).then(()=>this.loadWarmAsset(assetId,asset,entry)).catch(()=>{});
-    this.warmQueue=this.warmQueue.then(()=>{},()=>{});
+    this.warmQueue=(this.warmQueue??Promise.resolve())
+      .then(()=>this.loadWarmAsset(assetId,asset,entry)).catch(()=>{});
     return true;
   }
   async loadWarmAsset(assetId,asset,entry) {
@@ -428,16 +428,33 @@ export class EntityScene {
       // for a moment once it is ready, hidden again by settleWarmAssets().
       model.show=false;
       entry.model=this.layers.uam.models.add(model);
-      const shown=()=>{if(this.disposed || entry.model!==model)return;model.show=true;entry.showUntil=performance.now()+250;this.viewer.scene.requestRender?.();};
-      if(model.ready===true)shown();else model.readyEvent?.addEventListener(shown);
-      model.errorEvent?.addEventListener(()=>{entry.pending=false;});
-    } catch {entry.pending=false;}
+      // fromGltfAsync returns before GPU preparation. Keep the queue occupied
+      // through readyEvent and the short shader warm-up, not merely the fetch.
+      await new Promise(resolve=>{
+        entry.complete=resolve;
+        entry.listeners=[];
+        entry.timer=setTimeout(()=>this.finishWarmAsset(entry,true),MODEL_PREPARATION_TIMEOUT_MS);
+        const shown=()=>{if(this.disposed || !entry.pending || entry.model!==model)return;
+          model.show=true;entry.showUntil=performance.now()+250;scene.requestRender?.();};
+        if(model.ready===true)shown();else entry.listeners.push(model.readyEvent?.addEventListener(shown));
+        entry.listeners.push(model.errorEvent?.addEventListener(()=>this.finishWarmAsset(entry,true)));
+        scene.requestRender?.();
+      });
+    } catch {this.finishWarmAsset(entry,true);}
+  }
+  finishWarmAsset(entry,failed=false) {
+    clearTimeout(entry.timer);
+    for(const remove of entry.listeners??[])remove?.();
+    entry.listeners=[];entry.pending=false;entry.showUntil=0;
+    if(entry.model){entry.model.show=false;
+      if(failed){this.layers.uam.models.remove(entry.model);entry.model=null;}}
+    const complete=entry.complete;entry.complete=null;complete?.();
   }
   // The anchors drawn for their moment are hidden again here, every frame.
   settleWarmAssets(now) {
     if(!this.warmed)return;
     for(const entry of this.warmed.values()){
-      if(entry.model && entry.showUntil && now>=entry.showUntil){entry.model.show=false;entry.showUntil=0;entry.pending=false;}
+      if(entry.model && entry.showUntil && now>=entry.showUntil)this.finishWarmAsset(entry);
     }
   }
   replace(snapshot) {
@@ -902,5 +919,5 @@ export class EntityScene {
     this.needsLod=false;
   }
   destroy(){this.manualTurnaround?.destroy();this.removeLabelOcclusion?.();this.chargingCables?.destroy();this.disposed=true;this.fadingLabels.clear();this.lodScan=null;for(const item of this.residentModels)this.releaseModel(item);this.frameItems.length=0;
-    for(const entry of this.warmed?.values()??[])if(entry.model)this.layers.uam.models.remove(entry.model);this.warmed?.clear();}
+    for(const entry of this.warmed?.values()??[])this.finishWarmAsset(entry,true);this.warmed?.clear();}
 }

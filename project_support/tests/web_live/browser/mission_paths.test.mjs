@@ -49,6 +49,8 @@ class Primitives {
 }
 const C = {
   Cartesian3, PolylineCollection: Polylines, PrimitiveCollection: Primitives,
+  Cartographic: {fromDegrees: (longitude, latitude, height) =>
+    ({longitude: longitude * Math.PI / 180, latitude: latitude * Math.PI / 180, height})},
   Matrix4: class {static IDENTITY = {clone: () => ({})};},
   Color: {fromCssColorString: value => ({value, withAlpha: alpha => ({value, alpha})}),
     BLACK: {withAlpha: alpha => ({black: alpha})}},
@@ -98,13 +100,15 @@ test('the flown line ends on the aircraft instead of where it was a few seconds 
   // The aircraft has moved on since that answer: the line follows it.
   where = {x: 1, y: 2, z: 3};
   assert.equal(layer.update(), true, 'the end of the line moved');
-  assert.equal(layer.polylines.values[0].positions.length, history + 1);
-  assert.deepEqual(layer.polylines.values[0].positions.at(-1), where, 'and it ends on the aircraft');
+  assert.equal(layer.polylines.values[0].positions.length, history);
+  assert.equal(layer.tipLine.positions.length, 2);
+  assert.deepEqual(layer.tipLine.positions[0], layer.line.positions.at(-1));
+  assert.deepEqual(layer.tipLine.positions.at(-1), where, 'and it ends on the aircraft');
 
   // It keeps following, without asking the twin again.
   where = {x: 40, y: 2, z: 3};
   assert.equal(layer.update(), true);
-  assert.deepEqual(layer.polylines.values[0].positions.at(-1), where);
+  assert.deepEqual(layer.tipLine.positions.at(-1), where);
 
   // Standing still costs nothing: no redraw for a tip that has not moved.
   assert.equal(layer.update(), false, 'an aircraft that has not moved is not redrawn');
@@ -115,6 +119,7 @@ test('the flown line ends on the aircraft instead of where it was a few seconds 
   layer.tip = null;
   await layer.show({entity_id: 'scenario:UAM0007', kind: 'uam'}, {force: true});
   assert.equal(layer.polylines.values[0].positions.length, history);
+  assert.equal(layer.tipLine, null);
   layer.clear();
 });
 
@@ -160,6 +165,24 @@ test('a track is thinned to its cap but still ends where the aircraft is', async
   const short = new FlightTrackLayer(C, viewer(), {load: async () => trackOf(1), now: () => 0});
   await short.show({entity_id: 'scenario:UAM0007', kind: 'uam'});
   assert.equal(short.polylines.values.length, 0);
+});
+
+test('the flown track uses the same display-only deck registration as the aircraft', async () => {
+  const track = trackOf(4);
+  track.surface_references = {
+    origin: {vertiport_id: 'VP001', altitude_m: 30},
+    destination: {vertiport_id: 'VP002', altitude_m: 40},
+  };
+  const calls = [];
+  const layer = new FlightTrackLayer(C, viewer(), {load: async () => track,
+    surfaceOffset: (reference, position) => {
+      calls.push([reference.vertiport_id, position.height]);
+      return reference.vertiport_id === 'VP001' && position.height < 302 ? 12 : 0;
+    }, now: () => 0});
+  await layer.show({entity_id: 'scenario:UAM0007', kind: 'uam'});
+  assert.deepEqual(layer.line.positions.map(point => point.z), [312, 313, 302, 303],
+    'only samples inside the origin deck correction volume are lifted');
+  assert.equal(calls.length, 8, 'each distinct endpoint datum is considered for every sample');
 });
 
 // ---- the people -------------------------------------------------------------
@@ -406,11 +429,19 @@ test('flown track follows structured display anchors on every frame without refe
     load:async()=>{requests++;return trackOf(6);},anchor:()=>anchor,now:()=>0});
   await layer.show({entity_id:'scenario:UAM0007',kind:'uam'});
   const line=layer.line;
+  const history=line.positions;
+  let historyWrites=0;
+  Object.defineProperty(line,'positions',{get:()=>history,set:()=>{historyWrites++;},configurable:true});
   for(let frame=1;frame<=60;frame++){
     anchor.displayPosition[0]=1+frame*.02;
     assert.equal(layer.update(),true);
-    assert.equal(line.positions.at(-1).x,anchor.displayPosition[0]);
+    assert.equal(layer.tipLine.positions.at(-1).x,anchor.displayPosition[0]);
+    assert.equal(layer.tipLine.positions.length,2);
+    assert.equal(line.positions,history);
   }
+  assert.equal(historyWrites,0,'moving the tip never dirties the static history buffer');
+  assert.notEqual(layer.tipPolylines,layer.polylines);
+  Object.defineProperty(line,'positions',{value:history,writable:true,configurable:true});
   assert.equal(requests,1);
   assert.equal(layer.update(),false);
   await layer.show({entity_id:'scenario:UAM0007',kind:'uam'},{force:true});

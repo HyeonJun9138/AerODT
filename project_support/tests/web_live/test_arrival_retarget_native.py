@@ -46,7 +46,8 @@ def test_live_native_aircraft_rechecks_newly_blocked_pad_and_taxis_to_new_gate()
     ports=list(base._vertiports.values())
     schedule=schedule_of(row('F1','A1','VP1','VP2','06:31:00'),vertiports=ports)
     e=ScenarioEngine(schedule,vertiports=ports,network=base._network,
-        pilots=ScenarioPilots(NativePilotLibrary(),workers=1),ground_control=VertiportGroundControl())
+        pilots=ScenarioPilots(NativePilotLibrary(),workers=1),ground_control=VertiportGroundControl(),
+        policy={'psu':{'assign_gate_after_touchdown':False}})
     injected=False;changed=False;handle=None;chosen=None
     try:
         for _ in range(2400):

@@ -208,9 +208,10 @@ export class TrajectoryLayer {
     if(this.path?.kind===COMPARISON_KIND){
       const changed=this.comparison.update(this.path,this.now(),at?.time,at);this.reportComparison();return changed;
     }
-    if(!Number.isFinite(at?.time) || (at.time===this.shownFrom && !this.previous &&
-      JSON.stringify(at.displayPosition ?? at.position)===this.shownPosition))return false;
-    this.shownPosition=JSON.stringify(at.displayPosition ?? at.position);
+    const shownAt=at?.displayPosition ?? at?.position,last=this.shownPosition;
+    const unchanged=shownAt===last||(Array.isArray(shownAt)&&Array.isArray(last)&&shownAt.length===last.length&&shownAt.every((value,k)=>value===last[k]));
+    if(!Number.isFinite(at?.time) || (at.time===this.shownFrom && !this.previous && unchanged))return false;
+    this.shownPosition=Array.isArray(shownAt)?shownAt.slice():shownAt;
     if(this.draw(this.path))return true;
     // Nothing of the served path is ahead of the aircraft any more.
     this.remove();this.path=this.previous=null;this.onSummary(null);

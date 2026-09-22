@@ -221,3 +221,15 @@ def test_the_rest_of_the_day_still_runs_around_a_handed_over_aircraft():
     assert engine.aircraft["A1"].flight is None
     # And it is still in the fleet everyone reads, not hidden from it.
     assert any(item["aircraft_id"] == "A1" for item in engine.states())
+
+
+def test_candidates_choose_earliest_off_block_after_seat_filter():
+    engine=day(row('LATE','A1','VP1','VP2','06:37:06'),
+               row('FIRST','A2','VP1','VP2','06:31:00'),
+               row('OTHER','A3','VP1','VP2','06:30:00'))
+    engine.time_s=6*3600+30*60
+    engine.aircraft['A1'].seats=6
+    engine.aircraft['A2'].seats=6
+    engine.aircraft['A3'].seats=4
+    assert [r['flight_id'] for r in manual_takeover.candidates(engine,seats=6)]==['FIRST','LATE']
+    assert manual_takeover.candidates(engine)[0]['flight_id']=='OTHER'

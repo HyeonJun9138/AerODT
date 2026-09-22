@@ -32,6 +32,17 @@ function make(document, tag, attrs = {}, ...children) {
   return node;
 }
 
+// Written only when the value changed. The strip is repainted on every
+// snapshot -- ten a second while a day plays, for as long as an aircraft is
+// selected, which in the cockpit is the whole flight -- and a write of the
+// same text is still a mutation the browser restyles and lays out. Measured
+// by the fan-out audit as sixty to a hundred writes a snapshot; now only the
+// numbers that moved.
+const text = (node, value) => {const next = String(value ?? ''); if (node.textContent !== next) node.textContent = next;};
+const attribute = (node, name, value) => {const next = String(value); if (node.getAttribute(name) !== next) node.setAttribute(name, next);};
+const style = (node, property, value) => {if (node.style[property] !== value) node.style[property] = value;};
+const hidden = (node, value) => {const next = Boolean(value); if (node.hidden !== next) node.hidden = next;};
+
 export class AircraftDashboard {
   constructor({document = globalThis.document, host = document.body, actions = {}, supportsCamera = () => false,
       following = () => false, cockpitReady = () => false} = {}) {
@@ -164,16 +175,21 @@ export class AircraftDashboard {
 
   paintTile(key, {label, value, unit = '', sub = '', angle = null, fill = null, level = null}) {
     const held = this.tile(key, label);
-    held.node.hidden = false;
-    held.label.textContent = label;
-    held.value.textContent = value ?? '—';
-    held.unit.textContent = unit;
-    held.sub.textContent = sub;
-    held.arrow.hidden = !Number.isFinite(angle);
-    if (Number.isFinite(angle)) held.arrow.style.transform = `rotate(${angle - 90}deg)`;
-    held.node.setAttribute('data-gauge', String(Number.isFinite(fill)));
-    if (Number.isFinite(fill)) held.gauge.style.width = `${Math.round(Math.max(0, Math.min(1, fill)) * 100)}%`;
-    held.node.setAttribute('data-level', level ?? 'none');
+    hidden(held.node, false);
+    text(held.label, label);
+    text(held.value, value ?? '—');
+    text(held.unit, unit);
+    text(held.sub, sub);
+    hidden(held.arrow, !Number.isFinite(angle));
+    if (Number.isFinite(angle)) style(held.arrow, 'transform', `rotate(${angle - 90}deg)`);
+    attribute(held.node, 'data-gauge', Number.isFinite(fill));
+    if (Number.isFinite(fill)) style(held.gauge, 'width', `${Math.round(Math.max(0, Math.min(1, fill)) * 100)}%`);
+    attribute(held.node, 'data-level', level ?? 'none');
+    // A tile is a hundred pixels wide and the label or the sub can still be
+    // the longer of the two; clipped text has to be readable somewhere.
+    attribute(held.node, 'title', [label, [value ?? '—', unit].filter(Boolean).join(' '), sub]
+      .map(part => String(part ?? '').trim()).filter(Boolean).join(' · '));
+    this.painted?.add(key);
   }
 
   show(entity) {
@@ -185,14 +201,17 @@ export class AircraftDashboard {
     this.mountCockpitMenus();
     if (changed) {this.mission = null; this.paintMission();}
     const view = describeFlightReadouts(entity);
-    this.kind.textContent = KIND_LABEL[entity.kind] ?? entity.kind ?? '';
-    this.name.textContent = String(entity.name ?? entity.entity_id ?? '').split(' · ')[0];
-    this.quality.textContent = view.quality;
-    this.quality.setAttribute('data-quality', entity.quality ?? '');
-    this.phase.textContent = view.phase;
-    this.phase.setAttribute('data-phase', entity.flight_phase ?? '');
-    this.mode.textContent = view.mode ?? view.source;
-    for (const held of this.tiles.values()) held.node.hidden = true;
+    text(this.kind, KIND_LABEL[entity.kind] ?? entity.kind ?? '');
+    text(this.name, String(entity.name ?? entity.entity_id ?? '').split(' · ')[0]);
+    text(this.quality, view.quality);
+    attribute(this.quality, 'data-quality', entity.quality ?? '');
+    text(this.phase, view.phase);
+    attribute(this.phase, 'data-phase', entity.flight_phase ?? '');
+    text(this.mode, view.mode ?? view.source);
+    // The tiles this pass does not paint are hidden after it, rather than every
+    // tile being hidden first and most of them shown again a moment later:
+    // that was two mutations per tile per snapshot for tiles that never moved.
+    this.painted = new Set();
     for (const card of view.cards) {
       if (card.key === 'battery') continue;
       this.paintTile(card.key, {label: card.label, value: card.value, unit: card.unit, sub: card.sub, angle: card.angle});
@@ -208,14 +227,17 @@ export class AircraftDashboard {
     // The leg's own tile (who is aboard) comes from the mission poll, not the
     // snapshot: repainted here so a telemetry tick does not blink it away.
     if (this.mission) this.paintMission();
-    this.buttons.camera.hidden = !this.supportsCamera(entity);
-    this.buttons.cockpit.hidden = entity.kind !== 'uam';
-    this.buttons.cockpit.disabled = entity.kind === 'uam' && !this.cockpitReady(entity);
-    this.buttons.radar.hidden = !['uam', 'aircraft', 'helicopter', 'drone'].includes(entity.kind);
-    this.buttons.follow.setAttribute('aria-pressed', String(Boolean(this.following(entity))));
-    this.root.hidden = false;
-    this.root.setAttribute('data-kind', entity.kind ?? '');
-    this.root.setAttribute('data-open', 'true');
+    for (const [key, held] of this.tiles) if (!this.painted.has(key)) hidden(held.node, true);
+    this.painted = null;
+    hidden(this.buttons.camera, !this.supportsCamera(entity));
+    hidden(this.buttons.cockpit, entity.kind !== 'uam');
+    const cockpitDisabled = entity.kind === 'uam' && !this.cockpitReady(entity);
+    if (this.buttons.cockpit.disabled !== cockpitDisabled) this.buttons.cockpit.disabled = cockpitDisabled;
+    hidden(this.buttons.radar, !['uam', 'aircraft', 'helicopter', 'drone'].includes(entity.kind));
+    attribute(this.buttons.follow, 'aria-pressed', Boolean(this.following(entity)));
+    hidden(this.root, false);
+    attribute(this.root, 'data-kind', entity.kind ?? '');
+    attribute(this.root, 'data-open', 'true');
   }
 
   setMission(detail) {
@@ -228,28 +250,26 @@ export class AircraftDashboard {
   paintMission() {
     if (!this.root) return;
     const overview = describeMissionOverview(this.mission);
-    this.route.hidden = !overview;
+    hidden(this.route, !overview);
     if (!overview) return;
-    this.routeFrom.textContent = overview.from;
-    this.routeTo.textContent = overview.to;
+    text(this.routeFrom, overview.from);
+    text(this.routeTo, overview.to);
     const percent = parseInt(overview.progress, 10);
-    this.progress.hidden = !Number.isFinite(percent);
+    hidden(this.progress, !Number.isFinite(percent));
     if (Number.isFinite(percent)) {
-      this.progress.setAttribute('aria-valuenow', String(percent));
-      this.progressDone.style.width = `${percent}%`;
+      attribute(this.progress, 'aria-valuenow', percent);
+      style(this.progressDone, 'width', `${percent}%`);
       const planned = parseInt(String(overview.planned).replace(/[^\d]/g, ''), 10);
-      this.progressPlanned.hidden = !Number.isFinite(planned);
-      if (Number.isFinite(planned)) this.progressPlanned.style.left = `${planned}%`;
+      hidden(this.progressPlanned, !Number.isFinite(planned));
+      if (Number.isFinite(planned)) style(this.progressPlanned, 'left', `${planned}%`);
     }
-    this.eta.textContent = [overview.progress, overview.eta].filter(Boolean).join(' · ');
-    this.timing.textContent = overview.timing;
-    this.timing.setAttribute('data-level', overview.timingLevel ?? 'neutral');
-    this.warning.textContent = overview.warning ?? '';
-    this.warning.hidden = !overview.warning;
-    const seats = this.tile('passengers', '탑승');
+    text(this.eta, [overview.progress, overview.eta].filter(Boolean).join(' · '));
+    text(this.timing, overview.timing);
+    attribute(this.timing, 'data-level', overview.timingLevel ?? 'neutral');
+    text(this.warning, overview.warning ?? '');
+    hidden(this.warning, !overview.warning);
     this.paintTile('passengers', {label: '탑승', value: overview.passengers, sub: overview.flow || (overview.sequence !== '미배정' ? `착륙 ${overview.sequence}` : ''),
       fill: Number.isFinite(overview.occupancy) ? overview.occupancy : null});
-    seats.node.hidden = false;
   }
 
   setMinimised(minimised) {

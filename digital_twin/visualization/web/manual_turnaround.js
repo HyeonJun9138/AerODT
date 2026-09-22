@@ -17,17 +17,18 @@ export class ManualTurnaround{
   this.people?.destroy();this.worker?.destroy();this.people=this.worker=null;this.operation=null;
   if(this.cable)this.scene.primitives.remove(this.cable);this.cable=null;this.cableKey=null;
   for(const e of this.owned)this.viewer.entities.remove(e);this.owned=[];
-  for(const node of this.doors??[])if(node&&!node.isDestroyed?.())node.matrix=node.originalMatrix;
-  this.doors=null;this.doorModel=null;
+  for(const node of this.doors??[])if(node&&!node.isDestroyed?.()){node.matrix=node.originalMatrix;node.aerodtTurnaroundAngle=undefined;}
+  this.doors=null;this.doorModel=null;this.anchor=null;
  }
  update(sample,model,asset,plan,shown){
   const C=this.C,v=turnaroundVisual(sample),g=v?.g;
   if(!v){if(this.operation)this.clear();return;}
-  const key=`${g.start_s}:${g.vertiport}:${g.gate}:${g.charge_requested_s??'waiting'}`;
+  const alightingStart=g.alighting_start_s===undefined?g.start_s+2:g.alighting_start_s;
+  const key=`${g.start_s}:${g.vertiport}:${g.gate}:${alightingStart??'door'}:${g.charge_requested_s??'waiting'}`;
   if(this.operation!==key){
    this.clear();this.operation=key;
    const makePlan=(walk,start)=>({vehicle:plan.vehicle,alighting:walk,legs:[{stage:'charge',start_s:start,path:[[...g.position]]}]});
-   if(g.walk?.count)this.people=new PassengerBoardingLayer(C,this.scene,makePlan(g.walk,g.start_s+2),this.assets,this.warning);
+   if(g.walk?.count&&Number.isFinite(alightingStart))this.people=new PassengerBoardingLayer(C,this.scene,makePlan(g.walk,alightingStart),this.assets,this.warning);
    if(g.crew_path){
     const distance=Math.max(.01,g.crew_walk_s*.9),schedule={count:1,path:g.crew_path,distances_m:[0,distance],walk_mps:.9,walk_s:g.crew_walk_s,enter_s:5,duration_s:g.crew_walk_s+5,release_s:[0],asset_id:'kenney_blocky_person_q',height_m:1.75};
     this.worker=new PassengerBoardingLayer(C,this.scene,makePlan(schedule,g.start_s+g.crew_start_s),this.assets,this.warning);
@@ -51,11 +52,16 @@ export class ManualTurnaround{
     // Index 0 is the starboard hatch; a positive angle swings its free edge
     // outward. Same sign as showDoors in cabin_passengers.js.
     const active=(g.door_side>0?0:1)===i,angle=active?v.open*spec.open_deg*Math.PI/180*(i===0?1:-1):0;
+    // A door that has not moved keeps its matrix: rewriting it every frame
+    // dirtied the model's node tree for nothing while the aircraft stood.
+    if(node.aerodtTurnaroundAngle===angle)continue;node.aerodtTurnaroundAngle=angle;
     const rotation=C.Matrix4.fromRotationTranslation(C.Matrix3.fromRotationY(angle));
     node.matrix=C.Matrix4.multiply(node.originalMatrix,rotation,new C.Matrix4());
    }
   }
-  const near=C.Cartesian3.distance(this.scene.camera.positionWC,C.Cartesian3.fromDegrees(...g.position))<650;
+  // The stand does not move: its Cartesian is made once per procedure.
+  if(!this.anchor||this.anchorKey!==key){this.anchor=C.Cartesian3.fromDegrees(...g.position);this.anchorKey=key;}
+  const near=C.Cartesian3.distance(this.scene.camera.positionWC,this.anchor)<650;
   if(!v.cable||!shown||!near){if(this.cable)this.scene.primitives.remove(this.cable);this.cable=null;this.cableKey=null;return;}
   // Quantise the carrying geometry to 10 Hz; connected geometry is built once.
   const step=Math.floor(v.progress*100)/100,cableKey=`${key}:${step}`;if(cableKey===this.cableKey)return;

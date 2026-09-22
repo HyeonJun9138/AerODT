@@ -119,8 +119,9 @@ def test_the_cockpit_reads_the_service_and_asks_it_for_things():
     if granted.json()["state"] == "granted":
         landing = client.post(f"/api/simulation/scenario/manual/{aircraft_id}/request",
                               json={"kind": "arrival", "eta_s": 300})
-        assert landing.json()["sequence"] >= 1, "착륙 번호를 받는다"
-        assert client.get(f"/api/simulation/scenario/manual/{aircraft_id}").json()["arrival"]["vertiport"] == "VP2"
+        assert landing.json()["state"] == "hold"
+        assert "이륙 완료 보고" in landing.json()["reason"]
+        assert client.get(f"/api/simulation/scenario/manual/{aircraft_id}").json()["arrival"] is None
 
     unknown = client.post(f"/api/simulation/scenario/manual/{aircraft_id}/request", json={"kind": "tea"})
     assert unknown.status_code == 422

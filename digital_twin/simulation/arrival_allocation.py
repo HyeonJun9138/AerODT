@@ -57,6 +57,11 @@ def candidate_route(engine, aircraft, fato, stand, cache):
 
 def review(engine, aircraft, now, ground_observations=None):
     """Called on the serialized decision thread before submitting native work."""
+    if engine.policy['psu'].get('assign_gate_after_touchdown', False):
+        # FATO selection remains the airborne decision.  A GATE is deliberately
+        # absent until actual contact, so pre-approach bundle scoring must not
+        # recreate the old speculative GATE reservation.
+        return False
     c=aircraft.clearance;owner=aircraft.flight['flight_id'] if aircraft.flight else None
     if (not c or not aircraft.airborne or aircraft.failed or not aircraft.pilot_active
             or not engine.policy['psu'].get('allocate_fatos',True)
@@ -90,9 +95,9 @@ def review(engine, aircraft, now, ground_observations=None):
             state=engine.psu.resource_monitor.resource(port,'fato',fato,now)
             if state is None or not state.usable:
                 row['reason']='버티포트 보고상 FATO 사용 불가';continue
-        if any(place==port and held!=owner and engine._nearby_pads(port,fato,other)
+        if any(place==port and held!=owner and engine._same_fato(port,fato,other)
                 for (place,other),held in engine._active_pads.items()):
-            row['reason']='FATO 또는 인접 패드 실제 점유';continue
+            row['reason']='해당 FATO 실제 점유';continue
         pad_best=None;air_checked=False;air_reason=None
         for stand in stands:
             pair=candidate_route(engine,aircraft,fato,stand,state['routes'])

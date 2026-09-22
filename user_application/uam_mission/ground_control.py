@@ -6,9 +6,13 @@ advances only from the caller's actual route progress. Missing claim owners stay
 protected until observed again or explicitly released by lifecycle handling.
 """
 from dataclasses import dataclass
+import hashlib
+import heapq
 import math
 
-from digital_twin.contracts.ground_operations import GroundObservation, MovementAuthority
+from digital_twin.contracts.ground_operations import (
+    GroundObservation, GroundRouteProposal, MovementAuthority,
+)
 from digital_twin.model_library.ground_motion import ACCEL_MPS2
 from digital_twin.model_library.ground_routes import RouteGeometry, route_geometry, same_route_geometry
 
@@ -43,6 +47,14 @@ class VertiportGroundControl:
         self._claims = {}
         self._potential_routes = {}
         self._maximum_radius = {}
+        self._route_graphs = {}
+        # (vertiport, start, goal, limit) -> the paths `_candidate_paths` found.
+        # A graph does not change between configurations, so neither does
+        # this; before it was kept every proposal re-ran the enumeration.
+        self._candidate_cache = {}
+        # vertiport -> how many times its graph has been configured; part of
+        # the review stamp, since a new graph is a new set of paths.
+        self._configurations = {}
         self._sequence = 0
 
     def reset(self):
@@ -50,7 +62,162 @@ class VertiportGroundControl:
         self._claims.clear()
         self._potential_routes.clear()
         self._maximum_radius.clear()
+        self._route_graphs.clear()
+        self._candidate_cache.clear()
+        self._configurations.clear()
         self._sequence = 0
+
+    def _paths(self, vertiport_id, nodes, edges, start_id, goal_id, limit):
+        """The candidate paths of one configured graph, found once per (start, goal, limit).
+
+        The enumeration below walks every simple path of the taxi graph in
+        cost order until it has `limit` of them, and a day's tick asked for
+        it once per candidate departure pad of every aircraft waiting on a
+        stand -- the same stand, the same pad, the same graph, dozens of
+        times a tick. The graph is fixed from `configure_vertiport` to the
+        next one, which also forgets what was found for it.
+        """
+        key = (vertiport_id, start_id, goal_id, int(limit))
+        paths = self._candidate_cache.get(key)
+        if paths is None:
+            paths = self._candidate_cache[key] = self._candidate_paths(nodes, edges, start_id, goal_id, int(limit))
+        return paths
+
+    @staticmethod
+    def _candidate_paths(nodes, edges, start_id, goal_id, limit):
+        """Return the first ``limit`` simple paths in deterministic cost order."""
+        if start_id not in nodes or goal_id not in nodes:
+            return ()
+        queue = [(0.0, (start_id,))]
+        result = []
+        while queue and len(result) < limit:
+            cost, path = heapq.heappop(queue)
+            current = path[-1]
+            if current == goal_id:
+                result.append(path)
+                continue
+            for nxt, length in edges.get(current, ()):
+                if nxt not in path:
+                    heapq.heappush(queue, (cost + max(0.0, length), path + (nxt,)))
+        return tuple(result)
+
+    def configure_vertiport(self, vertiport_id, layout, *, radius_m=7.0, alternatives=2):
+        """Install one facility's taxi graph under its own ground controller.
+
+        Layout geometry is static model input.  The vertiport, rather than the
+        simulation engine, derives its shortest and next-shortest alternatives
+        and later attaches live occupancy facts when it proposes a route.
+        """
+        if not vertiport_id:
+            raise ValueError('vertiport identifier is required')
+        if not math.isfinite(radius_m) or radius_m <= 0:
+            raise ValueError('registered maximum radius must be finite and positive')
+        if isinstance(alternatives, bool) or not 1 <= int(alternatives) <= 4:
+            raise ValueError('ground route alternative count must be between one and four')
+        raw_nodes = {str(item['id']): item for item in (layout or {}).get('nodes', ())
+                     if item.get('id') and len(item.get('position_m') or ()) == 2}
+        # Authored layout coordinates are east/north; ground authority uses
+        # north/east to match its observation frame.
+        nodes = {identifier: (float(item['position_m'][1]), float(item['position_m'][0]))
+                 for identifier, item in raw_nodes.items()}
+        edges = {}
+        for edge in (layout or {}).get('edges', ()):
+            first, second = str(edge.get('from') or ''), str(edge.get('to') or '')
+            if first not in nodes or second not in nodes:
+                continue
+            length = float(edge.get('length_m') or math.dist(nodes[first], nodes[second]))
+            if not math.isfinite(length) or length < 0:
+                raise ValueError('taxi edge length must be finite and non-negative')
+            edges.setdefault(first, []).append((second, length))
+            edges.setdefault(second, []).append((first, length))
+        edges = {identifier: tuple(sorted(links)) for identifier, links in edges.items()}
+        graph = (nodes, edges, int(alternatives))
+        self._route_graphs[str(vertiport_id)] = graph
+        self._configurations[str(vertiport_id)] = self._configurations.get(str(vertiport_id), 0) + 1
+        self._candidate_cache = {key: paths for key, paths in self._candidate_cache.items()
+                                 if key[0] != str(vertiport_id)}
+
+        endpoints = [str(item['id']) for item in [*((layout or {}).get('gates') or ()),
+                                                   *((layout or {}).get('fatos') or ())]
+                     if item.get('id') in nodes]
+        potential = {}
+        for index, first in enumerate(endpoints):
+            for second in endpoints[index + 1:]:
+                for path in self._paths(str(vertiport_id), nodes, edges, first, second, int(alternatives)):
+                    geometry = route_geometry(tuple(nodes[node] for node in path))
+                    canonical = min(geometry.points, tuple(reversed(geometry.points)))
+                    potential[canonical] = route_geometry(canonical)
+        self._potential_routes[str(vertiport_id)] = tuple(
+            potential[key] for key in sorted(potential))
+        self._maximum_radius[str(vertiport_id)] = float(radius_m)
+
+    def review_stamp(self, vertiport_id):
+        """Everything a proposal at this vertiport reads besides the observations
+        it is handed: which graph is configured and the taxi claims held there,
+        in the fields `propose_routes` compares against. Two proposals made
+        under equal stamps from equal observations are the same proposal, so a
+        caller that holds the last one may keep it until the stamp changes."""
+        identifier = str(vertiport_id)
+        claims = tuple(sorted((claim.aircraft_id, claim.route_id, claim.radius_m, claim.start_m, claim.end_m)
+                              for claim in self._claims.values() if claim.vertiport_id == identifier))
+        return (self._configurations.get(identifier, 0), claims)
+
+    def propose_routes(self, vertiport_id, start_id, goal_id, *, aircraft_id=None,
+                       observations=(), radius_m=7.0, limit=2):
+        """Offer shortest and alternative taxi routes with current blockers.
+
+        This is a proposal for PSU comparison, not movement permission.  The
+        later ``authorize`` call remains the only route-bound taxi authority.
+        """
+        identifier = str(vertiport_id)
+        try:
+            nodes, edges, configured_limit = self._route_graphs[identifier]
+        except KeyError as error:
+            raise KeyError(f'ground layout is not configured for {identifier}') from error
+        if not math.isfinite(radius_m) or radius_m <= 0:
+            raise ValueError('proposal radius must be finite and positive')
+        if isinstance(limit, bool) or int(limit) < 1:
+            raise ValueError('proposal limit must be a positive integer')
+        limit = min(configured_limit, int(limit))
+        paths = self._paths(identifier, nodes, edges, str(start_id), str(goal_id), limit)
+        result = []
+        for rank, path in enumerate(paths, 1):
+            points = tuple(nodes[node] for node in path)
+            geometry = route_geometry(points)
+            stop = geometry.length_m
+            blockers = set()
+
+            def restrict(intervals, blocker):
+                nonlocal stop, blockers
+                if not intervals:
+                    return
+                candidate = max(0.0, intervals[0][0] - _STOP_MARGIN_M)
+                if candidate < stop - _EPS:
+                    stop, blockers = candidate, {str(blocker)}
+                elif abs(candidate - stop) <= _EPS:
+                    blockers.add(str(blocker))
+
+            for observation in observations:
+                if (observation.vertiport_id != identifier
+                        or observation.aircraft_id == aircraft_id):
+                    continue
+                restrict(geometry.occupied_intervals(
+                    route_geometry((observation.point_m,)), radius_m + observation.radius_m),
+                    observation.aircraft_id)
+            for claim in self._claims.values():
+                if claim.vertiport_id != identifier or claim.aircraft_id == aircraft_id:
+                    continue
+                restrict(geometry.occupied_intervals(
+                    claim.geometry, radius_m + claim.radius_m, 0.0, None,
+                    claim.start_m, claim.end_m), claim.aircraft_id)
+            digest = hashlib.sha1('|'.join(path).encode('utf-8')).hexdigest()[:10]
+            result.append(GroundRouteProposal(
+                vertiport_id=identifier,
+                route_id=f'ground:{identifier}:{start_id}:{goal_id}:{rank}:{digest}',
+                start_id=str(start_id), goal_id=str(goal_id), node_ids=path,
+                path_m=points, distance_m=geometry.length_m, rank=rank,
+                clear_distance_m=max(0.0, stop), blocked_by=tuple(blockers)))
+        return tuple(result)
 
     def configure_routes(self, vertiport_id, paths_m, *, radius_m=7.0):
         """Register immutable possible taxi paths before issuing port claims.

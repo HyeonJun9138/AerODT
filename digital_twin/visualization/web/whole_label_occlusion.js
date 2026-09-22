@@ -1,7 +1,29 @@
 // Depth is sampled after rendering. The label itself is rendered as one overlay,
 // never per-glyph depth-clipped; an obstruction hides the whole label.
 export class WholeLabelOcclusion {
- constructor(C,viewer,items,labels=()=>null){Object.assign(this,{C,viewer,items,labels});this.cursor=null;this.suspended=false;this.pending=null;this.clock=()=>performance.now();}
+ constructor(C,viewer,items,labels=()=>null){Object.assign(this,{C,viewer,items,labels});this.cursor=null;this.suspended=false;this.pending=null;this.clock=()=>performance.now();
+  this.defer=fn=>globalThis.setTimeout(fn,0);this.deferred=null;this.deferGeneration=0;this.disposed=false;}
+ // Asked from the map's postRender, but the sweep itself runs in the next
+ // task. A depth read waits for the GPU to finish what has been submitted,
+ // and inside postRender that is the whole frame just drawn: measured on an
+ // RTX 3080 at 9-13 ms per frame and up to 80 ms for one read, the single
+ // largest cost of the map (data/workspace/performance, 2026-09-19). In the
+ // next task the frame has been handed to the compositor, the wait overlaps
+ // time the main thread would have spent idle before the next display
+ // interval, and most of what it waits for has already happened. The scene
+ // read is the same one: positions move in the render loop, and the depth
+ // is of the frame just drawn. Operator motion is still answered at once,
+ // by dropping partial evidence exactly as before.
+ schedule({moving=false}={}){
+  if(this.disposed)return;
+  const isMoving=()=>Boolean(typeof moving==='function'?moving():moving);
+  if(isMoving()){this.deferGeneration++;this.deferred=null;this.update(undefined,{moving:true});return;}
+  if(this.deferred!=null)return;
+  const generation=++this.deferGeneration;let ran=false;
+  const token=this.defer(()=>{ran=true;if(generation!==this.deferGeneration||this.disposed)return;this.deferred=null;this.update(undefined,{moving:isMoving()});});
+  if(!ran)this.deferred=token??true;
+ }
+ dispose(){this.disposed=true;this.deferGeneration++;this.deferred=null;this.pending=null;}
  // Give every name back and forget what was hidden. Used wherever this check
  // stops running, so nothing is left hidden by a test that is no longer made.
  release(){

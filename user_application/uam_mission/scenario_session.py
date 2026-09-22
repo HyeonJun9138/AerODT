@@ -29,6 +29,10 @@ from user_application.uam_mission.scenario_observation import ScenarioObservatio
 from functools import wraps
 import inspect
 import threading
+import queue
+import copy
+import gc
+import logging
 import time
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -61,6 +65,12 @@ MAX_ADVANCE_S = 120.0
 # Tracks are written this often in scenario time. Fine enough to draw a path
 # from, coarse enough that a day is a file somebody can download.
 RECORD_INTERVAL_S = 1.0
+# How often the tick sweeps what the day has allocated since the last sweep
+# and freezes what survived (cheap: only that much is walked), and how often
+# it thaws the whole day and collects it (the one long pass, so frozen
+# objects that have since become garbage are given back).
+GC_SWEEP_S = 30.0
+GC_FULL_S = 900.0
 # Only aircraft on a flight are recorded, taxi included. 84 airframes standing
 # on decks for twelve hours is not a track, it is the same row two million times.
 RECORD_FLYING_ONLY = True
@@ -86,18 +96,29 @@ def epoch_of(date_text, seconds):
 
 
 class ScenarioRecorder:
-    """What the day leaves behind: the tracks, the flights and the holds.
+    """What the day leaves behind: operations, developer detail and tracks.
 
     Written as the day runs rather than at the end, so a day that is stopped
     half way still leaves everything up to that point. Files are opened on the
-    first write, so a session nobody plays writes nothing.
+    first write, so a session nobody plays writes nothing. Operational events
+    and developer diagnostics are deliberately written to different files.
     """
 
+    # Everything that touches the files and the proximity records is done on
+    # one writer thread, in the order it was asked, so the tick -- which
+    # holds the session's lock and the interpreter with it -- spends a few
+    # microseconds handing the work over instead of thirty-odd milliseconds
+    # encoding a hundred states and walking every pair of them, once a
+    # second, with every socket in the process waiting. The files come out
+    # byte for byte as before: one writer, one queue, one order. What is
+    # counted (`rows`, `events`) is counted when asked, which is what the
+    # status shows; `finish` and `close` wait for the queue to empty.
     def __init__(self, directory, scenario_id, *, workspace=None, policy=None):
         self.directory = Path(directory) / scenario_id
         self.scenario_id = scenario_id
         self._tracks = None
         self._events = None
+        self._diagnostics = None
         self.rows = 0
         self.events = 0
         self.started_at = None
@@ -105,18 +126,49 @@ class ScenarioRecorder:
         self._proximity_policy = deepcopy(policy or {})
         self._proximity = None
         self.finalized = False
+        self._queue = queue.Queue()
+        self._writer = None
 
     def _open(self):
         if self._tracks is None:
             self.directory.mkdir(parents=True, exist_ok=True)
             self._tracks = (self.directory / "tracks.jsonl").open("w", encoding="utf-8")
             self._events = (self.directory / "events.jsonl").open("w", encoding="utf-8")
+            self._diagnostics = (self.directory / "diagnostics.jsonl").open("w", encoding="utf-8")
             self.started_at = time.time()
             from data.simulation.proximity_records import ProximityRecords
             self._proximity = ProximityRecords(self._proximity_workspace, self.scenario_id, self._proximity_policy)
 
+    def _submit(self, work):
+        if self._writer is None:
+            self._writer = threading.Thread(target=self._drain_forever, name='scenario-recorder', daemon=True)
+            self._writer.start()
+        self._queue.put(work)
+
+    def _drain_forever(self):
+        while True:
+            work = self._queue.get()
+            try:
+                if work is None:
+                    return
+                work()
+            except Exception:  # noqa: BLE001 - a record that cannot be written must not stop the day
+                logging.getLogger(__name__).exception('scenario recorder write failed')
+            finally:
+                self._queue.task_done()
+
+    def _wait(self):
+        """Everything asked for so far is on disk and in the proximity records."""
+        if self._writer is not None:
+            self._queue.join()
+
     def track(self, moment, states):
         self._open()
+        states = list(states)
+        self.rows += sum(1 for state in states if not (RECORD_FLYING_ONLY and not state["flight_id"]))
+        self._submit(lambda: self._write_track(moment, states))
+
+    def _write_track(self, moment, states):
         self._proximity.observe(moment, states)
         for state in states:
             if RECORD_FLYING_ONLY and not state["flight_id"]:
@@ -131,20 +183,35 @@ class ScenarioRecorder:
                 "battery_pct": state.get("battery_pct"),
                 "power_kw": (state.get("energy") or {}).get("power_kw"),
             }, ensure_ascii=False) + "\n")
-            self.rows += 1
 
     def event(self, event):
         self._open()
+        self.events += 1
+        # A copy, so a record the day goes on editing is written as it was asked.
+        event = copy.deepcopy(event)
+        self._submit(lambda: self._write_event(event))
+
+    def _write_event(self, event):
         self._proximity.event(event)
         self._events.write(json.dumps(event, ensure_ascii=False) + "\n")
-        self.events += 1
         self._events.flush()
+
+    def diagnostic(self, diagnostic):
+        """Persist developer detail outside the operational event stream."""
+        self._open()
+        diagnostic = copy.deepcopy(diagnostic)
+        self._submit(lambda: self._write_diagnostic(diagnostic))
+
+    def _write_diagnostic(self, diagnostic):
+        self._diagnostics.write(json.dumps(diagnostic, ensure_ascii=False) + "\n")
+        self._diagnostics.flush()
 
     def finish(self, engine, schedule, *, analysis=None):
         """The two files that are read rather than replayed: flights and holds."""
         self._open()
+        self._wait()
         self._proximity.flush()
-        for handle in (self._tracks, self._events):
+        for handle in (self._tracks, self._events, self._diagnostics):
             if handle:
                 handle.flush()
         actual = {}
@@ -209,7 +276,8 @@ class ScenarioRecorder:
 
     def manifest(self):
         files = []
-        for name in ("tracks.jsonl", "events.jsonl", "flights.csv", "holds.json", "summary.json"):
+        for name in ("tracks.jsonl", "events.jsonl", "diagnostics.jsonl",
+                     "flights.csv", "holds.json", "summary.json"):
             path = self.directory / name
             if path.exists():
                 files.append({"name": name, "bytes": path.stat().st_size})
@@ -220,12 +288,17 @@ class ScenarioRecorder:
                     "continuous_minimum_guaranteed": False}}
 
     def close(self):
+        self._wait()
+        if self._writer is not None:
+            self._queue.put(None)
+            self._writer.join(timeout=5)
+            self._writer = None
         if self._proximity is not None:
             self._proximity.close()
-        for handle in (self._tracks, self._events):
+        for handle in (self._tracks, self._events, self._diagnostics):
             if handle:
                 handle.close()
-        self._tracks = self._events = None
+        self._tracks = self._events = self._diagnostics = None
 
 
 def _serialized(method):
@@ -258,6 +331,7 @@ class ScenarioSession(ScenarioObservation):
         self._log_workspace = log_workspace
         self._now = now
         self._lock = threading.RLock()
+        self._gc_sweep_at = self._gc_full_at = time.monotonic()
         self.schedule = None
         self.engine = None
         self.recorder = None
@@ -277,6 +351,7 @@ class ScenarioSession(ScenarioObservation):
         self._anchor_scenario = None
         self._last_record = None
         self._recorded_events = 0
+        self._recorded_diagnostic_sequence = 0
         self._prediction_history = PredictionHistory()
         self._prediction_watches = {}
         self._prediction_generation = 0
@@ -288,6 +363,9 @@ class ScenarioSession(ScenarioObservation):
         self._manual_poses = {}          # aircraft_id -> pose kwargs; newest wins, drained by the tick
         self._manual_watch = set()       # aircraft_id with a cockpit currently flying it
         self._manual_advice = {}         # aircraft_id -> the last advisory the tick computed
+        # vertiport id -> (latitude, longitude, cos latitude) of its frame, read
+        # once per loaded day for the wire view's nearest-endpoint test.
+        self._surface_frames = {}
         self._manual_advice_at = -float('inf')
 
     def _make_pilots(self, policy):
@@ -334,6 +412,7 @@ class ScenarioSession(ScenarioObservation):
             if self.engine is not None:
                 self.engine.close()
             self.schedule, self.engine = schedule, engine
+            self._surface_frames = {}
             self._infrastructure_dirty = infrastructure_revision != getattr(self, "_infrastructure_revision", 0)
             from data.simulation.operations_records import OperationsHistory
             self._operations_history = OperationsHistory()
@@ -347,9 +426,51 @@ class ScenarioSession(ScenarioObservation):
             self._anchor_wall = self._anchor_scenario = None
             self._last_record = None
             self._recorded_events = 0
+            self._recorded_diagnostic_sequence = 0
             self.recorder = ScenarioRecorder(self._directory, self.scenario_id,
                 workspace=self._log_workspace, policy=self.engine.policy) if self._directory else None
+        self._freeze_day()
         return self.description()
+
+    # The cyclic collector's oldest-generation pass walks every tracked object
+    # in the process, and a loaded morning is millions of them: measured on the
+    # live server while a pilot flew, it stopped every thread for 200-290 ms
+    # every 9-10 s, which is the hitch the pilot felt. Once a day is loaded,
+    # what is alive is moved to the collector's permanent generation and never
+    # walked again; the passes that keep running see only what the ticks
+    # allocate, which is small and dies young. Unloading moves the day back
+    # and collects it, so a day that is gone does not stay in memory.
+    def _freeze_day(self):
+        gc.unfreeze()
+        gc.collect()
+        gc.freeze()
+        self._gc_sweep_at = self._gc_full_at = time.monotonic()
+
+    # Measured on the live server with the day frozen at load: the collector's
+    # oldest pass still stopped every thread every 9 s, for longer as the day
+    # went on (118 ms at the start of a flight, 275 ms ten minutes in), because
+    # what the day keeps as it runs - events, trails, histories, pair minima -
+    # piles up behind the freeze and every pass walks all of it. So the tick
+    # sweeps that pile every GC_SWEEP_S and freezes what survived, which keeps
+    # each pass to a few milliseconds, and every GC_FULL_S thaws and collects
+    # the whole day once, so nothing that died frozen stays. Only when garbage
+    # is collected changes; nothing the day computes does.
+    def _collect_garbage_quietly(self):
+        now = time.monotonic()
+        if now - self._gc_full_at >= GC_FULL_S:
+            self._gc_full_at = self._gc_sweep_at = now
+            gc.unfreeze()
+            gc.collect()
+            gc.freeze()
+        elif now - self._gc_sweep_at >= GC_SWEEP_S:
+            self._gc_sweep_at = now
+            gc.collect()
+            gc.freeze()
+
+    @staticmethod
+    def _thaw_day():
+        gc.unfreeze()
+        gc.collect()
 
     def clear(self):
         with self._lock:
@@ -357,10 +478,12 @@ class ScenarioSession(ScenarioObservation):
             if self.engine is not None:
                 self.engine.close()
             self.schedule = self.engine = None
+            self._surface_frames = {}
             self._forget_manual()
             self._reset_prediction_history()
             self.state, self.control_open = IDLE, False
             self.scenario_id, self.name = "", ""
+        self._thaw_day()
         return self.description()
 
     def _close_recorder(self):
@@ -473,6 +596,7 @@ class ScenarioSession(ScenarioObservation):
             self._anchor_wall = self._anchor_scenario = None
             self._last_record = None
             self._recorded_events = 0
+            self._recorded_diagnostic_sequence = 0
             if self._directory:
                 self.scenario_id = f"{self.schedule['schedule_id']}-{uuid.uuid4().hex[:6]}"
                 self.recorder = ScenarioRecorder(self._directory, self.scenario_id,
@@ -510,6 +634,7 @@ class ScenarioSession(ScenarioObservation):
             # flown by hand, so its poses still land and its clearances still
             # refresh. Only the schedule stops when the day is paused.
             self._pump_manual()
+            self._collect_garbage_quietly()
             if self.state != PLAYING or self.engine is None or self._anchor_wall is None:
                 return False
             elapsed = (self._now() - self._anchor_wall) * self.speed
@@ -560,6 +685,11 @@ class ScenarioSession(ScenarioObservation):
         for event in history[self._recorded_events:]:
             self.recorder.event(event)
         self._recorded_events = len(history)
+        for diagnostic in self.engine.diagnostics:
+            sequence = int(diagnostic.get('diagnostic_sequence') or 0)
+            if sequence > self._recorded_diagnostic_sequence:
+                self.recorder.diagnostic(diagnostic)
+                self._recorded_diagnostic_sequence = sequence
 
     # ---- what the twin sees ------------------------------------------------
     @property
@@ -771,12 +901,18 @@ class ScenarioSession(ScenarioObservation):
         newest phase, so buffered takeoff/landing samples keep the right deck.
         """
         candidates = []
+        frames = self.__dict__.setdefault('_surface_frames', {})
         for identifier in {state.get('origin'), state.get('destination')} - {None}:
-            frame = self.engine._layout(identifier).get('frame') or {}
-            if not all(isinstance(frame.get(key), (int, float)) for key in ('latitude', 'longitude')):
+            frame = frames.get(identifier, False)
+            if frame is False:
+                raw = self.engine._layout(identifier).get('frame') or {}
+                frame = frames[identifier] = (
+                    (raw['latitude'], raw['longitude'], math.cos(math.radians(raw['latitude'])))
+                    if all(isinstance(raw.get(key), (int, float)) for key in ('latitude', 'longitude')) else None)
+            if frame is None:
                 continue
-            north = state['latitude_deg'] - frame['latitude']
-            east = (state['longitude_deg'] - frame['longitude']) * math.cos(math.radians(frame['latitude']))
+            north = state['latitude_deg'] - frame[0]
+            east = (state['longitude_deg'] - frame[1]) * frame[2]
             candidates.append((north * north + east * east, identifier))
         if not candidates:
             return None
@@ -1073,7 +1209,27 @@ class ScenarioSession(ScenarioObservation):
     @_serialized
     def track(self, aircraft_id):
         """Where one airframe has been on the flight it is flying or just flew."""
-        return None if self.engine is None else self.engine.track(aircraft_id)
+        if self.engine is None:
+            return None
+        track = self.engine.track(aircraft_id)
+        if track is None:
+            return None
+        # Track points remain authoritative simulation altitudes.  The map may
+        # register a deck against a different rendered terrain height, so give
+        # the display the same endpoint datums carried by live entities.  The
+        # renderer applies these only as a visual offset; recorded state is not
+        # rewritten and never comes back into Simulation.
+        references = {}
+        for endpoint in ('origin', 'destination'):
+            vertiport_id = track.get(endpoint)
+            if vertiport_id and vertiport_id not in {
+                    item['vertiport_id'] for item in references.values()}:
+                references[endpoint] = {
+                    'vertiport_id': vertiport_id,
+                    'altitude_m': self.engine._deck_height(vertiport_id),
+                }
+        track['surface_references'] = references
+        return track
 
     @_serialized
     def passengers(self):

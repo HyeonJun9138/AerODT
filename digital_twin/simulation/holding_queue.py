@@ -2,6 +2,11 @@
 import math
 from digital_twin.model_library.terminal_paths import segment_distance
 
+# Slack kept in the broad phase so a segment whose true distance is exactly
+# the separation is still handed to the exact test, whatever the last bit of
+# that test's own rounding does. A millimetre is far above any of it.
+BROAD_PHASE_MARGIN_M = 1e-3
+
 
 def relative(origin, point):
     return ((point[0]-origin[0])*111320.,
@@ -71,6 +76,25 @@ def positions(anchor, inbound, horizontal=120., vertical=45.):
                 yield f'{"R" if side==1 else "L"}{int(along/spacing)+2}-H{level+1}',point
 
 
+def fato_positions(anchor, rank, horizontal=120.):
+    """Candidate bays around one FATO at the queue rank's exact altitude.
+
+    Rank one is ten metres above the authored landing-start altitude, rank two
+    twenty metres above it, and so on.  Horizontal alternatives let separate
+    FATOs and departure corridors reject one side without losing the level.
+    """
+    if isinstance(rank, bool) or int(rank) < 1:
+        raise ValueError('holding rank must be a positive integer')
+    radius=max(180.,float(horizontal)*1.5)
+    scale=111320.*math.cos(math.radians(anchor[0]))
+    altitude=anchor[2]+10.*int(rank)
+    for index,bearing in enumerate(range(0,360,45),1):
+        angle=math.radians(bearing)
+        north,east=math.cos(angle)*radius,math.sin(angle)*radius
+        yield f'Q{int(rank)}-S{index}',(
+            anchor[0]+north/111320.,anchor[1]+east/scale,altitude)
+
+
 class HoldingQueue:
     def __init__(self):
         self.reservations = {}
@@ -93,6 +117,31 @@ class HoldingQueue:
             return r
         return None
 
+    def retarget(self, owner, port, candidates, rejoin, now, horizontal, vertical, allowed):
+        """Move an existing reservation to its new live queue-rank position."""
+        current=self.reservations.get(owner)
+        if current is None:
+            return self.reserve(owner,port,candidates,rejoin,now,horizontal,vertical,allowed)
+        for name,target in candidates:
+            if any(key!=owner and nearby(target,r['target'],horizontal,vertical)
+                   for key,r in self.reservations.items()):
+                continue
+            if any(key!=owner and (blocks_leg(target,r['target'],r['rejoin'],horizontal,vertical) or
+                   blocks_leg(r['target'],target,rejoin,horizontal,vertical))
+                   for key,r in self.reservations.items()):
+                continue
+            if not allowed(target):
+                continue
+            target=tuple(target);rejoin=tuple(rejoin)
+            if current['slot']==name and current['target']==target and current['rejoin']==rejoin:
+                return current
+            previous=current['target']
+            current.update(port=port,slot=name,target=target,rejoin=rejoin,state='moving',
+                           move_start=None,previous_target=previous,retargeted_s=now)
+            current.pop('settled_target',None);current.pop('return_hold',None);current.pop('via',None)
+            return current
+        return current
+
     def release(self, owner):
         return self.reservations.pop(owner,None)
 
@@ -106,6 +155,14 @@ class HoldingQueue:
         Equal full claims otherwise let paused returns lock a shared entry.
         """
         delta = relative(position,target)
+        # How far the own transfer reaches from its origin, laterally. Any point
+        # of it lies within this of the origin, so an other segment whose every
+        # point is farther away than this plus the separation cannot come
+        # within the separation of it (triangle inequality), and the exact
+        # segment tests below could only answer 'clear' for it. Those tests are
+        # most of the cost of screening a transfer against a whole fleet, and
+        # nearly all of the fleet is at other vertiports.
+        own_reach=math.hypot(delta[0],delta[1])+BROAD_PHASE_MARGIN_M
         own=self.reservations.get(owner)
         own_observation=next((o for o in observations if o['owner']==owner),None)
         for other in observations:
@@ -130,6 +187,12 @@ class HoldingQueue:
             for end in ends:
                 if min(p[2],end[2])-max(0.,delta[2]) >= vertical or min(0.,delta[2])-max(p[2],end[2]) >= vertical:
                     continue
+                # Broad phase (exact): the other segment stays farther from the
+                # origin than the own transfer reaches plus the separation, so
+                # neither `distance < horizontal` nor `closest < horizontal`
+                # below can hold for it.
+                if math.hypot(p[0],p[1])-math.hypot(end[0]-p[0],end[1]-p[1]) >= own_reach+horizontal:
+                    continue
                 portion=clip_height((0.,0.,0.),delta,min(p[2],end[2])-vertical,max(p[2],end[2])+vertical)
                 if portion is None:continue
                 closest = segment_distance(portion[0][:2],portion[1][:2],p[:2],end[:2])
@@ -147,6 +210,9 @@ class HoldingQueue:
             if key==owner:
                 continue
             p=relative(position,r['target'])
+            # Broad phase (exact), as above with a point for the other segment.
+            if math.hypot(p[0],p[1]) >= own_reach+horizontal:
+                continue
             portion=clip_height((0.,0.,0.),delta,p[2]-vertical,p[2]+vertical)
             if portion:
                 closest=segment_distance(portion[0][:2],portion[1][:2],p[:2],p[:2])

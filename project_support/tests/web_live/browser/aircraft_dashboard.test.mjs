@@ -161,3 +161,34 @@ test('focus mode starts with only its handle and preserves ordinary fold state o
  // Reading order follows: collapsed, the handle is the only thing there.
  assert.equal(d.root.children[0].getAttribute('aria-label'),'조작부 펼치기');
 });
+
+// The readings ran into each other: 3,151 rpm met 80 % and read as '3,15180 %'.
+// Measured at the old width, six tiles shared 559 px -- 67-82 px of content box
+// each against readings that needed up to 74 -- and with the battery there are
+// seven. Nothing inside a tile clipped, so the overflow simply drew over the
+// neighbour.
+test('no reading may be drawn outside its own tile', () => {
+  const css = readFileSync(new URL('../../../../user_application/web/aircraft_dashboard.css', import.meta.url), 'utf8');
+  // Each of the three texts in a tile clips rather than spilling.
+  assert.match(css, /\.adb-label\{[^}]*overflow:hidden;text-overflow:ellipsis\}/);
+  assert.match(css, /\.adb-reading\{[^}]*min-width:0\}/);
+  assert.match(css, /\.adb-tile\{[^}]*overflow:hidden\}/);
+  // A number that is cut in half is a wrong number, so the value holds its
+  // width and the unit beside it gives way first.
+  assert.match(css, /\.adb-value\{[^}]*flex:none\}/);
+  assert.match(css, /\.adb-unit\{[^}]*text-overflow:ellipsis\}/);
+  // And a floor with wrapping, so a narrow window makes a second row instead
+  // of crushing seven tiles into nothing.
+  assert.match(css, /\.adb-tile\{flex:1 1 98px;min-width:98px/);
+  assert.match(css, /\.adb-tiles\{[^}]*flex-wrap:wrap/);
+});
+
+test('a tile carries its own full text for whatever had to be clipped', () => {
+  const {dashboard} = harness();
+  dashboard.show(entity);
+  dashboard.paintTile('rotor', {label: '로터 회전수', value: '3,151', unit: 'rpm', sub: '시뮬레이션 상태값'});
+  assert.equal(tile(dashboard, 'rotor').getAttribute('title'), '로터 회전수 · 3,151 rpm · 시뮬레이션 상태값');
+  // Nothing absent is written into it as an empty separator.
+  dashboard.paintTile('tilt', {label: '로터 틸트', value: '0', unit: '°'});
+  assert.equal(tile(dashboard, 'tilt').getAttribute('title'), '로터 틸트 · 0 °');
+});

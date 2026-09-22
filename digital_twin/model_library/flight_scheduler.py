@@ -38,7 +38,7 @@ import io
 import math
 import random
 
-from . import flight_schedule
+from . import flight_schedule, schedule_planning
 
 SCHEMA_VERSION = 1
 
@@ -169,7 +169,8 @@ def _fato_picker():
 
 
 def schedule(*, demand, fleet, stands, timing, start_minutes, end_minutes, seed=1,
-             names=None, fatos=None, scenario_date="", scenario_id="", on_progress=None):
+             names=None, fatos=None, scenario_date="", scenario_id="", on_progress=None,
+             planning=None, manual_preference=None):
     """Build the day.
 
     `demand` is `{hour, from, to, passengers}` rows; `fleet` is
@@ -180,12 +181,18 @@ def schedule(*, demand, fleet, stands, timing, start_minutes, end_minutes, seed=
     `gate_in_s`, `turnaround_s`, and optionally `from_fato`, `to_fato` and
     `route_path` — or raises `ValueError` naming why that pair cannot be flown.
 
+    `planning`, when given, applies timetable FATO spacing and planned
+    turnaround recovery. Air-route occupancy and runtime separation remain
+    authoritative PSU concerns rather than timetable constraints.
+
     `on_progress(done, total)` is called as the day is built, because a run this
     long has to be able to say how far along it is.
     """
     rng = random.Random(int(seed) if seed is not None else 1)
     names = dict(names or {})
     fatos = dict(fatos or {})
+    planning_values = schedule_planning.validate(planning) if planning is not None else None
+    slots = schedule_planning.PlanningSlotBook() if planning_values is not None else None
     start_s, end_s, hours = _window(start_minutes, end_minutes)
 
     aircraft, free_at, notes = {}, {}, []
@@ -213,11 +220,21 @@ def schedule(*, demand, fleet, stands, timing, start_minutes, end_minutes, seed=
         destinations[key] = destinations.get(key, 0) + int(row["passengers"])
 
     flights, arrivals, blocked = [], [], set()
+    # Only the first matching generated flight gets preference. Time and
+    # physical resource checks remain authoritative; no existing day is edited.
+    manual_pending = bool(manual_preference)
+    def preferred(carrier):
+        return (manual_pending and carrier.flights == 0
+                and (not manual_preference.get("seats") or carrier.seats == manual_preference["seats"])
+                and (not manual_preference.get("vertiport") or carrier.at == manual_preference["vertiport"]))
     # One rotation for the whole day, so the pads are shared across it rather
     # than each hour starting again from the first one.
     pick_fato = _fato_picker()
     counter, sequence = 0, 0
     unserved, unresolved = 0, 0
+    capacity_wait_total = capacity_wait_max = 0.0
+    capacity_delayed_flights = capacity_spill_events = 0
+    capacity_wait_started = {}
     total_steps = len(hours) + 1
     if on_progress:
         on_progress(0, total_steps)
@@ -318,7 +335,7 @@ def schedule(*, demand, fleet, stands, timing, start_minutes, end_minutes, seed=
                      for origin, destinations in (by_hour.get(hour) or {}).items()}
         hour_state.update(ready=[], order=0, start=hour_start, end=hour_end)
         ready = hour_state["ready"]
-        for carrier in aircraft.values():
+        for carrier in sorted(aircraft.values(), key=lambda a: not preferred(a)):
             make_ready(carrier)
         while True:
             # Everything that lands before the next departure is landed first,
@@ -346,26 +363,72 @@ def schedule(*, demand, fleet, stands, timing, start_minutes, end_minutes, seed=
                 if destination is None:
                     break
                 try:
-                    legs = timing(carrier.at, destination, carrier.stand, None)
+                    choices = timing(carrier.at, destination, carrier.stand, None)
                 except (ValueError, KeyError) as error:
                     local.add((carrier.at, destination))
                     blocked.add((carrier.at, destination))
                     notes.append(f"{carrier.at} → {destination}: {error}")
                     continue
-                built = (destination, legs)
+                if isinstance(choices, dict):
+                    choices = [choices]
+                choices = [dict(item) for item in choices or () if isinstance(item, dict)]
+                if not choices:
+                    local.add((carrier.at, destination))
+                    blocked.add((carrier.at, destination))
+                    continue
+                built = (destination, choices)
                 break
             if built is None:
                 continue
-            destination, legs = built
+            destination, choices = built
             load = min(int(available[destination]), carrier.seats)
             if load <= 0:
                 continue
-            counter += 1
             cabin = flight_schedule.seat_class(carrier.seats)
             off_block = at
+            slot_specs = []
+            if slots is not None:
+                candidates = []
+                for option in choices:
+                    specs = schedule_planning.event_specs(carrier.at, destination, option, planning_values)
+                    candidates.append((slots.earliest_start(off_block, specs),
+                                       str(option.get("from_fato") or ""),
+                                       str(option.get("to_fato") or ""), option, specs))
+                slotted, _from_fato, _to_fato, legs, slot_specs = min(candidates,
+                    key=lambda item: (item[0], item[1], item[2]))
+                if slotted > off_block + 1e-7:
+                    capacity_wait_started.setdefault(identifier, off_block)
+                    if slotted >= hour_end:
+                        capacity_wait_started.pop(identifier, None)
+                        capacity_spill_events += 1
+                        continue
+                    heapq.heappush(ready, (slotted, hour_state["order"], identifier))
+                    hour_state["order"] += 1
+                    continue
+                capacity_wait = off_block - capacity_wait_started.pop(identifier, off_block)
+            else:
+                legs = choices[0]
+                capacity_wait = 0.0
+            counter += 1
+            if preferred(carrier):
+                manual_pending = False
+                # Restore ordinary tie order for the remaining initial fleet.
+                ranks = {key: i for i, key in enumerate(aircraft)}
+                ready[:] = [(t, ranks[key], key) for t, _, key in ready]
+                heapq.heapify(ready)
+            if slots is not None:
+                slots.reserve(off_block, slot_specs)
+                if capacity_wait > 0:
+                    capacity_delayed_flights += 1
+                    capacity_wait_total += capacity_wait
+                    capacity_wait_max = max(capacity_wait_max, capacity_wait)
             lift_off = off_block + float(legs["gate_out_s"])
             handoff = lift_off + float(legs["takeoff_s"])
             arrival_ready = handoff + float(legs["air_s"])
+            turnaround = float(legs["turnaround_s"])
+            if planning_values is not None:
+                turnaround = max(turnaround, float(cabin["turnaround_seconds"]))
+                turnaround += float(planning_values["turnaround_recovery_s"])
             flight = {
                 "flight_plan_id": f"FPL{counter:06d}", "aircraft_id": identifier,
                 "aircraft_type_id": cabin["type_id"], "seat_capacity": carrier.seats,
@@ -380,11 +443,11 @@ def schedule(*, demand, fleet, stands, timing, start_minutes, end_minutes, seed=
                 "arrival_fato_id": legs.get("to_fato") or pick_fato(destination, fatos.get(destination), "landing"),
                 "off_block_s": off_block, "lift_off_s": lift_off, "departure_handoff_s": handoff,
                 "touchdown_s": None, "in_block_s": None, "turnaround_complete_s": None,
-                "departure_resource_wait_s": 0.0, "arrival_resource_wait_s": 0.0,
+                "departure_resource_wait_s": capacity_wait, "arrival_resource_wait_s": 0.0,
                 "route_path": list(legs.get("route_path") or ()),
                 "flight_status": flight_schedule.UNRESOLVED_STATUS,
                 "_landing_s": float(legs["landing_s"]), "_gate_in_s": float(legs["gate_in_s"]),
-                "_turnaround_s": float(legs["turnaround_s"]),
+                "_turnaround_s": turnaround,
             }
             flights.append(flight)
             pending[flight["flight_plan_id"]] = flight
@@ -396,6 +459,11 @@ def schedule(*, demand, fleet, stands, timing, start_minutes, end_minutes, seed=
             push_arrival(arrival_ready, flight)
             available[destination] -= load
             release(carrier.at, off_block)
+        # A tentative facility wait belongs to this hour's demand. Another
+        # aircraft may carry the remaining passengers before the delayed one
+        # is reconsidered; do not charge that abandoned wait to a different
+        # destination or to the next hour's passengers.
+        capacity_wait_started.clear()
         settle(hour_end)
         unserved += sum(sum(destinations.values()) for destinations in remaining.values())
         if on_progress:
@@ -411,7 +479,10 @@ def schedule(*, demand, fleet, stands, timing, start_minutes, end_minutes, seed=
         for key in ("_landing_s", "_gate_in_s", "_turnaround_s", "_arrived_s"):
             flight.pop(key, None)
     carried = sum(flight["passenger_count"] for flight in flights
-                  if flight["flight_status"] == flight_schedule.READY_STATUS)
+                   if flight["flight_status"] == flight_schedule.READY_STATUS)
+    rotations = [carrier.flights for carrier in aircraft.values()]
+    if manual_pending:
+        notes.append("수동 우선 배치 조건에 맞는 편을 만들지 못했습니다. 인승·출발지·수요·항로를 확인하세요.")
     return {
         "schema_version": SCHEMA_VERSION,
         "scenario_id": str(scenario_id or ""), "scenario_date": str(scenario_date or ""),
@@ -427,6 +498,16 @@ def schedule(*, demand, fleet, stands, timing, start_minutes, end_minutes, seed=
             "unserved_passengers": unserved,
             "demand_passengers": sum(int(row["passengers"]) for row in demand or ()),
             "start_seconds": start_s, "end_seconds": end_s,
+            "capacity_delayed_flights": capacity_delayed_flights,
+            "capacity_delay_seconds_total": round(capacity_wait_total, 1),
+            "capacity_delay_seconds_max": round(capacity_wait_max, 1),
+            "capacity_spill_events": capacity_spill_events,
+            "fato_slot_reservations": slots.reservations["fato"] if slots else 0,
+            "turnaround_recovery_seconds": (planning_values["turnaround_recovery_s"]
+                                             if planning_values else 0.0),
+            "rotation_flights_min": min(rotations) if rotations else 0,
+            "rotation_flights_max": max(rotations) if rotations else 0,
+            "rotation_flights_mean": round(sum(rotations) / len(rotations), 2) if rotations else 0.0,
         },
     }
 

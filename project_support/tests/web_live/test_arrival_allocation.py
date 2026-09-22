@@ -10,6 +10,8 @@ from project_support.tests.web_live.test_fato_assignment import multi_engine
 @pytest.fixture
 def setup():
     e,original=multi_engine()
+    e.policy['psu']['assign_gate_after_touchdown']=False
+    e._at_final_gate=lambda aircraft:False
     a=e.aircraft['A1'];a.flight=dict(original,arrival_fato='F1');a.route=e.route(a.flight)
     e._prepare_waiting_route(a,e.time_s)
     r=e.psu.waiting.reservations['F1'];r['state']='holding'

@@ -105,6 +105,8 @@ CLOUD_PRODUCTS = [
 PROVIDERS = {
     "terrain": [
         {"id": "world_terrain", "label": "Cesium World Terrain", "note": "기존 전 세계 지형"},
+        {"id": "conditioned_dem", "label": "보정 DEM 사용",
+         "note": "공항·수면·완만한 지면의 요철을 사전 보정한 30m급 지형입니다. 범위 밖은 Cesium을 사용하며 물리 지면 판정은 변경하지 않습니다."},
         {"id": "local_dem", "label": "로컬 DEM 우선 + 범위 밖 Cesium",
          "note": "사용자 30m급 DEM. EGM96 높이 기준 가정으로 보정하며 범위 경계는 혼합합니다. 원자료 정확도 개선을 보장하지 않습니다."},
     ],
@@ -283,7 +285,7 @@ def describe_library(values=None):
          ]},
         {"id": "terrain", "label": "지형", "provider": _provider_label("terrain", values),
          "note": "로컬 자료가 없는 곳은 Cesium을 유지합니다. 끄면 평면 지표로 표시합니다. "
-                 "로컬 DEM도 30m급이며 수직 기준은 EGM96 가정입니다. 화면 지형이며 측량 기준이 아닙니다.",
+                 "보정 DEM은 EGM96 높이를 타원체 높이로 변환해 표시합니다. 30m급 시각화 자료이며 물리 지면 판정과 측량 정확도를 보장하지 않습니다.",
          "fields": [{"name": "enabled", "kind": "toggle", "label": "표시"},
                     {"name": "provider", "kind": "choice", "label": "지형 자료", "choices": PROVIDERS["terrain"]}]},
         {"id": "buildings", "label": "건물", "provider": _provider_label("buildings", values),

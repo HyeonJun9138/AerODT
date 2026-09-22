@@ -151,6 +151,11 @@
 .cockpit-psu-mfd .cockpit-psu-aside button{min-height:22px;font-size:11px;opacity:.82;
   background:#101e25;border-color:#33505a;color:#a8c2cd;font-weight:400}
 .cockpit-psu-mfd .cockpit-psu-aside button:hover:not(:disabled){opacity:1}
+/* Door, passenger and charging are independent aircraft procedures. */
+.cockpit-turnaround-mfd .cockpit-mfd-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));height:auto;gap:4px}
+.cockpit-turnaround-mfd .cockpit-next-flight-action{grid-column:1 / -1;
+  background:#17323f;border-color:#5aa0b0;color:#d8f4fb;font-weight:700}
+.cockpit-turnaround-mfd .cockpit-mfd-actions button[hidden]{display:none}
 .cockpit-psu-mfd .cockpit-screen-title{margin-bottom:6px}
 /* Label beside its value rather than above it. Stacked, these four readings
    cost 72 px of a panel that has none to spare; side by side they cost half

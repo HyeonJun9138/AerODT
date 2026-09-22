@@ -1,6 +1,6 @@
 import {arriveAtManualAircraft} from './domains/uam/cockpit/manual_assignment_arrival.js';
 import {CockpitEntryScreen} from './domains/uam/cockpit/cockpit_entry_screen.js';
-import {ManualFlightSession} from './domains/uam/cockpit/manual_flight_session.js?v=20260921-repeat-flight';
+import {ManualFlightSession} from './domains/uam/cockpit/manual_flight_session.js?v=20260921-pilot-arrival';
 import {createAnalysisReader} from './domains/uam/analysis/operations_requests.js';
 import {AircraftCameraPanel} from './aircraft_camera_panel.js';
 import {AirframeCamera} from '/visualization/airframe_camera.js';
@@ -12,7 +12,8 @@ import {ReplayPresentation} from './replay_presentation.js?v=20260917-manual-pre
 import {TrajectoryLayer} from '/visualization/trajectory_layer.js';
 import {HoldingBayLayer} from '/visualization/holding_bay_layer.js';
 import {loadCockpitProfiles} from './domains/uam/cockpit/cockpit_profiles.js?v=20260917-ground-controls';
-import {CockpitView} from './domains/uam/cockpit/cockpit_view.js?v=20260921-repeat-flight';
+import {CockpitView} from './domains/uam/cockpit/cockpit_view.js?v=20260921-psu-eta';
+import {DeckWalk} from './domains/uam/cockpit/deck_walk.js?v=20260922-door-boarding';
 import {CockpitCamera} from '/visualization/cockpit_camera.js?v=20260917-cockpit-reveal';
 import {screenCorners,screenTransform} from '/visualization/cockpit_projection.js?v=20260914-cockpit';
 import {CockpitStick} from '/visualization/cockpit_stick.js?v=20260917-hardware';
@@ -498,7 +499,7 @@ const demandPanel=createPanel(DemandPanel,{api:demandApi,notify:(status,message)
   // big each cabin is drawn, so the fleet is the right size the moment the
   // operator does hand it over.
   onPlanLoaded:(answer,manual)=>{liveGlobe?.setModelSpans(answer?.schedule?.model_spans);
-    if(!manualFlight.running){manualAssignment.setRequest(manual);
+    if(!manualFlight.running&&manual!==undefined){manualAssignment.setRequest(manual);
       if(scenarioControl.isOpen)void scenarioControl.refresh();}},
   onManualRequest:request=>{
     if(manualFlight.running)return;
@@ -549,7 +550,11 @@ const holdingBayLayer=()=>{
       {read:()=>manualFlight.readPsu()?.hold,aircraft:()=>manualFlight.sample});
   return holdingBay;
 };
+// Being the person rather than the aircraft. It exists from the start and
+// does nothing until the ground procedure says the pilot has stepped out.
+let deckWalk=null;
 const manualFlight=new ManualFlightSession({
+ onFrame:now=>deckWalk?.sync(now),
  onSound:kind=>document.dispatchEvent(new CustomEvent('aerodt:sound-cue',{detail:{kind}})),
  onClear:()=>{holdingBay?.clear();liveGlobe?.entityScene?.setManualSample(null,null);},
  contactDecks:async()=>{await liveGlobe?.portsReady;return liveGlobe?.vertiportLayer?.contactDecks()??[];},
@@ -708,7 +713,7 @@ const modelLibrary=new ModelLibrary({allowedKinds:['aircraft','person'],el:(...a
   load:()=>getJSON('/api/visual-assets')});
 // Library forms and map controls share this browser's display preferences.
 const providerRows={
-  terrain:providerSetting({document,id:'terrain-provider',label:'지형 자료',description:'로컬 DEM은 보유 지역만 적용 (30m급 · EGM96 가정)',
+  terrain:providerSetting({document,id:'terrain-provider',label:'지형 자료',description:'보정 DEM: 공항·수면·완만한 지면의 요철 완화 · 범위 밖은 Cesium',
     apply:value=>libraryPanel.setField('terrain','provider',value)}),
   imagery:providerSetting({document,id:'imagery-provider',label:'지도 영상',description:'지구 영상 공급자 — 브이월드 영상은 국내만 덮습니다',
     apply:value=>libraryPanel.setField('imagery','provider',value)}),
@@ -1034,7 +1039,7 @@ try {
     $('place-names').title=`지역명 · ${labels[status] || status}`;
     if(status==='error' || status==='partial')notify('place-names',status,'지역명 수신 지연. 지역명 버튼을 껐다 켜면 다시 요청합니다.');
   },onTerrain:status=>{
-    const labels={loading:'지형 연결 중',streaming:'현재 영역 정밀 지형 로딩',ready:liveGlobe?.activeTerrainSource==='local_dem'?'로컬 DEM 우선 · 범위 밖 Cesium':'World Terrain',error:'지형 연결 지연/실패',unavailable:'지형 인증 설정 필요'};
+    const labels={loading:'지형 연결 중',streaming:'현재 영역 정밀 지형 로딩',ready:liveGlobe?.activeTerrainSource==='conditioned_dem'?'보정 DEM 사용 · 범위 밖 Cesium':liveGlobe?.activeTerrainSource==='local_dem'?'로컬 DEM 우선 · 범위 밖 Cesium':'World Terrain',error:'지형 연결 지연/실패',unavailable:'지형 인증 설정 필요'};
     $('terrain-status').textContent=`지형 · ${labels[status] || status}`;
     if(status==='error' || status==='unavailable')notify('terrain',status,labels[status]);
     else if(status==='ready' && notices.states.has('terrain'))notify('terrain','ready','지형 연결 복구');
@@ -1044,7 +1049,7 @@ try {
     if(status==='error' || status==='unavailable')notify('buildings',status,`3D 건물 ${labels[status]}`);
     else if(status==='ready' && notices.states.has('buildings'))notify('buildings','ready','3D 건물 연결 복구');
   },onView:view=>viewReporter.report(view),onTerrainFlat:flat=>{
-    $('terrain-status').textContent=flat?'지형 · 꺼짐 (평면 지표, 건물 숨김)':`지형 · ${liveGlobe?.activeTerrainSource==='local_dem'?'로컬 DEM 우선 · 범위 밖 Cesium':'World Terrain'}`;
+    $('terrain-status').textContent=flat?'지형 · 꺼짐 (평면 지표, 건물 숨김)':`지형 · ${liveGlobe?.activeTerrainSource==='conditioned_dem'?'보정 DEM 사용 · 범위 밖 Cesium':liveGlobe?.activeTerrainSource==='local_dem'?'로컬 DEM 우선 · 범위 밖 Cesium':'World Terrain'}`;
     $('terrain').title=flat?'지형 기복(DEM) 켜기':'지형 기복(DEM) 표시 — 끄면 평면 지표, 건물도 함께 숨김';
   },onTrajectory:path=>{if(!replayPresentation?.selected)selectionPanel.setTrajectory(globe.detailId && globe.detailId!==globe.selected?null:path);},
   // The track layer answers later than the mission poll, so the line that says
@@ -1100,7 +1105,17 @@ try {
   liveGlobe=globe;
   aircraftCamera=new AircraftCameraPanel({document,workspace:windowWorkspace,globe,Camera:AirframeCamera,intruders,perception});
   window.addEventListener('pagehide',()=>aircraftCamera.destroy(),{once:true});
-  globe.cockpit=new CockpitView({onViewChange:()=>manualFlight.panel.focusControls(),globe,Camera:CockpitCamera,Throttle:CockpitThrottle,Stick:CockpitStick,screenCorners,screenTransform,readMission:id=>id===missionId?missionDetail:null,readClock:id=>id?.startsWith('scenario:')?scenarioControl.status:null,readControls:()=>manualFlight.readControls(),readManual:()=>({sample:manualFlight.sample,plan:manualFlight.plan}),readPsu:()=>manualFlight.readPsu(),onPsu:kind=>manualFlight.requestPsu(kind),onControl:(action,value)=>manualFlight.control(action,value),onGround:action=>manualFlight.ground(action)});
+  deckWalk=new DeckWalk({globe,window,
+    readGround:()=>manualFlight.sample?.ground_handling??null,
+    readSample:()=>manualFlight.sample,
+    readDecks:()=>globe.vertiportLayer?.walkWorld?.()??globe.vertiportLayer?.contactDecks?.()??[],
+    onBoard:()=>manualFlight.ground('crew_in'),
+    showTerminal:(id,on)=>globe.vertiportLayer?.showTerminal?.(id,on)??false,
+    readLife:async id=>{const answer=await fetch(`/api/simulation/scenario/vertiports/${encodeURIComponent(id)}`,
+      {cache:'no-store'});return answer.ok?answer.json():null;},
+    showLife:(id,board,waiting)=>globe.vertiportLayer?.showTerminalLife?.(id,board,waiting)??0,
+    notify:message=>notify('deck-walk','ready',message)});
+  globe.cockpit=new CockpitView({onViewChange:()=>manualFlight.panel.focusControls(),globe,Camera:CockpitCamera,Throttle:CockpitThrottle,Stick:CockpitStick,screenCorners,screenTransform,readMission:id=>id===missionId?missionDetail:null,readClock:id=>id?.startsWith('scenario:')?scenarioControl.status:null,readControls:()=>manualFlight.readControls(),readManual:()=>({sample:manualFlight.sample,plan:manualFlight.plan}),readPsu:()=>manualFlight.readPsu(),onPsu:kind=>manualFlight.requestPsu(kind),onControl:(action,value)=>manualFlight.control(action,value),onGround:action=>action==='crew_in'?deckWalk.board():manualFlight.ground(action)});
   aircraftDashboard.setControls(globe.cockpit.panel.toolbar,{view:globe.cockpit.panel.viewControls,display:globe.cockpit.panel.displayControls,onMenuOpen:()=>globe.cockpit.panel.setDockExpanded(false)});
   globe.cockpit.panel.onDockOpen=()=>aircraftDashboard.closeMenus();
   $('selection').dataset.workspaceSource='true';

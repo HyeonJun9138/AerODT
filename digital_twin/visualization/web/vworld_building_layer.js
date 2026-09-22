@@ -2,6 +2,7 @@
 import {BUILDING_COLOURS,DEFAULT_OPACITY,profileFor,buildingRange,buildingAltitudeFade,BUILDING_NEAR_HEIGHT,BUILDING_FAR_HEIGHT,COVERAGE_GLSL} from './building_streaming.js';
 import {hybridUniformValues,HYBRID_UNIFORM_GLSL,HYBRID_MASK_GLSL} from './hybrid_buildings.js';
 import {DEFAULT_TINT,appearanceOf} from './building_appearance.js';
+import {StagedPrimitive} from './staged_primitive.js';
 
 // A shader vec3 from three numbers. Cesium's own constructor is preferred where
 // there is one; a plain triple is what the uniform needs and is all a stub has.
@@ -18,6 +19,9 @@ export const CELLS_IN_VIEW=48, CELLS_KEPT=64, CONCURRENT_LOADS=1;
 export const CONCURRENT_FETCHES=4, MOVING_FETCHES=2;
 export const MAX_BUILDINGS=18000, MAX_VERTICES=260000, CELL_BUILDINGS=1800;
 export const REQUEST_RETENTION_MS=1200;
+// Bound the final Cesium packing/upload as well as the preceding JS loop.
+// A single indivisible polygon may exceed the vertex allowance.
+export const UPLOAD_INSTANCES=128,UPLOAD_VERTICES=4096,TERRAIN_SAMPLE_BATCH=96;
 export const KOREA={west:124,south:32.8,east:132.2,north:39.2};
 export const HEIGHT_COLOURS=BUILDING_COLOURS;
 export function colourFor(height){return (HEIGHT_COLOURS.find(([floor])=>height>=floor)??HEIGHT_COLOURS.at(-1))[1];}
@@ -94,7 +98,14 @@ export function centroidOf(ring){
   return {longitude:x/points.length,latitude:y/points.length};
 }
 const verticesOf=b=>b.rings.reduce((n,r)=>n+r.outer.length+(r.holes??[]).reduce((n,h)=>n+h.length,0),0);
-const yieldTask=()=>new Promise(resolve=>setTimeout(resolve,0));
+// Resume after the next paint, not a chain of zero-delay tasks competing with
+// a yaw frame. The timeout also releases work when a tab stops receiving rAF.
+const yieldTask=()=>new Promise(resolve=>{
+  if(typeof requestAnimationFrame!=='function'){setTimeout(resolve,0);return;}
+  let frame;
+  const fallback=setTimeout(()=>{cancelAnimationFrame(frame);resolve();},100);
+  frame=requestAnimationFrame(()=>{clearTimeout(fallback);setTimeout(resolve,0);});
+});
 // How much of the city a fragment survives to cover is carried by an ordered
 // dither rather than by alpha, so the city is drawn in the opaque pass.
 //
@@ -116,6 +127,7 @@ export async function fetchCell(column,row,{signal}={}){
 export class VWorldBuildingLayer{
   constructor({C,scene,load=fetchCell,groundHeights=async points=>points.map(()=>0),onStatus=()=>{},yieldWork=yieldTask}){
     Object.assign(this,{C,scene,load,groundHeights,onStatus,yieldWork});
+    this.uploadGate={};
     this.enabled=false;this.near=false;this.surfaceReady=true;this.inside=true;this.disposed=false;
     // Rings of ground another layer owns, and the test that says a footprint
     // runs into one. Both are given from outside, so this layer keeps no idea
@@ -132,6 +144,10 @@ export class VWorldBuildingLayer{
   }
   status(value){if(this.lastStatus!==value){this.lastStatus=value;this.onStatus(value);}}
   get visible(){return this.enabled&&this.near&&this.surfaceReady&&!this.disposed;}
+  retainWork(cell){
+    return this.visible&&(this.wanted.has(cell.key)||
+      Number.isFinite(cell.touched)&&this.now-cell.touched<REQUEST_RETENTION_MS);
+  }
   setHybridMask(values){Object.assign(this.uniforms,values??hybridUniformValues(this.C));this.scene.requestRender?.();}
   setStreamingBudget({fetches=this.streamingBudget.fetches,builds=this.streamingBudget.builds,
     retainedCells=this.streamingBudget.retainedCells}={}){
@@ -269,13 +285,12 @@ export class VWorldBuildingLayer{
     }
     this.wanted=new Set(wanted.map(c=>cellKey(c.column,c.row)));
     this.inside=!this.visible||wanted.length>0||(!view&&!focus);this.queue=[];
-    // A small orbit often leaves and returns to the same cell before its HTTP
-    // response arrives. Keep only a short, bounded in-flight grace; never build
-    // that offscreen response, and cancel immediately on provider disable.
-    for(const cell of this.cells.values())if(!this.wanted.has(cell.key)&&
-      (cell.stage!=='fetch'||now-(cell.touched??0)>=REQUEST_RETENTION_MS))cell.controller?.abort();
-    // A previous view's queued GPU primitive must not compile in the background.
-    for(const cell of this.cells.values())if(!this.wanted.has(cell.key)&&cell.pendingPrimitive){
+    // A short yaw excursion retains already-started work, within the SAME
+    // build/memory limits. New offscreen work is never queued. Otherwise every
+    // left/right look discards terrain preparation or GPU compilation and
+    // starts it over. Expiry, disable and geometry invalidation still cancel.
+    for(const cell of this.cells.values())if(!this.retainWork(cell))cell.controller?.abort();
+    for(const cell of this.cells.values())if(!this.retainWork(cell)&&cell.pendingPrimitive){
       this.scene.primitives.remove(cell.pendingPrimitive);cell.pendingPrimitive=null;
       cell.pendingCount=0;cell.pendingVertices=0;cell.state='waiting';
     }
@@ -380,20 +395,24 @@ export class VWorldBuildingLayer{
     const current=()=>!this.disposed&&!signal.aborted&&generation===this.generation&&this.cells.get(cell.key)===cell;
     const data=await this.load(cell.column,cell.row,{signal});
     if(!current()){cell.state='waiting';return;}
-    const seen=new Set();
-    cell.data=(data?.buildings??[]).filter(b=>{
-      if(!b?.rings?.length||!b.rings.every(r=>r.outer?.length>=4))return false;
+    const seen=new Set(),accepted=[];let started=performance.now(),index=0;
+    for(const b of data?.buildings??[]){
+      if(index++>0&&(index%128===0||performance.now()-started>2)){
+        await this.yieldWork();if(!current()){cell.state='waiting';return;}started=performance.now();
+      }
+      if(!b?.rings?.length||!b.rings.every(r=>r.outer?.length>=4))continue;
       const p=centroidOf(b.rings[0].outer);
       // Intersecting API boxes duplicate boundary buildings. Their centroid
       // owns the entire footprint including holes, avoiding coplanar meshes.
-      if(Math.floor(p.longitude/.01)!==cell.column||Math.floor(p.latitude/.01)!==cell.row)return false;
-      const id=b.id||JSON.stringify(b.rings);if(seen.has(id))return false;seen.add(id);return true;
-    }).sort((a,b)=>b.height_m-a.height_m).slice(0,CELL_BUILDINGS);
+      if(Math.floor(p.longitude/.01)!==cell.column||Math.floor(p.latitude/.01)!==cell.row)continue;
+      const id=b.id||JSON.stringify(b.rings);if(seen.has(id))continue;seen.add(id);accepted.push(b);
+    }
+    cell.data=accepted.sort((a,b)=>b.height_m-a.height_m).slice(0,CELL_BUILDINGS);
     cell.centroids=cell.data.map(b=>centroidOf(b.rings[0].outer));cell.vertexCounts=cell.data.map(verticesOf);
     cell.state=this.wanted.has(cell.key)?'queued':'waiting';
   }
   async fill(cell,generation,signal){
-    const current=()=>!this.disposed&&!signal.aborted&&generation===this.generation&&this.cells.get(cell.key)===cell&&this.wanted.has(cell.key);
+    const current=()=>!this.disposed&&!signal.aborted&&generation===this.generation&&this.cells.get(cell.key)===cell&&this.retainWork(cell);
     if(!current()){cell.state='waiting';return;}
     // Reserve before awaiting terrain: simultaneous fills share one budget.
     let count=0,vertices=0;
@@ -409,15 +428,18 @@ export class VWorldBuildingLayer{
     // Quota and cleared-ground changes should not repeat thousands of exact
     // terrain samples. Keep this cell's samples until a terrain rebuild.
     const cached=cell.bases??[];
-    const missing=buildings.length>cached.length?await this.groundHeights(cell.centroids.slice(cached.length,buildings.length)):[];
-    if(!current()){cell.state='waiting';return;}
-    if(!missing){cell.state='waiting';return;}
-    this.groundSamples+=missing.length;
-    const bases=cell.bases=cached.concat(missing);
+    const bases=cached.slice();
+    for(let at=cached.length;at<buildings.length;at+=TERRAIN_SAMPLE_BATCH){
+      const missing=await this.groundHeights(cell.centroids.slice(at,Math.min(buildings.length,at+TERRAIN_SAMPLE_BATCH)));
+      if(!current()||!missing){cell.state='waiting';return;}
+      this.groundSamples+=missing.length;bases.push(...missing);
+      if(at+TERRAIN_SAMPLE_BATCH<buildings.length){await this.yieldWork();if(!current()){cell.state='waiting';return;}}
+    }
+    cell.bases=bases;
     const primitive=buildings.length?await this.build(buildings,bases,current):null;
     if(!current()){cell.state='waiting';primitive?.destroy?.();return;}
     cell.state='ready';if(primitive){this.geometryBuilds++;primitive.show=false;cell.pendingPrimitive=primitive;this.scene.primitives.add(primitive);this.scene.requestRender?.();}
-    else if(!buildings.length){if(cell.primitive)this.scene.primitives.remove(cell.primitive);cell.primitive=null;cell.count=0;cell.vertices=0;}
+    else {if(cell.primitive)this.scene.primitives.remove(cell.primitive);cell.primitive=null;cell.count=0;cell.vertices=0;cell.pendingCount=0;cell.pendingVertices=0;}
   }
   appearance(){
     const appearance=new this.C.PerInstanceColorAppearance({translucent:false,closed:true,fragmentShaderSource:`
@@ -453,21 +475,36 @@ void main() {
     appearance.uniforms=this.uniforms;return appearance;
   }
   async build(buildings,bases,current=()=>true){
-    const C=this.C,instances=[];let started=performance.now();
-    for(let index=0;index<buildings.length;index++){
-      if(index>0&&(index%160===0||performance.now()-started>4)){await this.yieldWork();if(!current())return null;started=performance.now();}
+    const C=this.C,parts=[];let instances=[],vertices=0,started=performance.now();
+    const seal=()=>{
+      if(!instances.length)return;
+      parts.push(new C.Primitive({geometryInstances:instances,allowPicking:false,asynchronous:true,releaseGeometryInstances:true,
+        shadows:C.ShadowMode?.DISABLED,appearance:this.appearance()}));
+      instances=[];vertices=0;
+    };
+    const cancelled=()=>{for(const part of parts)part.destroy?.();return null;};
+    try{for(let index=0;index<buildings.length;index++){
+      if(index>0&&(index%80===0||performance.now()-started>2)){await this.yieldWork();if(!current())return cancelled();started=performance.now();}
       const b=buildings[index],base=Number.isFinite(bases[index])?bases[index]:0;
       // A building whose ground a vertiport has taken is skipped here rather
       // than at load, so it comes back when that vertiport goes.
       if(this.isCleared(b.rings[0].outer))continue;
-      for(const ring of b.rings)instances.push(new C.GeometryInstance({
+      for(const ring of b.rings){
+        const n=ring.outer.length+(ring.holes??[]).reduce((sum,h)=>sum+h.length,0);
+        if(instances.length&&(instances.length>=UPLOAD_INSTANCES||vertices+n>UPLOAD_VERTICES)){
+          seal();await this.yieldWork();if(!current())return cancelled();started=performance.now();
+        }
+        vertices+=n;
+        instances.push(new C.GeometryInstance({
         geometry:new C.PolygonGeometry({polygonHierarchy:new C.PolygonHierarchy(C.Cartesian3.fromDegreesArray(ring.outer.flat()),
           (ring.holes??[]).map(h=>new C.PolygonHierarchy(C.Cartesian3.fromDegreesArray(h.flat())))),
           height:base-.5,extrudedHeight:base+Math.max(1,b.height_m||0),vertexFormat:C.PerInstanceColorAppearance.VERTEX_FORMAT}),
         attributes:{color:C.ColorGeometryInstanceAttribute.fromColor(C.Color.fromCssColorString(colourFor(b.height_m)))}}));
+      }
     }
-    return new C.Primitive({geometryInstances:instances,allowPicking:false,asynchronous:true,releaseGeometryInstances:true,
-      shadows:C.ShadowMode?.DISABLED,appearance:this.appearance()});
+    seal();
+    return parts.length>1?new StagedPrimitive(parts,this.uploadGate):parts[0]??null;
+    }catch(error){cancelled();throw error;}
   }
   drop(cell){cell.controller?.abort();for(const p of [cell.primitive,cell.pendingPrimitive])if(p)this.scene.primitives.remove(p);cell.primitive=null;cell.pendingPrimitive=null;}
   evict(){

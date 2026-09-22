@@ -14,6 +14,10 @@ class TerminalReservations:
         self.assume_mixed_separated = bool(assume_mixed_separated)
         self.assume_distinct_fatos_separated = bool(assume_distinct_fatos_separated)
         self.claims, self._geometry = {}, {}
+        # Answers of `blockers`, kept only while the claims they were read
+        # from stand: `acquire` and `release` are the only writers of
+        # `claims`, and both empty this.
+        self._blockers = {}
 
     def blockers(self, flight, route, kind):
         # Switched off, the movements are still claimed and released - the
@@ -22,9 +26,21 @@ class TerminalReservations:
         # headway and stand egress go on deciding; only this one reason stops.
         if not self.enabled:
             return []
-        result = []
         place = flight['origin'] if kind == 'departure' else flight['destination']
         fato = flight[kind + '_fato']
+        key = (flight['flight_id'], place, fato, route.key, kind,
+               self.assume_mixed_separated, self.assume_distinct_fatos_separated)
+        remembered = self._blockers.get(key)
+        if remembered is not None:
+            return [dict(item) for item in remembered]
+        result = self._blockers_now(flight, route, kind, place, fato)
+        if len(self._blockers) >= 4096:
+            self._blockers.clear()
+        self._blockers[key] = result
+        return [dict(item) for item in result]
+
+    def _blockers_now(self, flight, route, kind, place, fato):
+        result = []
         for (owner, other_kind), other in self.claims.items():
             if owner == flight['flight_id']:
                 continue
@@ -60,7 +76,11 @@ class TerminalReservations:
         self.claims[(flight['flight_id'], kind)] = {
             'route': route, 'vertiport': flight['origin' if kind == 'departure' else 'destination'],
             'fato': flight[kind + '_fato']}
+        self._blockers.clear()
         return []
 
     def release(self, flight_id, kind):
-        return self.claims.pop((flight_id, kind), None) is not None
+        released = self.claims.pop((flight_id, kind), None) is not None
+        if released:
+            self._blockers.clear()
+        return released

@@ -15,9 +15,14 @@ const MAXIMUM_POINTS = 900;
 export class FlightTrackLayer {
   constructor(C, viewer, {load, onSummary = () => {}, maximumPoints = MAXIMUM_POINTS,
       supports = entity => entity?.kind === 'uam', anchor = () => null,
+      surfaceOffset = () => 0,
       now = () => globalThis.performance?.now?.() ?? Date.now()} = {}) {
-    Object.assign(this, {C, viewer, load, onSummary, maximumPoints, supports, anchor, now});
+    Object.assign(this, {C, viewer, load, onSummary, maximumPoints, supports, anchor, surfaceOffset, now});
     this.polylines = viewer.scene.primitives.add(new C.PolylineCollection());
+    // A dirty polyline can rebuild its collection's buffers. Keep the moving
+    // two-vertex tip separate from the (up to 900 vertex) recorded history.
+    this.tipPolylines = viewer.scene.primitives.add(new C.PolylineCollection());
+    this.tipLine = null;
     this.line = null; this.entityId = null; this.token = 0; this.fetchedAt = -Infinity;
     this.track = null; this.drawn = null; this.tip = null;
     this.pending=null;this.retryAt=0;this.failures=0;this.disposed=false;
@@ -32,31 +37,71 @@ export class FlightTrackLayer {
 
   // [longitude, latitude, altitude, time] rows, thinned to the cap. The oldest
   // are kept as they came: a track is only worth drawing as a whole shape.
-  positions(points) {
+  positions(points, references = null) {
     if (!Array.isArray(points) || points.length < 2) return null;
     const step = Math.ceil(points.length / this.maximumPoints);
     const result = [];
-    for (let index = 0; index < points.length; index += step) {
+    const surfaces = Object.values(references ?? {}).filter((reference, index, all) =>
+      reference && typeof reference.vertiport_id === 'string' && Number.isFinite(reference.altitude_m) &&
+      all.findIndex(item => item?.vertiport_id === reference.vertiport_id) === index);
+    const world = point => {
+      const [longitude, latitude, altitude] = point;
+      let displayAltitude = altitude;
+      if (surfaces.length) {
+        const cartographic = this.C.Cartographic?.fromDegrees
+          ? this.C.Cartographic.fromDegrees(longitude, latitude, altitude)
+          : {longitude: longitude * Math.PI / 180, latitude: latitude * Math.PI / 180, height: altitude};
+        // A deck correction already fades to zero outside its own footprint and
+        // low terminal column.  Summing distinct endpoint corrections therefore
+        // picks the applicable end without inventing a mid-route datum switch.
+        for (const reference of surfaces) {
+          const offset = Number(this.surfaceOffset(reference, cartographic));
+          if (Number.isFinite(offset)) displayAltitude += offset;
+        }
+      }
+      return this.C.Cartesian3.fromDegrees(longitude, latitude, displayAltitude);
+    };
+    // The twin answers with the whole track every few seconds, and all but
+    // its last few points are the ones it answered with last time. A point
+    // converted under the same surface references is the same Cartesian, so
+    // the converted prefix is kept and only what follows it is made: nine
+    // hundred conversions, each with a surface correction per reference near
+    // a deck, were a few milliseconds in the frame each answer landed in.
+    const signature = step === 1 ? JSON.stringify(surfaces) : null;
+    const kept = signature !== null && this.converted?.signature === signature ? this.converted : null;
+    let reused = 0;
+    if (kept) {
+      const limit = Math.min(kept.raw.length, points.length);
+      while (reused < limit) {
+        const a = kept.raw[reused], b = points[reused];
+        if (!Array.isArray(b) || b.length < 3 || a[0] !== b[0] || a[1] !== b[1] || a[2] !== b[2]) break;
+        reused++;
+      }
+      for (let index = 0; index < reused; index++) result.push(kept.world[index]);
+    }
+    for (let index = reused; index < points.length; index += step) {
       const point = points[index];
       if (!Array.isArray(point) || point.length < 3) return null;
       const [longitude, latitude, altitude] = point;
       if (![longitude, latitude, altitude].every(Number.isFinite)) return null;
-      result.push(this.C.Cartesian3.fromDegrees(longitude, latitude, altitude));
+      result.push(world(point));
     }
+    this.converted = signature === null ? null : {signature, raw: points.slice(0, result.length), world: result.slice()};
     // The last point is the aircraft's own: keep it whatever the thinning did.
     const last = points[points.length - 1];
     if (step > 1 && Array.isArray(last) && last.slice(0, 3).every(Number.isFinite)) {
-      result.push(this.C.Cartesian3.fromDegrees(last[0], last[1], last[2]));
+      result.push(world(last));
     }
     return result.length >= 2 ? result : null;
   }
 
   draw(track) {
-    const positions = this.positions(track?.points);
+    const positions = this.positions(track?.points, track?.surface_references);
     if (!positions) {this.remove(); return false;}
     this.drawn = positions;
-    if (this.line) this.line.positions = this.withTip(positions);
-    else this.line = this.polylines.add({positions: this.withTip(positions), width: 2.5, material: this.material()});
+    if (this.line) this.line.positions = positions;
+    else this.line = this.polylines.add({positions, width: 2.5, material: this.material()});
+    this.updateTip(true);
     return true;
   }
 
@@ -69,25 +114,37 @@ export class FlightTrackLayer {
   // slides with it, the same way the prediction ahead of it starts on the
   // aircraft rather than where it was when the projection was made. Nothing is
   // invented — this is where the aircraft is, not a guess about where it went.
-  withTip(positions) {
+  updateTip(force = false) {
+    const before = this.tip;
     const anchor = this.anchor(this.entityId);
     const xyz = anchor?.displayPosition;
     const source = Array.isArray(xyz) ? {x: xyz[0], y: xyz[1], z: xyz[2]} : anchor;
     if (!source || ![source.x, source.y, source.z].every(Number.isFinite)) {
       this.tip = null;
-      return positions;
+      if (this.tipLine) {this.tipPolylines.remove(this.tipLine); this.tipLine = null;}
+      return Boolean(before);
     }
     // Own the vertex: the renderer may reuse and mutate its position object.
     const at = {x: source.x, y: source.y, z: source.z};
     this.tip = at;
-    const last = positions[positions.length - 1];
+    const last = this.drawn?.at(-1);
     // Already there: a duplicated vertex would draw nothing and cost a redraw.
-    if (last && this.C.Cartesian3.distance(last, at) < .001) return positions;
-    return [...positions, at];
+    if (!last || this.C.Cartesian3.distance(last, at) < .001) {
+      const removed = Boolean(this.tipLine);
+      if (this.tipLine) {this.tipPolylines.remove(this.tipLine); this.tipLine = null;}
+      return removed;
+    }
+    if (!force && before && this.tipLine && this.C.Cartesian3.distance(before, at) <= .001) return false;
+    const positions = [last, at];
+    if (this.tipLine) this.tipLine.positions = positions;
+    else this.tipLine = this.tipPolylines.add({positions, width: 2.5, material: this.material()});
+    return true;
   }
 
   remove() {
     if (this.line) this.polylines.remove(this.line);
+    if (this.tipLine) this.tipPolylines.remove(this.tipLine);
+    this.tipLine = null; this.tip = null;
     this.line = null;
   }
 
@@ -131,12 +188,7 @@ export class FlightTrackLayer {
   update() {
     let moved = false;
     if (this.line && this.drawn) {
-      const before = this.tip;
-      const positions = this.withTip(this.drawn);
-      if (Boolean(before) !== Boolean(this.tip) || (before && this.tip && this.C.Cartesian3.distance(before, this.tip) > .001)) {
-        this.line.positions = positions;
-        moved = true;
-      }
+      moved = this.updateTip();
     }
     if (!this.pending && this.entityId && this.now()>=this.retryAt && this.now() - this.fetchedAt >= REFRESH_MS) {
       void this.show({entity_id: this.entityId, kind: 'uam'});
@@ -156,6 +208,8 @@ export class FlightTrackLayer {
     this.disposed=true;
     this.clear();
     this.viewer.scene.primitives.remove(this.polylines);
+    this.viewer.scene.primitives.remove(this.tipPolylines);
+    this.tipPolylines = null;
     this.polylines = null;
   }
 }

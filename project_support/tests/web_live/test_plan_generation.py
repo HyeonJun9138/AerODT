@@ -11,7 +11,7 @@ import time
 
 import pytest
 
-from digital_twin.model_library import flight_schedule
+from digital_twin.model_library import demand_profile, flight_schedule
 from digital_twin.model_library.route_network import network as build_network
 from digital_twin.model_library.vertiport_layout import generate_layout, validate_definition
 from user_application.uam_mission import plan_generation
@@ -76,6 +76,33 @@ def test_the_request_the_panel_builds_is_accepted_as_it_is_written():
     assert asked["start_minutes"] == 7 * 60 and asked["end_minutes"] == 10 * 60
     assert asked["seed"] == 42
     assert len(asked["weights"]) == 3 and len(asked["pairs"]) == 3
+    assert asked["planning"]["calibration_id"] == "seoul_uam_20260921"
+
+
+def test_planning_parameters_are_validated_and_used_for_phase_floors():
+    asked = plan_generation.validate_request(request(planning={
+        "fato_headway_s": 75,
+        "phase_floor_s": {"gate_out": 205},
+    }))
+    assert asked["planning"]["fato_headway_s"] == 75
+    assert asked["planning"]["phase_floor_s"]["gate_out"] == 205
+    timed = plan_generation._leg_seconds({"legs": [
+        {"stage": "gate_out", "duration_s": 10},
+        {"stage": "takeoff", "duration_s": 20},
+        {"stage": "climb", "duration_s": 50},
+        {"stage": "cruise", "duration_s": 100},
+        {"stage": "descent", "duration_s": 50},
+        {"stage": "landing", "duration_s": 30},
+        {"stage": "gate_in", "duration_s": 170},
+        {"stage": "charge", "duration_s": 400},
+    ]}, asked["planning"])
+    assert timed["gate_out_s"] == 205
+
+
+def test_invalid_planning_parameters_name_the_planning_field():
+    with pytest.raises(plan_generation.GenerationError) as raised:
+        plan_generation.validate_request(request(planning={"fato_headway_s": -1}))
+    assert raised.value.field == "planning"
 
 
 @pytest.mark.parametrize("changes, field", [
@@ -120,11 +147,25 @@ def test_a_day_is_built_and_reads_back_as_the_day_the_twin_will_fly():
                                      on_progress=lambda percent, phase, message: seen.append((percent, phase)))
     summary = built["summary"]
     assert summary["flights"] > 0, "three decks, six aircraft and 400 trips is a day"
-    assert summary["demand_passengers"] == 400
-    assert summary["carried_passengers"] + summary["unserved_passengers"] <= 400 + summary["flights"]
+    expected = demand_profile.window_demand(400, 7 * 60, 10 * 60)
+    assert summary["full_day_demand_passengers"] == 400
+    assert summary["operating_window_demand_passengers"] == expected
+    assert summary["demand_passengers"] == summary["network_schedulable_demand_passengers"]
+    assert summary["demand_passengers"] < expected, "unreachable OD demand is not fully manufactured elsewhere"
+    assert (summary["direct_connected_demand_passengers"]
+            + summary["redistributed_demand_passengers"]
+            + summary["network_lost_demand_passengers"] == expected)
+    assert summary["disconnected_od_demand_passengers"] == (
+        summary["redistributed_demand_passengers"] + summary["network_lost_demand_passengers"])
+    assert summary["od_redistribution_rate"] == pytest.approx(.85)
+    assert summary["out_of_window_demand_passengers"] == 400 - expected
+    assert summary["carried_passengers"] + summary["unserved_passengers"] <= expected + summary["flights"]
     assert summary["routed_pairs"] + summary["blocked_pairs"] == 6, "both directions of three pairs"
     assert summary["direct_pairs"] == 0, "missing routes must not become invented corridors"
     assert summary["blocked_pairs"] == 5, "this fixture has only one departure/arrival pair"
+    assert summary["planning_parameters"]["calibration_id"] == "seoul_uam_20260921"
+    assert summary["turnaround_recovery_seconds"] == 120
+    assert "capacity_delayed_flights" in summary and "rotation_flights_mean" in summary
     read = flight_schedule.read_schedule(built["csv"].encode("utf-8"), vertiports=VERTIPORTS,
                                          name="생성된 비행계획")
     assert len(read["flights"]) == summary["flights"]

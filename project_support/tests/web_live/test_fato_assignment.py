@@ -34,6 +34,22 @@ def test_connected_four_shared_pads_have_executable_alternatives_and_distribute_
     assert flight['arrival_fato'] == 'F2'
 
 
+def test_scenario_supplies_candidates_but_psu_selects_the_departure_plan():
+    engine, flight = multi_engine()
+    called = []
+    decide = engine.psu.select_departure_plan
+    def record(*args, **kwargs):
+        called.append((args, kwargs))
+        return decide(*args, **kwargs)
+    engine.psu.select_departure_plan = record
+    try:
+        selected, route = engine._select_fatos(flight, 23460)
+        assert called and selected['flight_id'] == flight['flight_id']
+        assert route.departure['fato'] == selected['departure_fato']
+    finally:
+        engine.close()
+
+
 def test_explicit_enroute_path_preserved_and_unconnected_new_endpoint_rejected():
     engine, flight = multi_engine()
     flight['route_path'] = ['fato:VP1:F1','WP1','WP2','fato:VP2:F2']
@@ -136,3 +152,131 @@ def test_candidate_scoring_does_not_launch_native_forecast_for_every_pad_pair():
     finally:
         engine.pilots=None
         engine.close()
+
+
+def test_scenario_counts_committed_landings_before_consuming_departure_capacity():
+    engine, _ = multi_engine()
+    try:
+        layout=engine._layout('VP2')
+        for index,pad in enumerate(layout['fatos']):
+            pad['role']='both'
+            pad['center_m']=[index*100.,0.]
+        engine._pending_departure_ids=lambda *_:('D1',)
+        first=engine._arrival_departure_capacity('VP2','F1','A1',engine.time_s)
+        assert first.granted and first.available_after==3 and first.required==2
+        for flight_id,fato in [('L1','F1'),('L2','F2')]:
+            c=engine.psu.request_arrival(flight_id=flight_id,vertiport='VP2',fato=fato,
+                stand='G1',earliest_s=engine.time_s,now_s=engine.time_s,defer_stand=True)
+            c.approach_started_s=engine.time_s
+        second=engine._arrival_departure_capacity('VP2','F3','A3',engine.time_s)
+        assert not second.granted
+        assert second.available_before==2 and second.available_after==1
+    finally:
+        engine.close()
+
+
+def test_departure_reserve_lookahead_detects_the_next_scheduled_flight():
+    engine, _ = multi_engine()
+    try:
+        before=engine.time_s-60
+        assert engine._pending_departure_ids('VP1',before)==('F1',)
+        assert engine._pending_departure_ids('VP2',before)==()
+        engine.policy['psu']['departure_reserve_lookahead_s']=30.
+        assert engine._pending_departure_ids('VP1',before)==()
+    finally:
+        engine.close()
+
+
+def test_automatic_arrival_prediction_holds_before_consuming_departure_capacity():
+    engine, flight = multi_engine()
+    try:
+        aircraft=engine.aircraft['A1'];aircraft.flight=flight;aircraft.route=engine.route(flight)
+        aircraft.index=aircraft.route.descent_index;aircraft.phase='descent'
+        aircraft.place(*aircraft.route.phases[aircraft.index].points[0])
+        aircraft.clearance=engine.psu.request_arrival(
+            flight_id='F1',vertiport='VP2',fato=aircraft.route.arrival['fato'],stand='G2',
+            earliest_s=engine.time_s+60,now_s=engine.time_s,defer_stand=True)
+        engine._arrival_departure_capacity=lambda *args:SimpleNamespace(
+            granted=False,reason='이륙 FATO 보호 대기 · 1/2개만 유지')
+        engine._refresh_predictions(engine.time_s)
+        assert aircraft.clearance.approach_s is None
+        assert aircraft.clearance.state==psu.HOLDING
+        assert aircraft.clearance.reason.startswith('이륙 FATO 보호 대기')
+    finally:
+        engine.close()
+
+
+def test_ground_observations_are_walked_once_while_nothing_moves(monkeypatch):
+    from digital_twin.simulation import scenario_engine as module
+    engine, flight = multi_engine()
+    made = []
+    original = module.GroundObservation
+    class Counting(original):
+        def __init__(self, *values, **named):
+            made.append(values[0])
+            super().__init__(*values, **named)
+    monkeypatch.setattr(module, 'GroundObservation', Counting)
+    read = lambda items: [(o.aircraft_id, o.vertiport_id, o.point_m, o.radius_m) for o in items]
+    first = engine._ground_observations()
+    walked = len(made)
+    assert walked == len(first) == len(engine.aircraft)
+    second = engine._ground_observations()
+    assert read(second) == read(first) and second is not first and len(made) == walked
+    # Anything that moves is seen: the fleet is walked again and the answer follows it.
+    moved = next(iter(engine.aircraft.values()))
+    moved.latitude += 1e-4
+    third = engine._ground_observations()
+    assert len(made) == walked * 2
+    assert read(third) != read(first)
+    assert [o for o in third if o.aircraft_id == moved.aircraft_id][0].point_m != \
+        [o for o in first if o.aircraft_id == moved.aircraft_id][0].point_m
+    assert read(engine._ground_observations()) == read(third) and len(made) == walked * 2
+
+
+def test_network_link_pairs_are_kept_between_option_reviews():
+    engine, flight = multi_engine()
+    first, _ = fato_assignment.options(engine, flight)
+    pairs = engine._network_link_pairs
+    assert pairs == {(r['from'], r['to']) for r in engine._network['links']}
+    second, _ = fato_assignment.options(engine, flight)
+    assert engine._network_link_pairs is pairs
+    assert [(f['departure_fato'], f['arrival_fato']) for f, _ in first] == \
+        [(f['departure_fato'], f['arrival_fato']) for f, _ in second]
+
+def test_departure_options_are_reviewed_again_only_when_the_deck_changes(monkeypatch):
+    from project_support.tests.web_live.test_scenario_engine import engine_of, row
+    from user_application.uam_mission.ground_control import VertiportGroundControl
+    from digital_twin.contracts.ground_operations import GroundRequest
+    engine = engine_of(row('F1', 'A1', 'VP1', 'VP2', '06:30:00'))
+    engine.ground_control = VertiportGroundControl()
+    aircraft = engine.aircraft['A1']
+    flight = dict(engine.flights[aircraft.flights[0]], departure_stand=aircraft.stand)
+    reviews = []
+    original = fato_assignment.options
+    monkeypatch.setattr(fato_assignment, 'options', lambda e, f: (reviews.append(f['flight_id']), original(e, f))[1])
+    first = engine._departure_options(flight, True)
+    assert reviews == ['F1'] and first[0]
+    # The same deck, the same claims: the review stands.
+    assert engine._departure_options(flight, True) is first and reviews == ['F1']
+    # A claim taken on this deck is a new review.
+    proposal = first[0][0][0]['_departure_ground_route']
+    request = GroundRequest(aircraft_id='OTHER', flight_id='FX', vertiport_id='VP1', route_id=proposal['route_id'],
+                            path_m=tuple(engine._ground_xy('VP1', point) for point in proposal['points']),
+                            distance_m=0., speed_mps=0., max_speed_mps=4., radius_m=7., requested_s=0.)
+    engine.ground_control.authorize([request], engine._ground_observations(), engine.time_s)
+    second = engine._departure_options(flight, True)
+    assert reviews == ['F1', 'F1'] and second is not first
+    assert engine._departure_options(flight, True) is second and reviews == ['F1', 'F1']
+    # An aircraft moving on this deck is a new review; one moving elsewhere is not.
+    aircraft.latitude += 1e-5
+    engine._departure_options(flight, True)
+    assert reviews == ['F1', 'F1', 'F1']
+    other = engine.aircraft.get('A2')
+    if other is not None and other.vertiport != 'VP1':
+        other.latitude += 1e-5
+        engine._departure_options(flight, True)
+        assert reviews == ['F1', 'F1', 'F1']
+    # Without a ground controller the options are kept as they always were.
+    engine.ground_control = None
+    kept = engine._departure_options(flight, False)
+    assert engine._departure_options(flight, False) is kept and reviews == ['F1', 'F1', 'F1']

@@ -13,6 +13,13 @@ test('remaining route follows all future WP legs and recomputes with location/sp
  assert.equal(a.ete,a.remaining/10);assert.equal(flightProgress({...e,ground_speed_mps:20},m).ete,a.ete/2);
  assert.equal(a.eta,24000+a.ete);assert.equal(a.elapsed,100);assert.deepEqual(m,before);
 });
+test('manual NAV uses the same operational route ETA as the PSU request trigger',()=>{
+ const psu={flight_id:'F',procedure:{timeline:{now_s:24000,remaining_route_eta_s:208,arrival_request_lead_s:180,arrival_request_due:false}}};
+ const timing=manualFlightTiming({entityId:'scenario:A',detail:{state:{aircraft_id:'A'},flight:{flight_id:'F'},events:[]},psu,plan:{},sample:{}});
+ const result=flightProgress(e,{...m,timing});
+ assert.equal(result.ete,208);assert.equal(result.eta,24208);assert.equal(result.note,'PSU ROUTE ETA');
+ assert.equal(timing.arrival_request_lead_s,180);assert.equal(timing.arrival_request_due,false);
+});
 test('stopped, unknown airborne, hold, stale and invalid route cannot fabricate ETA',()=>{
  for(const [entity,mission,opt] of [[{...e,ground_speed_mps:0},m,{}],[{...e,airborne:false},m,{}],[{...e,airborne:undefined},m,{}],[e,{...m,holding:true},{}],[e,m,{stale:true}],[e,{...m,timing:{stale:true}},{}],[e,{route_points:[]},{}],[e,{route_points:[points[0],{longitude_deg:NaN}]},{}]]){
   const r=flightProgress(entity,mission,opt);assert.equal(r.ete,null);assert.equal(r.eta,null);

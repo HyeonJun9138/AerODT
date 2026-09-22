@@ -18,24 +18,40 @@ from digital_twin.visualization.local_terrain import LocalTerrainTiles
 from project_support.tools.condition_dem import NODATA, sha, write_json
 
 
-def review(directory):
+def review(directory, baseline=None):
     directory = Path(directory)
     report = json.loads((directory/'report.json').read_text(encoding='utf-8'))
     manifest = json.loads((directory/'package/manifest.json').read_text(encoding='utf-8'))
     original = np.load(directory/'build_arrays/original.npy', mmap_mode='r')
     corrected = np.load(directory/'build_arrays/corrected.npy', mmap_mode='r')
+    previous = None
+    if baseline:
+        baseline=Path(baseline)
+        previous_report=json.loads((baseline/'report.json').read_text(encoding='utf-8'))
+        assert previous_report['bounds']==report['bounds']
+        assert [s['sha256'] for s in previous_report['sources']]==[s['sha256'] for s in report['sources']]
+        previous=np.load(baseline/'build_arrays/corrected.npy',mmap_mode='r')
+        assert previous.shape==corrected.shape
     assert original.shape == corrected.shape == tuple(report['shape'])
     valid_count = changed_count = 0
     maximum_change = 0.
+    exclusions = None
+    if report.get('profile')=='urban_strong':
+        exclusions={k:np.load(directory/'build_arrays'/(k+'.npy'),mmap_mode='r')
+                    for k in ('natural','structure','water')}
     for row in range(0, len(original), 256):
         a = original[row:row+256]; b = corrected[row:row+256]
         valid = a != NODATA
         assert np.array_equal(valid, b != NODATA), 'NoData coverage changed'
         assert np.isfinite(b).all()
+        if exclusions is not None:
+            protected=((exclusions['natural'][row:row+256]>0) | (exclusions['structure'][row:row+256]>0))
+            protected &= valid & (exclusions['water'][row:row+256]==0)
+            assert np.array_equal(a[protected],b[protected]), 'Mapped protected ground changed'
         delta = np.abs(b[valid]-a[valid])
         maximum_change = max(maximum_change, float(delta.max(initial=0)))
         valid_count += int(valid.sum()); changed_count += int((delta > .1).sum())
-    assert maximum_change <= report['parameters']['airport_max_change_m'] + .001
+    assert maximum_change <= max(v for k,v in report['parameters'].items() if k.endswith('_max_change_m')) + .001
     mosaic = directory/report['mosaic']['file']
     assert sha(mosaic) == report['mosaic']['sha256']
     with rasterio.open(mosaic) as d:
@@ -69,17 +85,33 @@ def review(directory):
     west,south,east,north = report['bounds']; dx=report['sources'][0]['dx'];dy=report['sources'][0]['dy']
     qa = directory/'qa';qa.mkdir(exist_ok=True)
     regions = []
-    for name, bounds, kind in [
+    regions_to_review = [
         ('Gimpo airport', (126.76,37.53,126.825,37.59), 'airport'),
         ('Han River', (126.90,37.51,126.97,37.56), 'water'),
         ('Bukhansan', (126.96,37.64,127.02,37.70), None),
-    ]:
+    ]
+    if report.get('profile')=='urban_strong':
+        regions_to_review += [('Gangnam urban', (127.01,37.48,127.065,37.525),'urban'),
+                             ('Yeouido urban', (126.90,37.515,126.95,37.545),'urban'),
+                             ('Gangnam roads', (127.01,37.48,127.065,37.525),'road'),
+                             ('Yeouido roads', (126.90,37.515,126.95,37.545),'road'),
+                             ('Han riverside ground roads', (126.88,37.50,127.06,37.57),'riverside_road')]
+    for name, bounds, kind in regions_to_review:
         w,s,e,n=bounds
         r0,r1=round((north-n)/dy),round((north-s)/dy)
         c0,c1=round((w-west)/dx),round((e-west)/dx)
         sl=np.s_[r0:r1,c0:c1];a=original[sl];b=corrected[sl]
-        mask = np.ones(a.shape,dtype=bool) if kind is None else ndi.binary_erosion(
-            np.load(directory/'build_arrays'/(kind+'.npy'),mmap_mode='r')[sl]>0,iterations=2)
+        if kind == 'riverside_road':
+            mask = np.load(directory/'build_arrays/road.npy',mmap_mode='r')[sl]>0
+            water = np.load(directory/'build_arrays/water.npy',mmap_mode='r')[sl]>0
+            spacing=(dy*111320,dx*111320*math.cos(math.radians((s+n)/2)))
+            mask &= (ndi.distance_transform_edt(~water,sampling=spacing)<=150) & ~water
+            for excluded in ('structure','natural'):
+                mask &= np.load(directory/'build_arrays'/(excluded+'.npy'),mmap_mode='r')[sl]==0
+        else:
+            mask = np.ones(a.shape,dtype=bool) if kind is None else np.load(directory/'build_arrays'/(kind+'.npy'),mmap_mode='r')[sl]>0
+        if kind and kind not in ('road','riverside_road'):
+            mask=ndi.binary_erosion(mask,iterations=2)
         mask &= a!=NODATA
         before=float(np.sqrt(np.mean((a-ndi.gaussian_filter(a,1.2))[mask]**2)))
         after=float(np.sqrt(np.mean((b-ndi.gaussian_filter(b,1.2))[mask]**2)))
@@ -88,6 +120,11 @@ def review(directory):
                             roughness_reduction_percent=100*(1-after/before) if before else 0,
                             before_range_m=[float(a[mask].min()),float(a[mask].max())],
                             after_range_m=[float(b[mask].min()),float(b[mask].max())]))
+        if previous is not None:
+            old=previous[sl]
+            old_rms=float(np.sqrt(np.mean((old-ndi.gaussian_filter(old,1.2))[mask]**2)))
+            regions[-1].update(previous_roughness_m=old_rms,
+                              reduction_from_previous_percent=100*(1-after/old_rms) if old_rms else 0)
         fig,axes=plt.subplots(1,3,figsize=(15,5),constrained_layout=True)
         spacing_x=dx*111320*math.cos(math.radians((s+n)/2));spacing_y=dy*111320
         lighting=LightSource(azdeg=315,altdeg=35)
@@ -98,7 +135,8 @@ def review(directory):
             if kind:
                 ax.contour(mask,levels=[.5],colors=['cyan'],linewidths=.5,extent=[w,e,s,n],origin='upper')
             ax.set_title(title)
-        im=axes[2].imshow(b-a,cmap='RdBu_r',vmin=-12,vmax=12,extent=[w,e,s,n],aspect='auto')
+        color_limit=80 if report.get('profile')=='urban_strong' else 12
+        im=axes[2].imshow(b-a,cmap='RdBu_r',vmin=-color_limit,vmax=color_limit,extent=[w,e,s,n],aspect='auto')
         axes[2].set_title('Height change (m)');fig.colorbar(im,ax=axes[2],shrink=.8)
         for ax in axes:
             ax.set_xlabel('Longitude');ax.set_ylabel('Latitude');ax.ticklabel_format(useOffset=False)
@@ -126,6 +164,7 @@ def review(directory):
                 matching_shared_edges=len(seams),package_hashes_verified=True,geotiff_matches_package=True,
                 merged_geotiff_matches_arrays=True,
                 nodata_preserved=True,regions=regions,samples=samples,tile_generation=tile_timings,
+                mapped_exclusions_preserved=exclusions is not None,
                 live_dashboard_tested=False)
     write_json(qa/'validation.json',result)
     print(json.dumps(result,indent=2))
@@ -134,4 +173,5 @@ def review(directory):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('directory',type=Path)
-    review(p.parse_args().directory)
+    p.add_argument('--baseline',type=Path)
+    args=p.parse_args();review(args.directory,args.baseline)

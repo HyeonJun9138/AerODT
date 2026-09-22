@@ -13,6 +13,7 @@ from digital_twin.simulation.psu_sequencing import ARRIVAL, GRANTED, HOLDING, Ps
 
 
 def sequencer(**tuning):
+    tuning.setdefault('manual_arrival_priority',True)
     return PsuSequencer(stands=lambda vertiport: ["G1", "G2", "G3", "G4"], tuning=Tuning(**tuning))
 
 

@@ -57,7 +57,7 @@ def validate_command(body):
     if body.get('flight_mode') not in ('fixed_wing','multirotor'):raise ValueError('flight_mode')
     out['flight_mode']=body['flight_mode'];return out
 
-def _share(scenario,aircraft_id,sample,step):
+def _share(scenario,aircraft_id,sample,step,contact_heights=None):
     """Put this pose where the rest of the day can see it.
 
     Failing to reach the day must never stop the aircraft being flown: the
@@ -71,6 +71,7 @@ def _share(scenario,aircraft_id,sample,step):
         return day.place_manual(aircraft_id,latitude=at['latitude'],longitude=at['longitude'],
             altitude=at.get('altitude_m'),heading=sample.get('heading_deg'),step=step,
             airborne=bool(sample.get('airborne')),speed_mps=sample.get('speed_mps'),
+            **({'contact_heights':contact_heights} if contact_heights is not None else {}),
             telemetry={key:sample[key] for key in ('pitch_deg','roll_deg','tilt_deg','rotor_radps','control_surface_deg','velocity_ned_mps') if key in sample})
     except Exception:
         return False
@@ -217,6 +218,10 @@ def create_manual_router(planning,workspace,prediction_history=None,scenario=Non
             path=plan['legs'][0]['path'];next_point=path[1] if len(path)>1 else [point[0],point[1]+.001]
             yaw=math.degrees(math.atan2((next_point[0]-point[0])*math.cos(math.radians(point[1])),next_point[1]-point[1]))
             origin,decks=departure_surface(plan,altitude,hello.get('contact_decks',[]))
+            # departure_surface has validated every supplied contact height.
+            # Keep these immutable for the connection, including subsequent legs.
+            contact_heights={item['id']:item['height_m'] for item in hello.get('contact_decks',[])
+                             if isinstance(item.get('id'),str)}
             # The runtime and the flight that owns it, in one hand-off. This also
             # takes `ManualFlight` off the event loop, where it read the ground
             # layouts and prepared the decks while every other socket and request
@@ -237,13 +242,13 @@ def create_manual_router(planning,workspace,prediction_history=None,scenario=Non
                     _watch(scenario,flown)
                     _sync_ground(scenario,flown,session)
                 produced=session.initialize_grounded()
-                if flown:_share(scenario,flown,produced,None)
+                if flown:_share(scenario,flown,produced,None,contact_heights)
                 return produced
             sample=await run_in_threadpool(arm)
             if prediction_history is not None:
                 prediction_history.open(session.logger.run_id,plan)
                 prediction_history.append(session.logger.run_id,sample)
-            await ws.send_json({'type':'ready','capabilities':['ground_handling_v1','ground_handling_v2',*(['next_flight_v1'] if flown else []),*(['autopilot_v1'] if getattr(session.runtime,'guidance_writer',None) else [])],'run_id':session.logger.run_id,'sample':sample,
+            await ws.send_json({'type':'ready','capabilities':['ground_handling_v1','ground_handling_v2','ground_handling_v3',*(['next_flight_v1'] if flown else []),*(['autopilot_v1'] if getattr(session.runtime,'guidance_writer',None) else [])],'run_id':session.logger.run_id,'sample':sample,
                 **({'plan':plan,'aircraft_id':flown} if flown else {}),'limitations':'버티포트 상면 접촉; 건물 벽 충돌 미지원; AirTaxi 공통 동역학; 배터리 추정'})
             last=time.monotonic();sequence=-1;paused=False;remainder=0.0;ground_sync_at=last;quiet_since=None
             while True:
@@ -317,8 +322,8 @@ def create_manual_router(planning,workspace,prediction_history=None,scenario=Non
                             else:
                                 def continue_next():
                                     state=session.ground.snapshot(session.observation,session.command)
-                                    if state.get('phase')!='released':
-                                        raise ValueError('충전 해제와 문 닫기를 마친 뒤 다음 비행을 준비하세요')
+                                    if not state.get('turnaround_complete'):
+                                        raise ValueError('승객 하차와 문 닫기를 마친 뒤 다음 비행을 준비하세요')
                                     day=scenario() if callable(scenario) else scenario
                                     assignment=day.continue_manual(flown,battery_pct=session.battery) if day else None
                                     if not assignment:raise ValueError('다음 비행 배정을 받지 못했습니다')
@@ -357,19 +362,24 @@ def create_manual_router(planning,workspace,prediction_history=None,scenario=Non
                 # A message that advances nothing needs no physics and no logged
                 # sample; it still answers, so the client can send the next one.
                 if steps:
-                    # One hop, not four. Every hand-off between this loop and a
-                    # worker waits for the GIL that the day's tick is holding,
-                    # and the round trip is what sets how many messages a second
-                    # the pilot gets -- which is what the simulated clock is
-                    # made of. One round trip was measured at 37.8 ms at the
-                    # median while a day was playing, against under 2 ms of work
-                    # at the other end. Most of that 37.8 ms was not the hand-off
-                    # but the session's lock, which `_share` and `_sync_ground`
-                    # both waited on then and neither takes now; the number has
-                    # not been measured again since the lock came off, so read
-                    # it as what four hops cost under a lock, not as what one
-                    # hop costs today. The GIL wait is still real, so the hop
-                    # count still matters and this stays one hop.
+                    # No hop at all. Every hand-off between this loop and a
+                    # worker is a wait for the GIL that the day's tick is
+                    # holding, and the wait, not the work, is the round trip:
+                    # under 2 ms of work against a 37.8 ms median hop when this
+                    # was measured under a playing day, and it is the round trip
+                    # that sets how many samples a second the pilot gets and how
+                    # evenly they arrive. Off the loop this took four such waits
+                    # a message (resume after the read, the worker taking the
+                    # GIL, the native step giving it up and taking it back, the
+                    # loop taking it back from the worker); on the loop it takes
+                    # two. Recorded reply gaps under a 3,783-flight day were
+                    # 108-127 ms at the median with 5-8% of them 180-357 ms --
+                    # the tick's own length -- and each of those is a pause in
+                    # the cockpit. The work itself is bounded: a native step of
+                    # at most STEPS_PER_MESSAGE sub-steps, one line to the run
+                    # log, a mailbox post and a cache read, none of which takes
+                    # the session's lock (`_share` and `_sync_ground`), so the
+                    # loop is held for the step and not for the day.
                     # The order below is the order these must happen in: ground
                     # state before the step, `_share` reads the sample the step
                     # just produced, and the history de-duplicates on its time.
@@ -377,11 +387,11 @@ def create_manual_router(planning,workspace,prediction_history=None,scenario=Non
                     def advance():
                         if sync_ground:_sync_ground(scenario,flown,session)
                         produced=session.step(command,steps)
-                        if flown:_share(scenario,flown,produced,steps*STEP_SECONDS)
+                        if flown:_share(scenario,flown,produced,steps*STEP_SECONDS,contact_heights)
                         if prediction_history is not None:
                             prediction_history.append(session.logger.run_id,produced)
                         return produced
-                    sample=await run_in_threadpool(advance)
+                    sample=advance()
                     if sync_ground:ground_sync_at=now
                 await ws.send_json({'type':'state','sequence':seq,'sample':sample})
         # A socket that went away without saying stop is not the same ending as

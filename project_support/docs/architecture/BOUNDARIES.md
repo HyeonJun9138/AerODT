@@ -119,8 +119,11 @@ PSU/버티포트 운영자/승객의 후속 계약과 전체 도식은 [비행 �
 사용하지 않는다. API 확장과 호환성은 ADR 0031에 기록했다.
 
 다중 비행은 application의 `ScenarioPilots`가 기체별 native `RoutePilot`과
-`UamVehicleRuntime`을 communication C ABI adapter로 연결한다. 일정과 시설 순서는
-`ScenarioEngine`/`PsuSequencer`, 비행 목표는 조종사, 물리 상태는 Runtime이 소유한다.
+`UamVehicleRuntime`을 communication C ABI adapter로 연결한다. `ScenarioEngine`은
+계획 시각 도래와 관측 수집을 담당한다. 시설별 `VertiportGroundControl`은 출발
+스탠드에서 FATO까지 최단·차선 유도로 후보와 현재 점유 사실을 제안하고 지상이동
+권한을 발급한다. FATO와 지상경로 후보 비교·출발 충돌 해석·출발 슬롯과 시설 순서는
+`PsuSequencer`가 소유한다. 비행 목표는 조종사, 물리 상태는 Runtime이 소유한다.
 표시 계층은 관찰된 자세/틸트/회전수만 소비한다. 경로 입력, 우측 오프셋 및 공유 패널
 종료 계약은 [ADR 0040](../adr/0040_native_scheduled_route_pilots.md)에 기록했다.
 단일/다중의 경로 유도는 같은 `RoutePilot` 정책과 획득 반경을 사용한다. 다중 전용
@@ -137,12 +140,40 @@ SimulationEngine의 점유 표를 직접 조회하지 않고 `VertiportResourceM
 보고로 FATO 가용성과 주기장 점유·예약을 판단한다. PSU의 교통 슬롯과 시설의 자원
 상태는 서로 다른 상태다.
 
+버티포트 지상경로 제안은 현재 동일 프로세스 typed call이다. 정적 그래프와 실제 위치
+관측을 받아 계산하지만 현재 위치를 별도로 저장하지 않는다. `ScenarioEngine`은 제안된
+로컬 경로를 실행 좌표로 투영하고 움직임을 적분할 뿐 유도로 탐색을 다시 구현하지 않는다.
+운항 판단 요약은 `events.jsonl`, 노드별 후보와 탈락 사유는 개발용
+`diagnostics.jsonl`에 분리하며, 어느 로그도 Runtime의 현재 상태가 아니다. 세부 결정은
+[ADR 0106](../adr/0106_vertiport_ground_route_proposals.md)을 따른다.
+
+도착 GATE는 접근 전에 선점하지 않는다. PSU는 FATO가 사용 가능하면 GATE 없이도
+착륙을 허가할 수 있고, 접지 관측 순서대로 빈 GATE와 버티포트가 제안한 복수
+FATO→GATE 경로를 선택한다. GATE가 없으면 실제 기체는 FATO에 남아 점유를 유지한다.
+동일 FATO의 공중 대기 순번은 남은 항로 ETA로 갱신하고, FATO 착륙 시작점 위에
+10 m 간격의 순번별 대기층을 지정한다. 세부 결정은
+[ADR 0110](../adr/0110_touchdown_order_gate_and_fato_holding.md)을 따른다.
+
+겸용 FATO에 접지한 기체가 출발 용량을 모두 닫지 않도록 PSU는 임박한 출발 수요가
+있을 때 착륙 전후의 실제 사용 가능 이륙 FATO 수를 비교한다. 기본은 300초 안의
+출발편에 대해 이륙 가능한 FATO의 50%를 남기는 것이다. 서로 다른 FATO는 중심
+거리에 관계없이 독립 자원으로 세고, 이미 최종 진입한 착륙편과 해당 FATO의 실제
+점유를 함께 센다. 부족하면 Pilot을 기존 FATO 주변 대기층에 유지한다.
+버티포트는 자원 사실을 보고하고 Simulation은 기하·현재 교통 관측을 제공할 뿐 보호
+비율과 허가 결과는 PSU가 소유한다. 세부 결정은
+[ADR 0111](../adr/0111_mixed_fato_departure_capacity_reserve.md)을 따른다.
+
 PSU와 조종사, 조종사와 Runtime의 방향별 계약은
 [PSU/Pilot ICD](PSU_PILOT_ICD.md)와
 [ADR 0105](../adr/0105_pilot_psu_runtime_boundaries.md)를 따른다. Pilot→PSU 요청·보고,
 PSU→Pilot 응답·허가·지시, Pilot→Runtime 조종 의도를 서로 다른 typed 계약으로
 분리한다. PSU가 Simulation이나 actuator를 직접 명령하는 경로는 없다. 수동 축 입력,
 조종 보조와 자동 유도는 생성 방식만 다르며 Pilot→Runtime 경계는 같다.
+
+접근 순번 요청 시점도 Pilot이 소유한다. Simulation은 현재 위치와 남은 시간 관측만
+제공하고, 자동 Pilot은 기준 충족 시 요청을 보내며 수동 Pilot은 동일 기준에서 버튼과
+알림을 활성화한다. PSU는 요청 이후의 순번과 자원 판단만 수행한다. 이 경계는
+[ADR 0107](../adr/0107_pilot_owned_arrival_request_trigger.md)을 따른다.
 
 | 계층 | 현재 책임 | 현재 제외 범위 |
 |---|---|---|

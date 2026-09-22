@@ -12,18 +12,117 @@ import json
 import math
 from pathlib import Path
 import sqlite3
+import shutil
 
 import mapbox_vector_tile
 from mapbox_vector_tile.Mapbox import vector_tile_pb2
 import numpy as np
 import rasterio
-from rasterio.features import rasterize
+from rasterio.features import rasterize, is_valid_geom
 from rasterio.transform import Affine
 from scipy import ndimage as ndi
 
 NODATA = -32767.0
 MASK_NAMES = ('water', 'river', 'airport', 'road')
 LAYERS = {'water', 'waterway', 'aeroway', 'transportation'}
+URBAN_MASK_NAMES = MASK_NAMES + ('building', 'urban', 'natural', 'structure')
+
+
+def strong_parameters():
+    return dict(gentle_ground_max_change_m=12, water_max_change_m=20,
+                road_max_change_m=60, urban_max_change_m=80, airport_max_change_m=60,
+                ground_sigma_cells=3, urban_opening_cells=9, dense_opening_cells=25, building_exclusion_cells=5,
+                dense_density_cells=25, dense_density_full_weight=.08, dense_additional_target_limit_m=12, urban_sigma_cells=4,
+                water_sigma_cells=6, road_visual_buffer_m=45,
+                urban_feather_m=90, natural_feather_m=60, structure_feather_m=120,
+                shore_road_release_m=45, shore_feather_m=120,
+                airport_max_fitted_slope_degrees=2, ground_slope_taper_degrees=[4,12])
+
+
+def condition_urban_patch(a, masks, spacing):
+    """Strong visual ground reconstruction, not surveyed elevations or road widths.
+
+    Opening suppresses small positive surface objects; a road/open-ground
+    reference prevents building footprints supplying their own ground height.
+    A 96-cell halo exceeds the combined finite filter support.
+    """
+    valid = np.isfinite(a) & (a != NODATA)
+    water = masks['water'].astype(bool) & valid
+    buildings = masks['building'].astype(bool)
+    structures = masks['structure'].astype(bool)
+    road = masks['road'].astype(bool) & valid
+    road_distance = (ndi.distance_transform_edt(~road, sampling=spacing)
+                     if road.any() else np.full(a.shape, np.inf))
+    wet_geometry = water | masks['river'].astype(bool)
+    shores = ndi.maximum_filter(wet_geometry, size=7) & ~water
+    immediate_bank = ndi.maximum_filter(wet_geometry, size=3) & ~water
+    # Release only mapped ground-road corridors behind the first bank cell.
+    # Water, the immediate bank, natural masks and elevated structures still win.
+    shores &= (road_distance > 45) | immediate_bank
+    landscape = ndi.maximum_filter(masks['natural'].astype(bool), size=3)
+    protected = landscape | shores | structures
+    broad = smooth_valid(a, valid, 8)
+    gy, gx = np.gradient(broad, *spacing)
+    slope = np.degrees(np.arctan(np.hypot(gx, gy)))
+    strength = np.clip((12-slope)/8, 0, 1)
+    result = a + strength*np.clip(smooth_valid(a, valid, 3)-a, -12, 12)
+    kinds = np.where(valid & (strength>0), 1, 0).astype('uint8')
+
+    original_reference = smooth_valid(a, valid & ~water & ~buildings & ~protected, 6)
+    original_filled = np.where(valid & ~buildings, a, original_reference)
+    original_filled = np.where(valid, original_filled, broad)
+    original_ground = ndi.grey_closing(ndi.grey_opening(original_filled, size=(9,9), mode='nearest'),
+                                      size=(5,5), mode='nearest')
+    building_halo = ndi.maximum_filter(buildings, size=5)
+    support = valid & ~water & ~building_halo & ~protected
+    reference = smooth_valid(a, support, 6)
+    filled = np.where(valid & ~building_halo, a, reference)
+    # Fill holes before opening so a NoData sentinel cannot lower neighbours.
+    filled = np.where(valid, filled, broad)
+    opened = ndi.grey_opening(filled, size=(9,9), mode='nearest')
+    # Remove narrow negative pits as well as positive surface bumps.
+    ground = ndi.grey_closing(opened, size=(5,5), mode='nearest')
+    # Dense high-rise districts can contaminate several adjacent DEM cells,
+    # not just mapped footprints. A wider opening removes block-scale humps.
+    # Blend by footprint density rather than flattening a named city rectangle.
+    dense = np.clip(ndi.uniform_filter(buildings.astype('float32'), size=25)/.08, 0, 1)
+    district = ndi.grey_closing(ndi.grey_opening(filled, size=(25,25), mode='nearest'),
+                               size=(5,5), mode='nearest')
+    ground = ground*(1-dense)+district*dense
+    ground = original_ground + np.clip(ground-original_ground, -12, 12)
+    ground = smooth_valid(ground, valid & ~water & ~protected, 4)
+    urban = masks['urban'].astype(bool) | buildings
+    if urban.any():
+        distance = ndi.distance_transform_edt(~urban, sampling=spacing)
+        weight = np.clip(1-distance/90, 0, 1)
+        # Retain broad hillside grades; do not flatten an urban mountain slope.
+        weight *= np.clip((20-slope)/10, 0, 1)
+        target = a+np.clip(ground-a, -80, 80)
+        result = result*(1-weight)+target*weight
+        kinds[valid & (weight>.05)] = 5
+    if road.any():
+        distance = road_distance
+        weight = np.clip(1-distance/45, 0, 1)
+        weight *= np.clip((20-slope)/10, 0, 1)
+        target = a+np.clip(ground-a, -60, 60)
+        result = result*(1-weight)+target*weight
+        kinds[valid & (weight>.05)] = 3
+    # Forest, structures, islands and banks are exclusions, even inside landuse.
+    if protected.any():
+        fade = np.ones(a.shape,dtype='float32')
+        if landscape.any():
+            fade = np.minimum(fade, np.clip(ndi.distance_transform_edt(~landscape, sampling=spacing)/60,0,1))
+        if shores.any():
+            fade = np.minimum(fade, np.clip(ndi.distance_transform_edt(~shores, sampling=spacing)/120,0,1))
+        if structures.any():
+            fade = np.minimum(fade, np.clip(ndi.distance_transform_edt(~structures, sampling=spacing)/120,0,1))
+        fade = fade*fade*(3-2*fade)
+        result = a+(result-a)*fade
+    result[protected] = a[protected]; kinds[protected] = 0
+    wet = smooth_valid(a, water, 6)
+    result[water] = (a+np.clip(wet-a, -20, 20))[water]; kinds[water] = 2
+    result[~valid] = NODATA; kinds[~valid] = 0
+    return result.astype('float32'), kinds
 
 
 def sha(path):
@@ -112,8 +211,26 @@ def airport_plane(a, inside):
     return fit[0] * (xx - origin[0]) + fit[1] * (yy - origin[1]) + fit[2], fit
 
 
-def select_group(layer, props, geom_type):
+def select_group(layer, props, geom_type, profile='conservative'):
     kind = props.get('class')
+    polygon = geom_type in ('Polygon', 'MultiPolygon')
+    if profile == 'urban_strong':
+        if layer == 'building' and polygon:
+            return 'building'
+        if layer == 'landuse' and polygon and kind in (
+                'residential','commercial','retail','industrial','school','university',
+                'hospital','kindergarten','library','bus_station','pitch','playground','stadium'):
+            return 'urban'
+        if layer == 'landcover' and polygon and kind in ('wood','wetland','rock','ice'):
+            return 'natural'
+        if layer == 'transportation' and (props.get('brunnel') == 'tunnel' or props.get('layer',0) < 0):
+            # Subsurface transport must not preserve roof artefacts as surface ridges.
+            return None
+        if layer == 'transportation' and (
+                props.get('brunnel') == 'bridge' or props.get('layer',0) > 0 or kind == 'bridge'):
+            return 'structure'
+        if layer == 'transportation' and kind in ('minor','service','residential','unclassified'):
+            return 'road' if geom_type in ('LineString','MultiLineString') else None
     if layer == 'water' and geom_type in ('Polygon', 'MultiPolygon'):
         return 'water'
     if layer == 'waterway' and kind in ('river', 'canal'):
@@ -131,6 +248,8 @@ def select_group(layer, props, geom_type):
 def geographic_geometry(geometry, x, y, z, extent):
     n = 2 ** z
     def walk(coords):
+        if not coords:
+            return []
         if isinstance(coords[0], (int, float)):
             lon = ((x + coords[0] / extent) / n) * 360 - 180
             lat = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * (y + coords[1] / extent) / n))))
@@ -139,7 +258,7 @@ def geographic_geometry(geometry, x, y, z, extent):
     return {'type': geometry['type'], 'coordinates': walk(geometry['coordinates'])}
 
 
-def extract_masks(mbtiles, masks, transform, shape, bounds):
+def extract_masks(mbtiles, masks, transform, shape, bounds, profile='conservative'):
     counts = Counter()
     connection = sqlite3.connect(Path(mbtiles).resolve().as_uri() + '?mode=ro', uri=True)
     try:
@@ -159,7 +278,7 @@ def extract_masks(mbtiles, masks, transform, shape, bounds):
             proto = vector_tile_pb2.tile(); proto.ParseFromString(raw)
             filtered = vector_tile_pb2.tile()
             for layer in proto.layers:
-                if layer.name in LAYERS:
+                if layer.name in (LAYERS | {'building','landuse','landcover'} if profile=='urban_strong' else LAYERS):
                     filtered.layers.add().CopyFrom(layer)
             decoded = mapbox_vector_tile.decode(filtered.SerializeToString(), default_options={'y_coord_down': True})
             lon0, lon1 = x / n * 360 - 180, (x + 1) / n * 360 - 180
@@ -170,12 +289,15 @@ def extract_masks(mbtiles, masks, transform, shape, bounds):
             c1, r1 = min(shape[1], math.ceil(c1)), min(shape[0], math.ceil(r1))
             if c1 <= c0 or r1 <= r0:
                 continue
-            groups = {name: [] for name in MASK_NAMES}
+            groups = {name: [] for name in masks}
             for name, layer in decoded.items():
                 for feature in layer['features']:
                     geometry = feature['geometry']; props = feature['properties']
-                    group = select_group(name, props, geometry['type'])
+                    group = select_group(name, props, geometry['type'], profile)
                     if group:
+                        if not is_valid_geom(geometry):
+                            counts['invalid_geometry_fragments_skipped'] += 1
+                            continue
                         groups[group].append(geographic_geometry(geometry, x, y, z, layer['extent']))
                         counts[group + '_fragments'] += 1
             tx = transform * Affine.translation(c0, r0)
@@ -212,7 +334,9 @@ def validate_geoid(path):
             raise ValueError('Expected a geographic single-band EGM96 undulation grid')
 
 
-def build(source, mbtiles, output, geoid):
+def build(source, mbtiles, output, geoid, profile='conservative', reuse_masks=None):
+    if profile not in ('conservative','urban_strong'):
+        raise ValueError('Unknown conditioning profile')
     source, mbtiles, output = Path(source).resolve(), Path(mbtiles).resolve(), Path(output).resolve()
     if output.exists():
         raise ValueError('Choose a new output directory; existing results are never overwritten')
@@ -253,21 +377,45 @@ def build(source, mbtiles, output, geoid):
             data[both] = (target[both] + data[both]) / 2
         np.copyto(target, data, where=data != NODATA)
     original.flush()
-    masks = {name: array(name, 'uint8') for name in MASK_NAMES}
-    counts = extract_masks(mbtiles, masks, transform, shape, (west, south, east, north))
+    names=URBAN_MASK_NAMES if profile=='urban_strong' else MASK_NAMES
+    if reuse_masks is not None:
+        cache=Path(reuse_masks)
+        cached=json.loads((cache/'mask_cache.json').read_text(encoding='utf-8'))
+        if (cached['schema_version']!=2 or cached['profile']!=profile or cached['shape']!=list(shape)
+                or cached['bounds']!=[west,south,east,north] or cached['mbtiles_sha256']!=sha(mbtiles)
+                or cached['sources']!=[m['sha256'] for m in metadata]):
+            raise ValueError('Mask cache does not match source data and profile')
+        masks={}
+        for name in names:
+            path=cache/'build_arrays'/(name+'.npy')
+            if sha(path)!=cached['hashes'][name]:
+                raise ValueError('Mask cache hash mismatch')
+            shutil.copyfile(path,scratch/(name+'.npy'))
+            masks[name]=np.load(scratch/(name+'.npy'),mmap_mode='r+')
+            if masks[name].shape!=shape or masks[name].dtype!=np.uint8:
+                raise ValueError('Invalid mask cache geometry')
+        counts=cached['vectors']
+    else:
+        masks = {name: array(name, 'uint8') for name in names}
+        counts = extract_masks(mbtiles, masks, transform, shape, (west, south, east, north), profile)
     for a in masks.values():
         a.flush()
+    write_json(output/'mask_cache.json',dict(schema_version=2,profile=profile,shape=shape,
+               bounds=[west,south,east,north],mbtiles_sha256=sha(mbtiles),
+               sources=[m['sha256'] for m in metadata],vectors=counts,
+               hashes={name:sha(scratch/(name+'.npy')) for name in names}))
     print('vector_complete', counts, flush=True)
     corrected = array('corrected', 'float32', NODATA)
     category = array('category', 'uint8')
-    block, halo = 512, 64
+    block, halo = 512, 96
     for row in range(0, shape[0], block):
         r1 = min(shape[0], row+block); r0h = max(0, row-halo); r1h = min(shape[0], r1+halo)
         spacing = (dy*111320, dx*111320*math.cos(math.radians(north-row*dy)))
         for col in range(0, shape[1], block):
             c1 = min(shape[1], col+block); c0h = max(0, col-halo); c1h = min(shape[1], c1+halo)
             patch = np.asarray(original[r0h:r1h, c0h:c1h])
-            result, kinds = condition_patch(patch, {k:v[r0h:r1h, c0h:c1h] for k,v in masks.items()}, spacing)
+            conditioner = condition_urban_patch if profile=='urban_strong' else condition_patch
+            result, kinds = conditioner(patch, {k:v[r0h:r1h, c0h:c1h] for k,v in masks.items()}, spacing)
             crop = np.s_[row-r0h:r1-r0h, col-c0h:c1-c0h]
             corrected[row:r1, col:c1] = result[crop]; category[row:r1, col:c1] = kinds[crop]
         print('condition_rows', r1, shape[0], flush=True)
@@ -293,7 +441,10 @@ def build(source, mbtiles, output, geoid):
         weight = ndi.gaussian_filter(inside.astype('float32'), 1.5)
         valid = (a != NODATA) & (masks['water'][r0:r1,c0:c1] == 0)
         existing = corrected[r0:r1,c0:c1]
-        delta = np.clip(plane-a, -12, 12)
+        limit = 60 if profile=='urban_strong' else 12
+        delta = np.clip(plane-a, -limit, limit)
+        if profile=='urban_strong':
+            valid &= (masks['natural'][r0:r1,c0:c1] == 0) & (masks['structure'][r0:r1,c0:c1] == 0)
         existing[valid] = (existing*(1-weight)+(a+delta)*weight)[valid]
         kinds = category[r0:r1,c0:c1]; kinds[valid & (weight>.05)] = 4
         airport_reports.append({'label':label,'cells':int(inside.sum()),
@@ -313,7 +464,7 @@ def build(source, mbtiles, output, geoid):
         write_tif(rasters/(name+'_conditioned.tif'),data,tx,VERTICAL_DATUM='EGM96',PURPOSE='visualization_only')
         write_tif(rasters/(name+'_change_m.tif'),np.where(valid,delta,NODATA).astype('float32'),tx,VERTICAL_DATUM='difference_metres')
         write_tif(rasters/(name+'_mask.tif'),np.where(valid,category[r:r+h,c:c+w],255).astype('uint8'),tx,nodata=255,
-                  CLASSES='0:unchanged,1:gentle_ground,2:water,3:road_centerline,4:airport')
+                  CLASSES='0:unchanged,1:gentle_ground,2:water,3:road,4:airport,5:urban')
         binpath=package/(name+'.bin');data.astype('<f4').tofile(binpath)
         grids.append(dict(file=binpath.name,dtype='float32',width=w,height=h,west=m['west'],north=m['north'],
                           dx=dx,dy=dy,bounds=[m['west'],m['north']-(h-1)*dy,m['west']+(w-1)*dx,m['north']],nodata=NODATA,sha256=sha(binpath)))
@@ -335,9 +486,9 @@ def build(source, mbtiles, output, geoid):
                   purpose='visualization_only_not_survey_or_flight_safety')
     manifest['version']=hashlib.sha256(json.dumps(manifest,sort_keys=True).encode()).hexdigest()[:16]
     write_json(package/'manifest.json',manifest)
-    report=dict(sources=metadata,mbtiles_sha256=sha(mbtiles),geoid_sha256=sha(geoid),shape=shape,
+    report=dict(profile=profile,sources=metadata,mbtiles_sha256=sha(mbtiles),geoid_sha256=sha(geoid),shape=shape,
                 mosaic=dict(file='merged_conditioned_30m.tif',sha256=sha(output/'merged_conditioned_30m.tif')),
-                parameters=dict(gentle_ground_max_change_m=2, water_max_change_m=8,
+                parameters=strong_parameters() if profile=='urban_strong' else dict(gentle_ground_max_change_m=2, water_max_change_m=8,
                                 road_max_change_m=1, airport_max_change_m=12,
                                 ground_sigma_cells=1.2, water_sigma_cells=5,
                                 airport_max_fitted_slope_degrees=2,
@@ -359,5 +510,7 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     for name in ('source','mbtiles','output','geoid'):
         parser.add_argument('--'+name,required=True,type=Path)
+    parser.add_argument('--profile',choices=['conservative','urban_strong'],default='conservative')
+    parser.add_argument('--reuse-masks',type=Path,help='Reuse only a hash-verified matching mask cache')
     args=parser.parse_args()
-    build(args.source,args.mbtiles,args.output,args.geoid)
+    build(args.source,args.mbtiles,args.output,args.geoid,args.profile,args.reuse_masks)

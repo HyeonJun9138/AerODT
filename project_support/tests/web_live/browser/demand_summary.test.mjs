@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {FakeElement, fakeDocument} from './fake_dom.mjs';
 import {DEFAULT_WEIGHT, WEIGHT_MAX, WEIGHT_MIN, WEIGHT_STEP, buildRequest, clampWeight,
-  defaultState, describeWeights, odEstimates, weightOf, weightRows}
+  defaultState, describeWeights, odDemandPlan, odEstimates, operatingTrips, weightOf, weightRows}
   from '../../../../user_application/web/demand_setup.js';
 import {DemandSummary, TOP_PAIRS, barWidth} from '../../../../user_application/web/domains/uam/planning/demand_summary.js';
 import {DemandPanel} from '../../../../user_application/web/domains/uam/planning/demand_panel.js';
@@ -81,14 +81,17 @@ test('the setting is described the way an operator would say it', () => {
 test('the pairs a day is mostly about follow from the two sets of weights', () => {
   const rows = weightRows(SCOPE, state(), DEFAULTS, KNOWN);
   const pairs = [{from: 'VP001', to: 'VP013'}, {from: 'VP002', to: 'VP013'}, {from: 'VP004', to: 'VP001'}];
-  const legs = odEstimates(rows, pairs, 10000);
+  const plan = odDemandPlan(rows, pairs, 10000);
+  const legs = plan.legs;
   assert.equal(legs.length, 6, 'a joined pair carries both directions');
-  assert.ok(Math.abs(legs.reduce((sum, leg) => sum + leg.share, 0) - 1) < 1e-9,
-    'what the cut pairs would have carried is re-shared, not lost');
-  assert.equal(legs.reduce((sum, leg) => sum + leg.trips, 0) > 9900, true);
-  // 강남 sends the most, so its outbound legs lead.
-  assert.equal(legs[0].from, 'VP013');
-  assert.ok(legs[0].from_name === '강남' && legs[0].to_name);
+  assert.ok(legs.reduce((sum, leg) => sum + leg.share, 0) < 1,
+    '15% of disconnected OD demand leaves instead of being manufactured elsewhere');
+  assert.equal(plan.redistributed_trips + plan.lost_trips, plan.disconnected_trips);
+  assert.equal(legs.reduce((sum, leg) => sum + leg.trips, 0), plan.schedulable_trips);
+  assert.ok(plan.redistributed_trips > plan.lost_trips && plan.lost_trips > 0);
+  assert.ok(legs[0].from_name && legs[0].to_name);
+  assert.ok(legs.every((leg, index) => index === 0 || legs[index - 1].share >= leg.share),
+    'the displayed alternatives are sorted by their post-diffusion demand');
   // A deck switched off carries nothing in either direction.
   const silent = weightRows(SCOPE, state({weights: {VP013: {departure: 0, arrival: 0}}}), DEFAULTS, KNOWN);
   for (const leg of odEstimates(silent, pairs, 10000)) {
@@ -135,6 +138,8 @@ function panelHarness() {
     api: {list: async () => ({vertiports: VERTIPORTS}),
       demandDefaults: async () => ({source: '서울시 통행 수요 기반 출발·도착 비율',
         default_weight: 100, step: 10, min: 0, max: 300,
+        profile: {hourly_departure_pct: [1.9581,1.3959,1.0857,.8918,1.2796,2.7142,4.2458,5.3509,5.6223,5.3121,5.1764,5.1377,
+          5.0407,5.1764,5.2927,5.4672,5.7387,5.8938,5.7774,5.2540,4.7111,4.4785,4.0132,2.9857]},
         vertiports: PLACES.map(([id, name]) => ({vertiport: id, name, known: true,
           source: name, ...DEFAULTS[id]}))})},
     document: fakeDocument,
@@ -199,6 +204,10 @@ test('the button asks for a summary before it asks for a day', async () => {
   assert.equal(view.scope.count, SCOPE.length);
   assert.equal(view.weights.length, SCOPE.length);
   assert.ok(view.trips > 0 && view.hours && view.seed);
+  assert.equal(view.operating_trips, 53537);
+  assert.equal(view.out_of_window_trips, 13963);
+  assert.equal(view.od.operating_trips, 53537);
+  assert.equal(view.od.redistributed_trips + view.od.lost_trips, view.od.disconnected_trips);
   assert.ok(view.document.kind === 'aerodt.multi_flight_setup');
   // And the two things it can do are handed over with it.
   assert.equal(typeof summaries[0].actions.generate, 'function');
@@ -207,7 +216,7 @@ test('the button asks for a summary before it asks for a day', async () => {
 
 // ---- the window ------------------------------------------------------------
 const VIEW = {
-  request: {version: 1}, errors: null, trips: 67500,
+  request: {version: 1}, errors: null, trips: 67500, operating_trips: 53537, out_of_window_trips: 13963,
   demand: '13,500,000 × 0.5% = 67,500명/일', hours: '06:30–21:30 · 15시간', seed: '매번 랜덤',
   scope: {count: 4, pairs: 5, total_pairs: 6},
   weights: weightRows(SCOPE, {scope: SCOPE, weights: {}}, DEFAULTS, KNOWN),
@@ -236,7 +245,8 @@ test('the summary window says what is about to be generated', () => {
   // The four things worth reading first.
   const figures = mount.querySelectorAll('.ds-figure').map(node => node.textContent.replace(/\s+/g, ' '));
   assert.equal(figures.length, 4);
-  assert.match(figures[0], /67,500명/);
+  assert.match(figures[0], /53,537명/);
+  assert.match(figures[0], /24시간 67,500명/);
   assert.match(figures[1], /4곳/);
   assert.match(figures[1], /5 \/ 6쌍/);
   assert.match(figures[3], /16대/);
@@ -290,6 +300,17 @@ test('seat supply below the day it has to carry is said in the window', () => {
   const enough = windowHarness();
   assert.equal(enough.mount.querySelector('#demand-summary-capacity').className, 'ds-note');
   enough.summary.destroy();
+});
+
+test('the window states how disconnected demand is diffused and reduced', () => {
+  const od = {disconnected_trips: 1000, redistributed_trips: 850, lost_trips: 150,
+    schedulable_trips: 53387, legs: []};
+  const {summary, mount} = windowHarness({...VIEW, od});
+  const note = mount.querySelector('#demand-summary-network-demand').textContent;
+  assert.match(note, /1,000명 중 850명은 대체 항로로 분산/);
+  assert.match(note, /150명은 다른 교통수단·시간대로 이탈/);
+  assert.match(note, /최종 항로 반영 수요는 53,387명/);
+  summary.destroy();
 });
 
 test('the request is made from the window, and closing leaves the settings alone', async () => {
@@ -351,4 +372,14 @@ test('a generated day is adopted the same way the example one is', async () => {
   assert.equal(panel.plan, description);
   assert.equal(panel.forgetPlan(), true);
   assert.equal(panel.plan, null);
+});
+
+
+test('planning summary shows the edited request without excluded-feature notices', () => {
+  const {mount} = windowHarness({...VIEW, request: {...VIEW.request,
+    planning: {fato_headway_s: 90, turnaround_recovery_s: 180}}});
+  const content = mount.querySelector('#demand-summary-planning').textContent;
+  assert.match(content, /FATO별 90초/);
+  assert.match(content, /회복여유 180초/);
+  assert.doesNotMatch(content, /공중 항로|충돌은 제외/);
 });

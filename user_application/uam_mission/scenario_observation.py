@@ -5,7 +5,7 @@ never advances it, commands a pilot, or owns a second runtime state.
 """
 import math
 
-from digital_twin.model_library import flight_plan, flight_schedule
+from digital_twin.model_library import flight_plan, flight_schedule, terminal_board
 
 
 def _segment_distance(p, a, b):
@@ -290,7 +290,18 @@ class ScenarioObservation:
                      if found is not None]
         report = (self.engine.psu.resource_monitor.report(vertiport_id, self.engine.time_s)
                   if self.engine.psu.resource_monitor is not None else None)
+        # What the deck's own board reads, from the day as written plus whatever
+        # each of those flights is doing now. It rides on this answer rather than
+        # a route of its own: the page already asks for this every few seconds,
+        # and a second request for the same deck would say the same thing a
+        # moment later, which is how two screens come to disagree.
+        live = {}
+        for aircraft in self.engine.aircraft.values():
+            state = self.state_for(aircraft)
+            if state.get("flight_id"):
+                live[state["flight_id"]] = state
         return {"vertiport_id": vertiport_id, "clock": flight_schedule.clock_text(self.engine.time_s),
+                "board": terminal_board.board(self.engine.flights, live, vertiport_id, self.engine.time_s),
                 # The pad bookings below are in the day's own seconds, so the
                 # display needs the same clock to say which of them is now.
                 "time_s": round(self.engine.time_s, 1),

@@ -93,6 +93,17 @@ export function configureTerrainStreaming(globe) {
   globe.loadingDescendantLimit=20;
   globe.preloadSiblings=false;
   globe.depthTestAgainstTerrain=true;
+  configureTileLoadSlice(globe);
+}
+
+export function configureTileLoadSlice(globe){
+  // Cesium 1.143's endFrame queue services terrain AND imagery. Its default
+  // 5ms slice is additional to drawing. No public scheduling option exists;
+  // isolate this guarded compatibility setting here (see streaming ADR).
+  // This is a soft budget: a single texture upload cannot be preempted.
+  const surface=globe?._surface;
+  if(Number.isFinite(surface?._loadQueueTimeSlice)&&surface._loadQueueTimeSlice>1)
+    surface._loadQueueTimeSlice=1;
 }
 
 // Bound tile work before the browser's transport queue; leave relay capacity

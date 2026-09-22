@@ -55,8 +55,8 @@ PSU_NODES = [
  {'id': 'terminal_hold', 'kind': 'end', 'text': '교차 경로 대기 · 차단 기체·FATO 기록'},
  {'id': 'ask',
   'kind': 'start',
-  'text': '실제 위치에서 도착 ETA를 갱신한다',
-  'detail': '접근 길이·수평속도·강하율로 남은 시간을 계산한다',
+  'text': '조종사의 접근 순번 요청과 현재 ETA를 수신한다',
+  'detail': '요청 시점 판단은 조종사가 맡고, PSU는 요청을 받은 뒤 순번·FATO·GATE를 검토한다',
   'next': 'known'},
  {'id': 'known', 'kind': 'decision', 'text': '발급된 착륙 번호가 있나?', 'yes': 'reuse', 'no': 'pad'},
  {'id': 'reuse',
@@ -67,7 +67,7 @@ PSU_NODES = [
  {'id': 'pad',
   'kind': 'action',
   'text': '출발 예약과 선행 착륙 ETA 사이에 배치한다',
-  'detail': '진행 중 접근이 우선이며 같은 패드의 시간 슬롯은 겹치지 않는다. 이륙은 가까운 패드의 접근까지 보호하고 실제 출발 위치 이탈을 확인한다',
+  'detail': '진행 중 접근이 우선이며 같은 패드의 시간 슬롯은 겹치지 않는다. 서로 다른 FATO의 실제 점유는 공유하지 않으며, 교차 경로는 별도 경로 검사로 보호한다',
   'next': 'stand'},
  {'id': 'stand', 'kind': 'decision', 'text': '빈 주기장과 도착 출구가 확보됐나?', 'detail': '실제 빈 주기장을 예약한다. 이동 중인 선행기가 허가된 경로로 교차 구간을 완전히 벗어날 시간도 확인한다', 'yes': 'grant', 'no': 'other'},
  {'id': 'other', 'kind': 'decision', 'text': '다른 빈 주기장으로 안전하게 이동할 수 있나?', 'yes': 'move', 'no': 'forecast'},
@@ -80,10 +80,10 @@ PSU_NODES = [
  {'id': 'clear', 'kind': 'action', 'text': '복귀 경로 확인 · 접근 시작 허가', 'detail': '옆 대기점에서 접근점으로 복귀할 시간을 예측에 포함한다. 실제 접근점 도착 뒤 접근 구간으로 이어가며, 최종 착륙 허가는 별도로 확인한다', 'next': 'traffic_clear'},
  {'id': 'traffic_clear', 'kind': 'decision', 'text': '접근 교통 분리가 확인됐나?', 'yes': 'final', 'no': 'traffic_hold'},
  {'id': 'traffic_hold', 'kind': 'action', 'text': 'PSU에 지정 대기점 요청', 'detail': '항로 위에서 임의로 대기하지 않는다. PSU가 자리와 이동 경로를 배정하고 조종사가 실제 위치·교통을 확인한다', 'next': 'hold'},
- {'id': 'final', 'kind': 'decision', 'text': '최종 진입 전 실제 패드·출구·선행편이 비었나?', 'detail': '실제 점유와 공용 구간을 재확인한다. 게이트만 점유 중이면 독립 FATO 선착륙 조건을 별도로 검사한다', 'yes': 'land', 'no': 'staging'},
+ {'id': 'final', 'kind': 'decision', 'text': '최종 패드와 임박한 이륙편의 FATO 용량이 확보됐나?', 'detail': '실제 점유·공용 구간·선행편과 이륙 보호 용량을 재확인한다. 50% 설정이면 겸용 FATO 4개 중 실제 사용 가능한 2개를 출발용으로 남긴다', 'yes': 'land', 'no': 'staging'},
  {'id': 'land', 'kind': 'end', 'text': '최종 착륙 허가', 'detail': '접지 뒤 패드 반경을 실제로 벗어나야 다음 편에 넘긴다'},
  {'id': 'staging', 'kind': 'decision', 'text': '빈 독립 FATO에서 게이트 해제를 잠시 기다릴 수 있나?',
-  'detail': '공용 패드·상승 경로·출발 유도로를 막지 않고, 이동 중 출발편의 게이트 해제가 임박한 경우만 선착륙한다. 접지 후 지상 이동권으로 대기·감속하며 실제 이탈 전까지 FATO 점유를 유지한다', 'yes': 'land', 'no': 'protect'},
+  'detail': '공용 패드·상승 경로·출발 유도로와 설정된 이륙 FATO 보호 수를 모두 유지하고, 이동 중 출발편의 게이트 해제가 임박한 경우만 선착륙한다. 접지 후 실제 이탈 전까지 FATO 점유를 유지한다', 'yes': 'land', 'no': 'protect'},
  {'id': 'protect', 'kind': 'end', 'text': '최종 접근 감속 대기', 'detail': '예측이 틀려도 점유된 패드로 내리지 않는다'},
  {'id': 'over', 'kind': 'decision', 'text': '대기 한도를 넘겼나?', 'yes': 'refuse', 'no': 'hold'},
  {'id': 'refuse', 'kind': 'end', 'text': '대기 한도 초과 보고'},
@@ -96,7 +96,7 @@ PSU_NODES = [
 PSU_PARAMETERS = [
  {'id':'assume_distinct_fatos_separated','label':'서로 다른 FATO 공중 분리 가정','node':'terminal','kind':'toggle',
   'default':True,'scope':'live',
-  'note':'다음 계획 로드부터 적용. 같은 버티포트의 서로 다른 FATO는 공통 WP가 있어도 공중 경로 전체를 선점해 막지 않습니다. 실제 근접 대응과 패드 점유, 인접 패드 및 지상 검사는 유지합니다. 분리 항로를 생성하거나 안전을 보장하는 설정은 아닙니다.'},
+  'note':'다음 계획 로드부터 적용. 같은 버티포트의 서로 다른 FATO는 공통 WP가 있어도 공중 경로 전체를 선점해 막지 않습니다. 실제 근접 대응과 각 FATO의 자체 점유 및 지상 검사는 유지합니다. 분리 항로를 생성하거나 안전을 보장하는 설정은 아닙니다.'},
  {'id':'assume_mixed_separated','label':'이착륙 우측 분리 가정','node':'terminal','kind':'toggle',
   'default':True,'scope':'live',
   'note':'다음 비행계획 로드부터 적용. 이륙과 착륙은 비행 측에서 우측으로 분리된다고 가정하여 공중 경로 중첩만으로 사전 차단하지 않습니다. 우측 항로를 생성하는 기능은 아닙니다. 같은 패드 실제 점유, 지상 출구, 동방향 간격과 실제 근접 대응은 유지하는 연구 설정입니다.'},
@@ -115,17 +115,16 @@ PSU_PARAMETERS = [
  'min':60,'max':600,'step':10,'default':150.0,'scope':'live',
  'note':'설정값, 접근 시작 간격의 2배, 착륙 간격 중 큰 값을 사용합니다. 이미 비행·체공 중인 기체도 도착 수요에 포함합니다. 지상 출발 지연 뒤에는 예약 순번을 유지한 채 시각을 재확인합니다. 실제 패드 점유 검사는 별도입니다.'},
  {'id':'entry_per_fato','label':'도착 FATO별 진입 간격','node':'entry_meter','kind':'toggle','default':True,'scope':'live',
-  'note':'켜면 진입 간격을 배정된 도착 FATO별로 따로 센다: 착륙 FATO가 둘이면 두 편이 나란히 들어온다. 끄면 버티포트 전체를 한 줄로 세워 FATO가 여럿이어도 한 번에 한 편만 들어온다. 패드 점유·인접 패드 확인은 그대로 유지한다.'},
+  'note':'켜면 진입 간격을 배정된 도착 FATO별로 따로 센다: 착륙 FATO가 둘이면 두 편이 나란히 들어온다. 끄면 버티포트 전체를 한 줄로 세워 FATO가 여럿이어도 한 번에 한 편만 들어온다. 각 FATO의 자체 점유 확인은 그대로 유지한다.'},
  {'id':'predictive_ground','label':'출발편 뒤 게이트 선예약','node':'forecast','kind':'toggle','default':True,'scope':'live','note':'이동·이동권이 확인된 출발편의 후속 게이트 예약. 단순 예정 시각만으로 허가하지 않습니다.'},
  {'id':'ground_lookahead_s','label':'지상 해제 예측 범위','node':'forecast','default':120.,'min':30,'max':300,'step':10,'unit':'초','scope':'live','note':'허가된 지상 경로의 이탈 예상 시각을 이 범위까지 확인합니다.'},
  {'id':'progressive_approach','label':'초기 접근 구간 먼저 투입','node':'terminal','kind':'toggle','default':True,'scope':'live','note':'이륙 경로와 겹치지 않는 초기 구간만 허가하고 공용 구간 앞에서 다시 검사합니다.'},
  {'id':'direct_approach','label':'대기 구역에서 바로 접근','node':'terminal','kind':'toggle','default':True,'scope':'live','note':'다음 비행계획 로드부터 적용. 켜면 대기 구역에서 풀린 기체가 회랑 끝 진입점으로 되돌아가지 않고 그 자리에서 하강 구간으로 바로 접근합니다. 끄면 진입점으로 복귀한 뒤 접근합니다.'},
  {'id':'landing_staging_wait_s','label':'선착륙 시 게이트 예상 대기','node':'staging','default':30.,'min':0,'max':90,'step':5,'unit':'초','scope':'live','note':'빈 독립 FATO에 착륙을 허가할 때의 예상 대기 상한. 0이면 선착륙 대기를 끕니다. 실제 지연이 늘면 지상에서 계속 보호합니다.'},
-{'id': 'allocate_fatos', 'label': '연결된 FATO로 분산 배정', 'node': 'allocate', 'kind': 'toggle', 'default': True, 'scope': 'live', 'note': '다음 비행계획 로드부터 적용합니다. 출발 전 배정하며 비행 중에는 접근 항로를 유지합니다.'}, {'id': 'predictive_arrivals', 'label': '예측 접근 허가', 'node': 'grant', 'kind': 'toggle', 'default': True, 'scope': 'live', 'note': '실제 위치 ETA로 슬롯을 갱신하고 접근과 최종 착륙을 따로 허가합니다.'}, {'id': 'prediction_buffer_s', 'label': 'ETA 여유', 'node': 'pad', 'default': 12.0, 'min': 0, 'max': 60, 'step': 1, 'unit': '초', 'scope': 'live', 'note': '도착 예측에 더하는 여유. 실제 패드 점유 확인은 별도로 유지합니다.'}, {'id': 'approach_headway_s', 'label': '접근 시작 간격', 'node': 'spacing', 'default': 30.0, 'min': 10, 'max': 180, 'step': 5, 'unit': '초', 'scope': 'live', 'note': '앞 기체가 접근을 시작한 뒤 다음 기체를 보낼 최소 시간.'}, {'id': 'approach_capacity', 'label': '패드별 동시 접근', 'node': 'spacing', 'default': 3.0, 'min': 1, 'max': 6, 'step': 1, 'unit': '대', 'scope': 'live', 'note': '최종 착륙 중인 기체를 포함합니다.'}, {'id': 'final_guard_s', 'label': '최종 진입 확인 시점', 'node': 'final', 'default': 45.0, 'min': 20, 'max': 120, 'step': 5, 'unit': '초', 'scope': 'live', 'note': '실제 접근 위치로 계산한 시간이 이 값 안에 들면 패드와 선행편을 확인합니다. 대기·복귀 ETA 때문에 이 판정이 반복해서 바뀌지 않습니다.'}, {'id': 'pad_adjacency_m', 'label': '인접 패드 간격', 'node': 'land', 'default': 50.0, 'min': 10, 'max': 200, 'step': 5, 'unit': 'm', 'scope': 'live', 'note': '같은 데크에서 이 거리 안의 패드는 하나로 본다: 한 패드가 쓰이는 동안 그 안의 다른 패드에서 이륙·최종 착륙을 시키지 않는다. 36 m 간격 4-FATO 데크에서 50 m면 F1·F3, F2·F4가 동시에 움직인다. 다운워시 안전 기준이 아닌 연구 설정이다.'}, {'id': 'pad_clear_radius_m', 'label': '패드 이탈 확인 반경', 'node': 'land', 'default': 25.0, 'min': 10, 'max': 80, 'step': 5, 'unit': 'm', 'scope': 'live', 'note': '접지 뒤 실제 지상 위치가 이 반경을 벗어나면 점유를 해제합니다.'}] + [
-    {"id": "arrival_request_lead_s", "label": "접근 요청 시점", "unit": "초", "node": "ask",
-     "min": 60, "max": 1800, "step": 10, "default": 180.0, "scope": "live",
-     "note": "착륙 예정 이 시간 전에 묻는다. 짧으면 순서를 바꿀 여지가 없고, 길면 아직 "
-             "모르는 앞순위까지 미리 밀어낸다."},
+ {'id': 'allocate_fatos', 'label': '연결된 FATO로 분산 배정', 'node': 'allocate', 'kind': 'toggle', 'default': True, 'scope': 'live', 'note': '다음 비행계획 로드부터 적용합니다. 출발 전 배정하며 비행 중에는 접근 항로를 유지합니다.'}, {'id': 'predictive_arrivals', 'label': '예측 접근 허가', 'node': 'grant', 'kind': 'toggle', 'default': True, 'scope': 'live', 'note': '실제 위치 ETA로 슬롯을 갱신하고 접근과 최종 착륙을 따로 허가합니다.'}, {'id': 'assign_gate_after_touchdown', 'label': '접지 후 GATE 배정', 'node': 'grant', 'kind': 'toggle', 'default': True, 'scope': 'live', 'note': '켜면 접근·착륙은 FATO 기준으로 처리하고, 실제 접지 순서대로 빈 GATE와 복수 지상경로를 배정합니다.'}, {'id': 'protect_departure_capacity', 'label': '임박한 이륙 FATO 보호', 'node': 'final', 'kind': 'toggle', 'default': True, 'scope': 'live', 'note': '켜면 임박한 출발편이 있을 때 착륙으로 사용할 수 없는 이륙 가능 FATO 수를 계산하여 설정된 비율만큼 실제 출발 용량을 남깁니다.'}, {'id': 'departure_fato_reserve_ratio', 'label': '이륙 FATO 보호 비율', 'node': 'final', 'default': 0.5, 'min': 0, 'max': 1, 'step': 0.25, 'unit': '비율', 'scope': 'live', 'note': '이륙 가능한 FATO 중 남겨둘 최소 비율입니다. 0.5이면 4개 중 2개를 보호하며 전용 이륙 FATO 수보다 작게 잡지 않습니다.'}, {'id': 'departure_reserve_lookahead_s', 'label': '이륙 용량 보호 예고시간', 'node': 'final', 'default': 300.0, 'min': 30, 'max': 1800, 'step': 30, 'unit': '초', 'scope': 'live', 'note': '이 시간 안에 출발 예정·요청·진행 중인 편이 있을 때만 이륙 FATO 보호 규칙을 적용합니다.'}, {'id': 'prediction_buffer_s', 'label': 'ETA 여유', 'node': 'pad', 'default': 12.0, 'min': 0, 'max': 60, 'step': 1, 'unit': '초', 'scope': 'live', 'note': '도착 예측에 더하는 여유. 실제 패드 점유 검사는 별도로 유지합니다.'}, {'id': 'approach_headway_s', 'label': '접근 시작 간격', 'node': 'spacing', 'default': 30.0, 'min': 10, 'max': 180, 'step': 5, 'unit': '초', 'scope': 'live', 'note': '앞 기체가 접근을 시작한 뒤 다음 기체를 보낼 최소 시간.'}, {'id': 'approach_capacity', 'label': '패드별 동시 접근', 'node': 'spacing', 'default': 3.0, 'min': 1, 'max': 6, 'step': 1, 'unit': '대', 'scope': 'live', 'note': '최종 착륙 중인 기체를 포함합니다.'}, {'id': 'final_guard_s', 'label': '최종 진입 확인 시점', 'node': 'final', 'default': 45.0, 'min': 20, 'max': 120, 'step': 5, 'unit': '초', 'scope': 'live', 'note': '실제 접근 위치로 계산한 시간이 이 값 안에 들면 패드와 선행편을 확인합니다. 대기·복귀 ETA 때문에 이 판정이 반복해서 바뀌지 않습니다.'}, {'id': 'pad_clear_radius_m', 'label': '패드 이탈 확인 반경', 'node': 'land', 'default': 25.0, 'min': 10, 'max': 80, 'step': 5, 'unit': 'm', 'scope': 'live', 'note': '접지 뒤 실제 지상 위치가 이 반경을 벗어나면 점유를 해제합니다.'}] + [
+    {"id": "arrival_request_lead_s", "label": "조종사 접근 순번 요청 시점", "unit": "초", "node": "ask",
+     "min": 60, "max": 1800, "step": 10, "default": 180.0, "scope": "live", "source": "pilot",
+     "note": "조종사 차트가 소유하는 동일한 값입니다. PSU는 이 시점을 정하지 않고 요청을 받은 뒤 처리합니다."},
     {"id": "fato_landing_separation_s", "label": "착륙 · 착륙 간격", "unit": "초", "node": "pad",
      "min": 20, "max": 600, "step": 5, "default": 90.0, "scope": "live",
      "note": "한 FATO가 연속 착륙 사이에 두는 시간. 수직 착륙과 유도로까지 빠지는 시간이다. "
@@ -173,6 +172,12 @@ PILOT_NODES = [{'id': 'tick',
   'kind': 'start',
   'text': '조종사가 자기 상태를 읽는다',
   'detail': '위치·속도·자세는 물리에서 관측한다. 보간하지 않는다',
+  'next': 'arrival_request'},
+ {'id': 'arrival_request', 'kind': 'decision', 'text': '접근 순번 요청 기준에 들어왔나?',
+  'detail': '실제 위치에서 계산한 남은 시간과 도착 진입점 도달 여부를 확인한다. 자동 조종은 즉시 요청하고 수동 조종은 요청 버튼과 알림을 활성화한다',
+  'yes': 'arrival_send', 'no': 'traffic'},
+ {'id': 'arrival_send', 'kind': 'action', 'text': 'PSU에 접근 순번 요청',
+  'detail': '조종사가 현재 ETA와 비행편을 보낸다. PSU의 순번 배정·접근 허가·착륙 허가는 이 요청과 별도다',
   'next': 'traffic'},
  {'id': 'traffic', 'kind': 'decision', 'text': '예측되는 근접 교통이 있나?', 'yes': 'avoid', 'no': 'held'},
  {'id': 'avoid',
@@ -211,7 +216,10 @@ PILOT_NODES = [{'id': 'tick',
   'detail': '멀리서는 설정한 접근 속도를 쓰며, 최종 정렬점에서는 6초 응답 여유와 남은 거리로 미리 감속한다. 가까이서는 보조 틸트를 해제하고, 하강 경사 제한을 끝까지 유지한다. 위치·속도·방향·로터 정렬 확인 후 수직 착륙한다'},
  {'id': 'track', 'kind': 'end', 'text': '코스 추종 — 방위를 맞추고 속도를 낸다', 'detail': '실제 기수가 목표 방위에 들어오기 전에는 가속하지 않는다'}]
 
-PILOT_PARAMETERS = [{'id': 'pilot_self_hold', 'label': '조종사 자율 대기', 'node': 'traffic', 'kind': 'toggle',
+PILOT_PARAMETERS = [{'id': 'arrival_request_lead_s', 'label': '접근 순번 요청 시점', 'unit': '초',
+  'node': 'arrival_request', 'min': 60, 'max': 1800, 'step': 10, 'default': 180.0, 'scope': 'live',
+  'note': '예상 접지까지 남은 시간이 이 값 안에 들거나 도착 진입점에 도달하면 조종사가 요청합니다. 자동 모드는 즉시 전송하고 수동 모드는 알림과 요청 버튼을 활성화합니다.'},
+ {'id': 'pilot_self_hold', 'label': '조종사 자율 대기', 'node': 'traffic', 'kind': 'toggle',
   'default': True, 'scope': 'live',
   'note': '끄면 조종사는 스스로 멈추지 않고 PSU가 지시한 대기만 수행합니다. 근접 교통은 계속 '
           '보고 회피·감속은 하되, 자기 판단으로 접근을 세우거나 분리 대기점으로 빠지지 않습니다. '
@@ -419,6 +427,16 @@ def validate(values):
     fifteen they meant.
     """
     answer = defaults()
+    # Older saved files kept this pilot trigger under PSU.  Preserve the
+    # operator's value while moving its ownership to the pilot chart.
+    if (isinstance(values, dict) and isinstance(values.get("psu"), dict)
+            and "arrival_request_lead_s" in values["psu"]
+            and not (isinstance(values.get("pilot"), dict)
+                     and "arrival_request_lead_s" in values["pilot"])):
+        parameter = next(p for p in PILOT_PARAMETERS
+                         if p["id"] == "arrival_request_lead_s")
+        answer["pilot"]["arrival_request_lead_s"] = _one(
+            parameter, values["psu"]["arrival_request_lead_s"])
     if isinstance(values, dict):
         for chart in CHARTS:
             given = values.get(chart["id"])

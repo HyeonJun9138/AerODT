@@ -37,6 +37,10 @@ class ManualGround:
         # walking is told what happened instead of being left to guess.
         self.notice=None
         self.psu = None;self.next_flight=None;self.remaining_flights=None;self.flight_completed=False
+        # Whether the person flying this aircraft is currently standing on the
+        # deck rather than in the seat. It lives on the operation rather than
+        # here so an aircraft that strays and loses its procedure cannot leave
+        # a pilot marked as outside an aircraft that has gone.
         self.door={'forward_m':.3,'right_m':1.1,'height_m':.8}
         asset=plan.get('aircraft',{}).get('asset_id','')
         if workspace and asset and all(c.isalnum() or c=='_' for c in asset):
@@ -47,6 +51,27 @@ class ManualGround:
 
     @property
     def locked(self):return self.operation is not None and not self.released
+    @property
+    def crew_outside(self):
+        return bool(self.operation and self.operation.get('crew_out_s') is not None)
+
+    @staticmethod
+    def door_fraction(operation, time_s):
+        """Current door travel, independent of charging and procedure release."""
+        if not operation:return 0.0
+        # Old operations created before the independent door contract opened
+        # from start_s. Keeping this fallback also makes recorded fixtures read.
+        start=operation.get('door_motion_s',operation.get('start_s',time_s))
+        source=float(operation.get('door_from',0.0))
+        target=float(operation.get('door_target',1.0))
+        share=max(0.0,min(1.0,(time_s-start)/2.0))
+        return source+(target-source)*share
+
+    def move_door(self, open_, sample):
+        op=self.operation;now=sample['time_s']
+        op['door_from']=self.door_fraction(op,now)
+        op['door_target']=1.0 if open_ else 0.0
+        op['door_motion_s']=now
 
     def sync_psu(self, advice):
         """Use the received stand for ground handling, never change aircraft pose."""
@@ -119,12 +144,45 @@ class ManualGround:
     def request(self,action,request_id,sample,command):
         if not isinstance(request_id,str) or not 1<=len(request_id)<=80:raise ValueError('request_id')
         if request_id in self.requests:return self.requests[request_id]
-        if action=='disembark':
-            okay,reason=self.eligibility(sample,command)
-            if not okay:return self.remember(request_id,False,reason)
-            try:operation=self.begin(sample)
-            except (ValueError,KeyError,IndexError) as error:return self.remember(request_id,False,'하차 동선 준비 실패: '+str(error))
-            self.operation=operation;self.released=False;self.notice=None
+        if action in ('open_door','reopen'):
+            # Door motion is not procedure release. An existing passenger or
+            # charging operation stays exactly where it is while the door is
+            # opened and closed; in particular opening never recreates people.
+            self.snapshot(sample,command)
+            if self.operation is None:
+                okay,reason=self.eligibility(sample,command)
+                if not okay:return self.remember(request_id,False,reason)
+                try:operation=self.begin(sample)
+                except (ValueError,KeyError,IndexError) as error:return self.remember(request_id,False,'출입문 준비 실패: '+str(error))
+                self.operation=operation;self.released=False;self.notice=None
+            else:
+                if sample.get('airborne') is not False or sample.get('speed_mps',math.inf)>.15 or sample.get('rotor_radps',math.inf)>2:
+                    return self.remember(request_id,False,'기체가 GATE에 정지하고 로터가 멈춘 뒤 문을 여세요')
+                # Recover old close/release state as well, so a pilot is never
+                # left with a dead panel after pressing the door button.
+                self.operation.pop('release_s',None)
+                self.operation.pop('disconnect_s',None)
+                self.released=False;self.notice=None
+                self.move_door(True,sample)
+            message='문을 엽니다 · 진행 중인 하차와 충전 상태는 유지됩니다'
+        elif action=='disembark':
+            # Compatibility: an older cockpit can still send one combined
+            # request. New cockpits open the door first and send this separately.
+            if self.operation is None or self.released:
+                okay,reason=self.eligibility(sample,command)
+                if not okay:return self.remember(request_id,False,reason)
+                try:self.operation=self.begin(sample)
+                except (ValueError,KeyError,IndexError) as error:return self.remember(request_id,False,'하차 동선 준비 실패: '+str(error))
+                self.released=False;self.notice=None
+                start=sample['time_s']+2
+            else:
+                if self.operation.get('alighting_start_s') is not None:
+                    return self.remember(request_id,False,'승객 하차를 이미 요청했습니다')
+                state=self.snapshot(sample,command)
+                if state['phase']!='door_open':return self.remember(request_id,False,'문이 열린 뒤 승객 하차를 요청하세요')
+                start=sample['time_s']
+            self.operation['alighting_start_s']=start
+            self.operation['alighting_end_s']=start+self.operation['alighting_duration_s']
             message='문을 열고 하차를 시작합니다'
         elif action=='charge':
             state=self.snapshot(sample,command)
@@ -139,9 +197,34 @@ class ManualGround:
             op['charge_requested_s']=sample['time_s'];op['crew_start_s']=t
             op['charge_at_s']=t+op['crew_walk_s']+4
             message='충전 연결 요청 접수 · 직원 이동 후 케이블을 연결합니다'
+        elif action=='crew_out':
+            # Once the cable is on and the battery is taking it, the aircraft is
+            # doing nothing that needs a person in the seat: the stick is
+            # already dead (`locked`) for the whole procedure. So this is the
+            # one moment it is safe to step out onto the deck.
+            state=self.snapshot(sample,command)
+            if state['phase'] not in ('charging','complete'):
+                return self.remember(request_id,False,'충전이 시작된 뒤 내릴 수 있습니다')
+            if self.crew_outside:return self.remember(request_id,False,'이미 기체 밖에 있습니다')
+            self.operation['crew_out_s']=sample['time_s']
+            message='문으로 내려 데크에 섭니다'
+        elif action=='crew_in':
+            if not self.crew_outside:return self.remember(request_id,False,'기체 안에 있습니다')
+            self.operation.pop('crew_out_s',None)
+            message='조종석으로 돌아왔습니다'
+        elif action=='close_door':
+            self.snapshot(sample,command)
+            if not self.operation:return self.remember(request_id,False,'먼저 문을 여세요')
+            if self.crew_outside:return self.remember(request_id,False,'조종석으로 돌아온 뒤 문을 닫으세요')
+            self.move_door(False,sample)
+            message='문을 닫습니다 · 충전 연결과 지상 절차는 유지됩니다'
         elif action=='release':
             state=self.snapshot(sample,command)
-            if state['phase'] not in ('awaiting_charge','charging','complete'):return self.remember(request_id,False,'하차와 충전 연결 완료 후 해제할 수 있습니다')
+            # Closing the door and giving the stick back to an empty seat is how
+            # an aircraft leaves without its pilot.
+            if self.crew_outside:return self.remember(request_id,False,'조종석으로 돌아온 뒤 해제하세요')
+            if state['phase'] not in ('door_open','awaiting_charge','charging','complete'):
+                return self.remember(request_id,False,'문이 완전히 열린 상태에서 닫을 수 있습니다')
             self.operation['release_s']=sample['time_s']
             self.operation['disconnect_s']=3 if self.operation['charge_requested_s'] is not None else 0
             message='충전 케이블 분리 · 문 닫기' if self.operation['disconnect_s'] else '문을 닫습니다'
@@ -175,8 +258,9 @@ class ManualGround:
         walking=distance(socket,port)/.9 if socket else 0
         people_s=walk['duration_s'] if walk else 0
         return {'start_s':sample['time_s'],'position':p,'heading_deg':heading,'vertiport':end['vertiport'],'gate':gate['id'],
+                'door_from':0.0,'door_target':1.0,'door_motion_s':sample['time_s'],
                 'walk':walk,'door_side':side,'door':door,'crew_path':[socket,port] if socket else None,'crew_walk_s':walking,
-                'alighting_end_s':2+people_s,'charge_requested_s':None,
+                'alighting_start_s':None,'alighting_end_s':None,'alighting_duration_s':people_s,'charge_requested_s':None,
                 'crew_start_s':2+people_s,'charge_at_s':2+people_s+(walking+4 if socket else 0),'socket':socket,'charger_id':charger['id'] if charger else None}
 
     def strayed(self,sample):
@@ -207,8 +291,16 @@ class ManualGround:
             recent=bool(self.notice) and abs((sample or {}).get('time_s',0)-self.notice[0])<NOTICE_SECONDS
             return self.scheduled({'phase':'idle','available':available,'reason':self.notice[1] if recent else reason,'locked':False})
         op=self.operation;t=max(0,sample['time_s']-op['start_s']);release=op.get('release_s')
-        if t<2:phase='opening'
-        elif t<op['alighting_end_s']:phase='alighting'
+        alighting_start=op.get('alighting_start_s')
+        alighting_end=op.get('alighting_end_s')
+        door_open=self.door_fraction(op,sample['time_s'])
+        door_target=op.get('door_target',1.0)
+        moving=abs(door_open-door_target)>1e-6
+        door_state=('opening' if door_target>door_open else 'closing') if moving else ('open' if door_open>=.999 else 'closed')
+        door_phase='opening' if door_state=='opening' else 'closing' if door_state=='closing' else 'door_open' if door_state=='open' else 'door_closed'
+        if alighting_start is None:phase=door_phase
+        elif sample['time_s']<alighting_start:phase=door_phase
+        elif sample['time_s']<alighting_end:phase='alighting'
         elif op['charge_requested_s'] is None:phase='awaiting_charge' if op['socket'] else 'complete'
         elif t<op['charge_at_s']:phase='connecting'
         else:phase='charging'
@@ -216,8 +308,22 @@ class ManualGround:
             dt=sample['time_s']-release;delay=op['disconnect_s']
             phase='disconnecting' if dt<delay else 'closing' if dt<delay+2 else 'released'
             self.released=phase=='released'
-        door_open=min(1,t/2) if release is None else max(0,1-max(0,sample['time_s']-release-op['disconnect_s'])/2)
-        labels={'opening':'문 여는 중','alighting':'승객 하차 · 시설로 이동','awaiting_charge':'하차 완료 · 충전 연결 요청을 기다립니다','connecting':'지상 직원 · 케이블 운반 / 연결','charging':'충전 중 · 출발하려면 해제','complete':'하차 완료 · 충전 시설 없음','disconnecting':'충전 케이블 분리 중','closing':'문 닫는 중','released':'지상 절차 완료 · 조작 가능'}
+        if release is not None:
+            # Legacy explicit release owns its own disconnect-then-close
+            # animation. New close_door never comes through this path.
+            door_open=max(0,1-max(0,sample['time_s']-release-op['disconnect_s'])/2)
+            door_state='open' if sample['time_s']-release<op['disconnect_s'] else 'closing' if door_open>0 else 'closed'
+        labels={'opening':'문 여는 중','door_open':'문 열림 · 승객 하차 요청 대기','door_closed':'문 닫힘 · 다시 열어 하차할 수 있습니다','alighting':'승객 하차 · 시설로 이동','awaiting_charge':'하차 완료 · 충전 연결 요청을 기다립니다','connecting':'지상 직원 · 케이블 운반 / 연결','charging':'충전 중','complete':'하차 완료 · 충전 시설 없음','disconnecting':'충전 케이블 분리 중','closing':'문 닫는 중','released':'지상 절차 완료'}
+        outside=self.crew_outside
+        alighting_done=alighting_start is not None and sample['time_s']>=alighting_end
         return self.scheduled({**op,'crew_path':op['crew_path'] if op['charge_requested_s'] is not None else None,
-                'elapsed_s':t,'phase':phase,'label':labels[phase],'available':False,'locked':self.locked,'door_open':door_open,
-                'passengers_remaining':sum(t<2+r for r in op['walk']['release_s']) if op['walk'] else 0})
+                'elapsed_s':t,'phase':phase,'label':('데크에 내려 있음 · '+labels[phase]) if outside else labels[phase],
+                'crew_outside':outside,'crew_can_leave':phase in ('charging','complete') and not outside,
+                'reopen_allowed':phase=='released','door_control_available':True,'door_state':door_state,
+                'alight_allowed':phase=='door_open','alighting_done':alighting_done,
+                'turnaround_complete':door_state=='closed' and alighting_done,
+                # Where a person steps down to, in the aircraft's own frame. The
+                # door offsets are the ones read from the airframe's metadata.
+                'crew_door_m':dict(self.door),
+                'available':False,'locked':self.locked,'door_open':door_open,
+                'passengers_remaining':sum(sample['time_s']-alighting_start<r for r in op['walk']['release_s']) if op['walk'] and alighting_start is not None else int(self.plan['vehicle']['passengers'])})

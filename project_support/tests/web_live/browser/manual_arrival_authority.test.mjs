@@ -37,6 +37,17 @@ test('audible advisory never announces approach start from the forecast clock',(
  s.announceApproach(x);assert.match(said[1],/최종 하강 금지/);
 });
 
+test('manual arrival request readiness sounds once when the pilot button activates',()=>{
+ const said=[],sounds=[],s=Object.assign(Object.create(ManualFlightSession.prototype),
+  {notify:t=>said.push(t),onSound:t=>sounds.push(t)});
+ const x=message();x.procedure.stage='항로 비행';
+ x.procedure.next={kind:'arrival',label:'접근 순번 요청',enabled:false};
+ s.announceApproach(x);assert.equal(said.length,0);
+ x.procedure.stage='접근 순번 요청 가능';x.procedure.next.enabled=true;
+ s.announceApproach(x);s.announceApproach(x);
+ assert.deepEqual(sounds,['received']);assert.match(said[0],/지금 PSU에 요청/);
+});
+
 test('retained holding-bay booking cannot hide the NAV route after approach clearance',()=>{
  const x=message();x.hold={slot:'R2-H1'};
  assert.equal(manualArrivalHolding(x),true);

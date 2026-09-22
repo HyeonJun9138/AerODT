@@ -12,6 +12,7 @@ import {cabinAt,showCabin,showDoors} from './cabin_passengers.js?v=20260917-cabi
 import {ScenarioPassengerLayer} from './scenario_passengers.js?v=20260917-cabin-passengers';
 import {VertiportLayer, footprintsOf, overlapsFootprint, texturedAppearance} from './vertiport_layer.js?v=20260921-inset-lights';
 import {retainShaderPrograms} from './shader_retention.js';
+import {budgetTileProcessing} from './tile_processing_budget.js';
 import {warmUpShaders, warmUpImage} from './shader_warmup.js';
 import {flightShaderModels} from './visual_asset_loader.js';
 import {RouteLayer,distanceMetres} from './route_layer.js';
@@ -124,6 +125,11 @@ export class LiveGlobe {
     // pick variant that comes back after its last user went is a cache hit,
     // not a 50-1000 ms Direct3D link wait in the middle of a zoom or an edit.
     this.shaderRetention=retainShaderPrograms(v.scene);
+    // A batch of city tiles is finished one per frame rather than all in the
+    // frame it landed: finishing a tile is its GPU upload, its draw commands
+    // and its per-feature style, and Cesium OSM Buildings hands over several
+    // at once as the camera crosses a city.
+    this.tileBudget=budgetTileProcessing(C);
     this.placeLabels=new PlaceLabels({
       isReady:()=>v.scene.globe.tilesLoaded,
       stableMs:250,
@@ -218,6 +224,9 @@ export class LiveGlobe {
     // operator wants the flown path and the projected one on screen together.
     this.flightTrack=new FlightTrackLayer(C,v,{load:loadFlightTrack,onSummary:onFlightTrack,
       supports:entity=>entity?.kind==='uam',
+      // Historical samples use the same display-only deck registration as the
+      // aircraft model, so the green line cannot appear below it near a deck.
+      surfaceOffset:(reference,position)=>this.vertiportLayer?.surfaceOffset(reference,position)??0,
       // The flown line ends on the aircraft, the way the predicted one starts
       // on it: the twin's track always lags a few seconds, and without this the
       // line stops short and jumps forward each time it is asked again.
@@ -238,6 +247,10 @@ export class LiveGlobe {
     this.onVertiportPlaced=null;
     this.entityScene.surfaceOffset=(reference,position)=>this.vertiportLayer.surfaceOffset(reference,position);
     this.scenarioPassengers.deckTop=id=>this.vertiportLayer.deckTop(id);
+    // The terminal draws its own people from the same catalogue the day's
+    // boarding walks use, so there is one body model in the build.
+    this.vertiportLayer.personAsset=id=>this.entityScene.assets?.get(id)??null;
+    this.vertiportLayer.onWarning=this.onWarning;
     // The stand cable of a charging aircraft leaves the cabinet body the
     // vertiport layer placed, so the cable layer asks it where that is.
     this.entityScene.chargerCabinet=connection=>this.vertiportLayer.chargerCabinet(connection);
@@ -480,19 +493,23 @@ export class LiveGlobe {
     void this.vertiportLayer?.refresh().then(()=>this.routeLayer?.refresh());
   }
   async setTerrainSource(source) {
-    const wanted=source==='local_dem'?'local_dem':'world_terrain';
+    const wanted=['local_dem','conditioned_dem'].includes(source)?source:'world_terrain';
     this.terrainSource=wanted;
     const revision=++this.terrainRevision;
     if(!this.worldTerrain)return;
-    if(this.activeTerrainSource===wanted && (wanted!=='local_dem' || this.localTerrain))return;
+    const key=wanted==='conditioned_dem'?'conditionedTerrain':'localTerrain';
+    const pendingKey=key+'Pending';
+    if(this.activeTerrainSource===wanted && (wanted==='world_terrain' || this[key]))return;
     let next=this.worldTerrain,actual='world_terrain';
-    if(wanted==='local_dem') {
+    if(wanted!=='world_terrain') {
+      const label=wanted==='conditioned_dem'?'보정 DEM':'로컬 DEM';
       try {
-        if(!this.localTerrain && !this.localTerrainPending)this.localTerrainPending=loadLocalTerrain(this.C,this.worldTerrain,{
-          onFallback:()=>{if(!this.localTerrainWarned){this.localTerrainWarned=true;this.onWarning('로컬 지형 일부를 읽지 못해 Cesium 지형으로 대체했습니다.');}}
-        }).then(provider=>this.localTerrain=provider).finally(()=>{this.localTerrainPending=null;});
-        next=this.localTerrain || await this.localTerrainPending;actual='local_dem';
-      } catch {if(revision===this.terrainRevision)this.onWarning('로컬 DEM 연결 실패. 기존 Cesium 지형을 유지합니다.');}
+        if(!this[key] && !this[pendingKey])this[pendingKey]=loadLocalTerrain(this.C,this.worldTerrain,{
+          source:wanted==='conditioned_dem'?'conditioned':'local',
+          onFallback:()=>{if(!this[key+'Warned']){this[key+'Warned']=true;this.onWarning(`${label} 일부를 읽지 못해 Cesium 지형으로 대체했습니다.`);}}
+        }).then(provider=>this[key]=provider).finally(()=>{this[pendingKey]=null;});
+        next=this[key] || await this[pendingKey];actual=wanted;
+      } catch {if(revision===this.terrainRevision)this.onWarning(`${label} 연결 실패. 기존 Cesium 지형을 유지합니다.`);}
     }
     if(revision!==this.terrainRevision || this.terrainDisposed)return;
     this.activeTerrainSource=actual;
@@ -1109,6 +1126,10 @@ export class LiveGlobe {
     const scale=this.renderBudget?.update(v.camera,{now,frameMs:this.timing.recentMs??this.timing.summary().p50Ms,
       relative:Boolean(this.tracking||this.flightAnchor||this.cockpit?.active),approaching:Boolean(this.approach||this.entryActive),
       viewPose:this.cockpit?.active?cockpitBudgetPose(v.camera):null,
+      // The cockpit keeps its pixels: this display is main-thread bound, so
+      // the cut bought nothing, and each step of the ladder reallocated every
+      // framebuffer -- a hitch on the way down and six coming back, per turn.
+      holdResolution:Boolean(this.cockpit?.active),
       enabled:!this.transitioning&&!this.recorder});
     const moving=this.renderBudget?.moving===true;
     // The grade the display was given on the first, empty view, checked against
@@ -1222,7 +1243,10 @@ export class LiveGlobe {
     // Terrain detail: the adaptive level, or the approach's coarser middle.
     if(v.scene.globe && this.detail){
       if(now-(this.lastDetail ?? 0)>=200){this.lastDetail=now;this.detail.observe(this.pendingTiles ?? 0,this.viewHeight(),now);}
-      v.scene.globe.maximumScreenSpaceError=Math.max(this.detail.value,this.approachDetail ?? 0,moving?(scale<1?6:4):0);
+      // Not in the cockpit: a pilot turns all the time, and coarsening the
+      // ground for each turn meant re-refining it after each turn -- a burst
+      // of tile loads and a visible drop in detail, for every look around.
+      v.scene.globe.maximumScreenSpaceError=Math.max(this.detail.value,this.approachDetail ?? 0,moving&&!this.cockpit?.active?(scale<1?6:4):0);
     }
     if(this.entityScene.needsLod || this.entityScene.lodScan || now-this.lastLod>=(moving?250:200)){
       this.entityScene.retirePreparation?.(now);
@@ -1245,11 +1269,22 @@ export class LiveGlobe {
     this.entityScene.updateManualGround(passengers?.shown!==false);
     if(passengers?.shown){
       const carry=passengers.carriedSeconds();
-      const walks=new Map(passengers.walks.map(w=>[w.aircraft_id,w]));
-      const cabins=new Map((carry===null?[]:passengers.cabins??[]).map(c=>[c.aircraft_id,c]));
+      // The indexes are rebuilt when the layer has new answers, not every
+      // frame: between fetches the same walks and cabins index the same way.
+      const index=this.passengerIndex;
+      if(!index||index.walks!==passengers.walks||index.cabins!==passengers.cabins||index.withCabins!==(carry!==null)){
+        this.passengerIndex={walks:passengers.walks,cabins:passengers.cabins,withCabins:carry!==null,
+          walks_by:new Map(passengers.walks.map(w=>[w.aircraft_id,w])),
+          cabins_by:new Map((carry===null?[]:passengers.cabins??[]).map(c=>[c.aircraft_id,c]))};
+      }
+      const walks=this.passengerIndex.walks_by,cabins=this.passengerIndex.cabins_by;
       for(const [id,item] of this.items){
         if(this.entityScene.manualSample(item))continue;
-        const key=id.replace(/^(scenario|physical):/,'');
+        // Seats and doors are nodes of a loaded model. An aircraft drawn as a
+        // point has nothing to show them on, and both calls below would
+        // return at once, so its cabin state is not worked out at all.
+        if(!item.model?.ready)continue;
+        const key=item.passengerKey??=id.replace(/^(scenario|physical):/,'');
         const profile=this.entityScene.assets.get(item.assetId)?.cockpit;
         const state=cabinAt(cabins.get(key),carry===null?null:walks.get(key),carry??0);
         const ownSeat=this.cockpit?.active&&this.cockpit.model===item.model?profile?.viewpoints?.find(p=>p.id===this.cockpit.camera.viewpoint)?.occupant_node:null;
@@ -1291,8 +1326,10 @@ export class LiveGlobe {
     // sustained GPU load still relaxes the near-field detail gradually.
     const frameMs=this.timing.summary().p50Ms;
     const targetFps=this.performanceOptions?.targetFps??60;
-    if(this.buildings.tileset?.show)this.osmBuildingFocus?.update(v.camera,{height,frameMs,now,view:buildingView,moving,targetFps});
-    if(this.vworld3d?.tileset?.show)this.vworld3dFocus?.update(v.camera,{height,frameMs,now,view:buildingView,moving,targetFps});
+    // The same for the city: its detail is held through a cockpit's turns.
+    const turning=moving&&!this.cockpit?.active;
+    if(this.buildings.tileset?.show)this.osmBuildingFocus?.update(v.camera,{height,frameMs,now,view:buildingView,moving:turning,targetFps});
+    if(this.vworld3d?.tileset?.show)this.vworld3dFocus?.update(v.camera,{height,frameMs,now,view:buildingView,moving:turning,targetFps});
     this.onView(view);
   }
   // The visible ground rectangle in degrees, or null when the camera is not

@@ -6,10 +6,10 @@ says *when* in the operating day the demand happens and *who wants to go where*;
 time. Neither knows about files, clocks or the wire.
 
 The rules fixed here are the ones that are easy to get wrong and impossible to
-see afterwards: the day's trips stay inside the operating window rather than
-being thrown away with the hours outside it, the numbers the operator read on
-the summary are the numbers that get scheduled, and a flight that could not be
-given an arrival stand is carried as unresolved rather than quietly dropped.
+see afterwards: the 24-hour potential demand is clipped by the operating
+window, the numbers the operator read on the summary are the numbers that get
+scheduled, and a flight that could not be given an arrival stand is carried as
+unresolved rather than quietly dropped.
 """
 import csv
 import io
@@ -38,17 +38,24 @@ def test_a_window_takes_part_hours_and_can_run_past_midnight():
     assert demand_profile.window_hours(9 * 60, 9 * 60) == []
 
 
-def test_the_whole_day_is_flown_inside_the_window_rather_than_cut_off_with_it():
+def test_the_operating_window_takes_only_its_share_of_the_whole_day():
     trips = demand_profile.hourly_trips(1000, 6 * 60 + 30, 21 * 60 + 30)
-    assert sum(trips.values()) == 1000, "no passenger is lost to an hour outside the window"
+    assert demand_profile.window_share(6 * 60 + 30, 21 * 60 + 30) == pytest.approx(.7931362931)
+    assert sum(trips.values()) == 793
     assert set(trips) == set(range(6, 22))
     assert trips[6] < trips[8], "the half hour of the 06 hour carries less than a whole busy one"
+
+
+def test_the_default_seoul_demand_keeps_closed_hour_demand_out_of_the_schedule():
+    assert demand_profile.window_demand(67_500, 6 * 60 + 30, 21 * 60 + 30) == 53_537
+    assert sum(demand_profile.hourly_trips(67_500, 6 * 60 + 30, 21 * 60 + 30).values()) == 53_537
 
 
 def test_the_pairs_carry_what_the_summary_said_they_would():
     # The same formula the operator read on the summary window: the departing
     # deck's share against the arriving deck's, with the departing deck itself
-    # out of the arrival denominator, then re-shared over the pairs that remain.
+    # out of the arrival denominator. A cut pair loses 15% of its own demand and
+    # diffuses the other 85% instead of renormalising the connected network to 100%.
     weights = [{"vertiport": "VP1", "departure_share": 0.5, "arrival_share": 0.5},
                {"vertiport": "VP2", "departure_share": 0.3, "arrival_share": 0.3},
                {"vertiport": "VP3", "departure_share": 0.2, "arrival_share": 0.2}]
@@ -56,9 +63,43 @@ def test_the_pairs_carry_what_the_summary_said_they_would():
     legs = demand_profile.od_shares(weights, pairs)
     assert {(leg["from"], leg["to"]) for leg in legs} == {
         ("VP1", "VP2"), ("VP2", "VP1"), ("VP1", "VP3"), ("VP3", "VP1")}
-    assert sum(leg["share"] for leg in legs) == pytest.approx(1.0)
+    allocation = demand_profile.od_allocation(weights, pairs)
+    assert sum(leg["share"] for leg in legs) == pytest.approx(
+        allocation["direct_share"] + allocation["redistributed_share"])
+    assert allocation["lost_share"] == pytest.approx(
+        allocation["disconnected_share"] * .15)
+    assert sum(leg["share"] for leg in legs) < 1.0
     out = {(leg["from"], leg["to"]): leg["share"] for leg in legs}
     assert out[("VP1", "VP2")] > out[("VP1", "VP3")], "the bigger arrival deck takes more"
+
+
+def test_disconnected_demand_prefers_an_alternative_from_the_same_origin():
+    weights = [{"vertiport": name, "departure_share": 1 / 3, "arrival_share": 1 / 3}
+               for name in ("A", "B", "C")]
+    allocation = demand_profile.od_allocation(
+        weights, [{"from": "A", "to": "B"}, {"from": "B", "to": "C"}])
+    legs = {(leg["from"], leg["to"]): leg for leg in allocation["legs"]}
+    # A→C is disconnected. Its transferable share goes to A→B before any
+    # destination-only or network-wide fallback is considered.
+    assert legs[("A", "B")]["redistributed_share"] > 0
+    assert allocation["redistribution_rate"] == pytest.approx(.85)
+
+
+def test_demand_plan_reports_diffusion_and_preserves_the_whole_person_account():
+    weights = [{"vertiport": name, "departure_share": 1 / 3, "arrival_share": 1 / 3}
+               for name in ("A", "B", "C")]
+    plan = demand_profile.demand_plan(
+        daily_trips=10_000, weights=weights, pairs=[{"from": "A", "to": "B"}],
+        start_minutes=0, end_minutes=23 * 60 + 59)
+    summary = plan["summary"]
+    assert (summary["direct_connected_demand_passengers"]
+            + summary["redistributed_demand_passengers"]
+            + summary["network_lost_demand_passengers"]
+            == summary["operating_window_demand_passengers"])
+    assert summary["disconnected_od_demand_passengers"] == (
+        summary["redistributed_demand_passengers"] + summary["network_lost_demand_passengers"])
+    assert sum(row["passengers"] for row in plan["rows"]) == summary["network_schedulable_demand_passengers"]
+    assert summary["network_lost_demand_passengers"] > 0
 
 
 def test_the_demand_is_whole_people_and_adds_up_to_what_was_asked_for():
@@ -68,7 +109,8 @@ def test_the_demand_is_whole_people_and_adds_up_to_what_was_asked_for():
         daily_trips=997, weights=weights, pairs=[{"from": "VP1", "to": "VP2"}],
         start_minutes=6 * 60, end_minutes=9 * 60)
     assert all(isinstance(row["passengers"], int) and row["passengers"] > 0 for row in rows)
-    assert sum(row["passengers"] for row in rows) == 997, "the rounding loses nobody"
+    expected = demand_profile.window_demand(997, 6 * 60, 9 * 60)
+    assert sum(row["passengers"] for row in rows) == expected, "rounding preserves the clipped window total"
     assert {row["hour"] for row in rows} == {6, 7, 8}
     again = demand_profile.demand_rows(
         daily_trips=997, weights=weights, pairs=[{"from": "VP1", "to": "VP2"}],
@@ -243,7 +285,8 @@ def test_thin_demand_is_spread_over_every_deck_and_every_hour_rather_than_the_fi
     pairs = [{"from": a, "to": b} for index, a in enumerate(decks) for b in decks[index + 1:]]
     rows = demand_profile.demand_rows(daily_trips=1500, weights=weights, pairs=pairs,
                                       start_minutes=6 * 60 + 30, end_minutes=22 * 60)
-    assert sum(row["passengers"] for row in rows) == 1500
+    expected = demand_profile.window_demand(1500, 6 * 60 + 30, 22 * 60)
+    assert sum(row["passengers"] for row in rows) == expected
     by_origin, by_destination = {}, {}
     for row in rows:
         by_origin[row["from"]] = by_origin.get(row["from"], 0) + row["passengers"]
@@ -270,8 +313,9 @@ def test_unequal_shares_still_land_where_the_summary_said_over_the_day():
     got = {}
     for row in rows:
         got[(row["from"], row["to"])] = got.get((row["from"], row["to"]), 0) + row["passengers"]
+    window_total = demand_profile.window_demand(1000, 6 * 60, 22 * 60)
     for leg, share in shares.items():
-        assert abs(got.get(leg, 0) - 1000 * share) <= 1.0, (leg, got.get(leg), 1000 * share)
+        assert abs(got.get(leg, 0) - window_total * share) <= 1.0, (leg, got.get(leg), window_total * share)
 
 
 def test_an_aircraft_that_lands_inside_the_hour_flies_again_inside_the_hour():

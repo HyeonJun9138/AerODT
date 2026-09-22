@@ -197,6 +197,12 @@ def main(argv=None):
     # 경로를 위해 시뮬레이션 전체를 열 배 느리게 만드는 거래여서, 되돌린다.
     # 왕복 자체는 메시지당 스레드 홉을 넷에서 하나로 줄여 따로 줄였다
     # (communication/web/manual_routes.py).
+    # A 1 ms scheduler tick for as long as this process serves: every timed
+    # wait here (the GIL's switch interval above all) is otherwise rounded up
+    # to Windows' 15.6 ms timer, and the pilot's control step waits on a few
+    # of them per message. See timer_resolution.py.
+    from user_application.apps.web_dashboard.timer_resolution import raise_timer_resolution
+    lower_timer_resolution = raise_timer_resolution()
     server = uvicorn.Server(uvicorn.Config(create_app(prepare_config(ROOT,args.port,host)),
         host=host,port=args.port,workers=1))
     stopped = threading.Event()
@@ -215,6 +221,8 @@ def main(argv=None):
     try:
         server.run()
     finally:
+        if lower_timer_resolution is not None:
+            lower_timer_resolution()
         stopped.set()
         close_shutdown()
     return 0 if server.started else 1

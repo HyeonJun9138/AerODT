@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {LocalTerrainProvider,mergeHeightTile} from '../../../../digital_twin/visualization/web/local_terrain_provider.js';
+import {LocalTerrainProvider,mergeHeightTile,mergeHeightTileSliced,loadLocalTerrain} from '../../../../digital_twin/visualization/web/local_terrain_provider.js';
 import {LiveGlobe} from '../../../../digital_twin/visualization/web/globe.js';
 
 const rect={west:0,south:0,east:1,north:1};
@@ -20,6 +20,40 @@ test('height layout, blending, missing pixels and invalid wire values',()=>{
   assert.equal(mergeHeightTile(C,original,rect,buffer(80,.5,2),2,0).buffer[0],45.5);
   assert.throws(()=>mergeHeightTile(C,original,rect,new ArrayBuffer(4),2,0));
   assert.throws(()=>mergeHeightTile(C,original,rect,buffer(NaN,1,2),2,0));
+});
+
+test('sliced DEM blending preserves every height, coordinate, mask and credit',async()=>{
+  const data=buffer(),view=new Float32Array(data),count=65*65;
+  for(let i=0;i<count;i++){view[i]=i/10;view[count+i]=(i%5)/4;}
+  let yields=0,samples=0,lastSamples=0;
+  const original={interpolateHeight:(_r,x,y)=>{samples++;return 10+x+2*y;}};
+  const expected=mergeHeightTile(C,original,rect,data,65,13,'credit');samples=0;
+  const actual=await mergeHeightTileSliced(C,original,rect,data,65,13,'credit',{
+    now:()=>0,yieldWork:async()=>{assert.ok(samples-lastSamples<=256);lastSamples=samples;yields++;}});
+  assert.deepEqual(actual,expected);
+  assert.equal(yields,Math.ceil(samples/256));
+});
+
+test('fully covered local heights do not incur an artificial per-pixel batch delay',async()=>{
+  let yields=0;
+  const tile=await mergeHeightTileSliced(C,null,rect,buffer(),65,0,null,{
+    now:()=>0,yieldWork:async()=>{yields++;}});
+  assert.equal(yields,1);assert.ok(tile.buffer.every(h=>h===80));
+});
+
+test('terrain CPU work yields to the time budget even before the sample cap',async()=>{
+  let clock=0,yields=0;
+  await mergeHeightTileSliced(C,{interpolateHeight:()=>20},rect,buffer(80,.5,2),2,0,null,{
+    now:()=>clock++,yieldWork:async()=>{yields++;}});
+  assert.equal(yields,2);
+});
+
+test('cancelled local terrain stops after yielding without world fallback or pending leaks',async()=>{
+  const request={cancelled:false},w=world();let yields=0,fallbacks=0;
+  const p=new LocalTerrainProvider(C,w,meta,{fetchTile:()=>buffer(80,.5),onFallback:()=>fallbacks++,
+    yieldWork:async()=>{if(++yields===2)request.cancelled=true;}});
+  await assert.rejects(p.requestTileGeometry(0,0,10,request),/cancelled/);
+  assert.equal(yields,2);assert.equal(w.calls,1);assert.equal(fallbacks,0);assert.equal(p.pending,0);
 });
 
 test('covered local interior does not fetch world data, terminates at native-detail limit',async()=>{
@@ -64,4 +98,54 @@ test('switching sources while flat updates the saved provider rather than enabli
   const provider={},g={terrainFlat:true,savedTerrainProvider:null,viewer:{terrainProvider:'flat',scene:{requestRender(){}}},surface:{}};
   LiveGlobe.prototype.attachTerrain.call(g,provider);
   assert.equal(g.viewer.terrainProvider,'flat');assert.equal(g.savedTerrainProvider,provider);
+});
+
+
+test('conditioned DEM uses its own metadata and tile endpoint',async()=>{
+  const previous=globalThis.fetch,urls=[];
+  globalThis.fetch=async url=>{urls.push(url);return {ok:true,json:async()=>({...meta,enabled:true,schema_version:1})};};
+  const Cesium={...C,Request:class{},RequestType:{TERRAIN:0},Resource:class{
+    constructor(options){this.options=options;}
+    fetchArrayBuffer(){urls.push(this.options.url);return Promise.resolve(buffer());}
+  }};
+  try {
+    const provider=await loadLocalTerrain(Cesium,world(),{source:'conditioned'});
+    assert.equal((await provider.requestTileGeometry(0,0,14)).buffer[0],80);
+    assert.equal(urls[0],'/api/visualization/terrain/conditioned');
+    assert.match(urls[1],/^\/api\/visualization\/terrain\/conditioned\/14\/0\/0\?v=v1$/);
+    await assert.rejects(loadLocalTerrain(Cesium,world(),{source:'../private'}));
+  } finally {globalThis.fetch=previous;}
+});
+
+test('conditioned selection attaches only conditioned heights and can return to world',async()=>{
+  const w=world(),conditioned={},local={},attached=[];
+  const g={C,worldTerrain:w,terrainRevision:0,activeTerrainSource:'world_terrain',conditionedTerrain:conditioned,localTerrain:local,
+    attachTerrain:p=>attached.push(p),onTerrainStatus:()=>{},onWarning:()=>{}};
+  await LiveGlobe.prototype.setTerrainSource.call(g,'conditioned_dem');
+  assert.equal(g.activeTerrainSource,'conditioned_dem');assert.equal(attached.at(-1),conditioned);
+  await LiveGlobe.prototype.setTerrainSource.call(g,'local_dem');
+  assert.equal(attached.at(-1),local);
+  await LiveGlobe.prototype.setTerrainSource.call(g,'world_terrain');
+  assert.equal(g.activeTerrainSource,'world_terrain');assert.equal(attached.at(-1),w);
+});
+
+test('stale conditioned load cannot overwrite a newer local selection',async()=>{
+  let resolve;const attached=[],local={},pending=new Promise(r=>resolve=r);
+  const g={C,worldTerrain:world(),terrainRevision:0,activeTerrainSource:'world_terrain',conditionedTerrainPending:pending,localTerrain:local,
+    attachTerrain:p=>attached.push(p),onTerrainStatus:()=>{},onWarning:()=>{}};
+  const first=LiveGlobe.prototype.setTerrainSource.call(g,'conditioned_dem');
+  await LiveGlobe.prototype.setTerrainSource.call(g,'local_dem');resolve({conditioned:true});await first;
+  assert.equal(g.activeTerrainSource,'local_dem');assert.deepEqual(attached,[local]);
+});
+
+test('unavailable conditioned package warns and retains world without claiming it is active',async()=>{
+  const previous=globalThis.fetch;globalThis.fetch=async()=>({ok:true,json:async()=>({enabled:false})});
+  const attached=[],warnings=[],w=world();
+  const g={C,worldTerrain:w,terrainRevision:0,activeTerrainSource:'world_terrain',
+    attachTerrain:p=>attached.push(p),onTerrainStatus:()=>{},onWarning:m=>warnings.push(m)};
+  try {
+    await LiveGlobe.prototype.setTerrainSource.call(g,'conditioned_dem');
+    assert.equal(g.activeTerrainSource,'world_terrain');assert.equal(attached[0],w);
+    assert.match(warnings[0],/보정 DEM 연결 실패/);
+  } finally {globalThis.fetch=previous;}
 });

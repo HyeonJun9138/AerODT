@@ -18,12 +18,9 @@ export function manualArrivalHolding(psu){
  }
  return Boolean(psu?.hold||psu?.instruction?.clearance==='hold');
 }
-// How near the destination the panel starts asking for the approach number by
-// itself. The reservation is made *en route* -- it books from a 120 s default
-// estimate, so asking on arrival is asking to be put at the back of the queue
-// -- and nothing said so until the pilot was already there. The second figure
-// is where it stops suggesting and starts saying it is late.
-const BOOK_FROM_M=15000,BOOK_LATE_M=6000;
+// Distance can enrich an already-issued pilot cue, but it must never create the
+// cue. Request readiness comes from the server-side pilot procedure.
+const BOOK_LATE_M=6000;
 
 export function pilotGuidance(psu,{distanceM=null}={}){
  const p=psu?.procedure,t=p?.timeline??{},stale=Boolean(psu?.stale||psu?.error),waiting=!p;
@@ -55,11 +52,14 @@ export function pilotGuidance(psu,{distanceM=null}={}){
  const steps=PSU_STEPS.map(([kind,label],index)=>({kind,label,
   state:at<0?(psu?.completed||done.report_gate?'done':'todo')
    :index<at?'done':index===at?'now':'todo'}));
- // Asked for by distance, because that is what a pilot has in front of them.
- const nearing=next.kind==='arrival'&&Number.isFinite(distanceM)&&distanceM<=BOOK_FROM_M;
- const prompt=!nearing?'':distanceM<=BOOK_LATE_M
-  ?`도착 ${(distanceM/1000).toFixed(1)} km · 접근 순번 예약이 늦습니다 · 지금 요청하세요`
-  :`도착 ${(distanceM/1000).toFixed(1)} km · 접근 순번을 지금 예약하세요`;
+ // Pilot-owned readiness is authoritative. The local distance only makes that
+ // active cue easier to read; it cannot enable a request on its own.
+ const requestReady=next.kind==='arrival'&&Boolean(next.enabled)&&!blocked&&!stopped;
+ const prompt=!requestReady?'':Number.isFinite(distanceM)
+  ?(distanceM<=BOOK_LATE_M
+    ?`도착 ${(distanceM/1000).toFixed(1)} km · 접근 순번 요청이 늦습니다 · 지금 요청하세요`
+    :`도착 ${(distanceM/1000).toFixed(1)} km · 접근 순번을 지금 요청하세요`)
+  :'접근 순번 요청 기준 도달 · 지금 요청하세요';
  return {stage:stale?'PSU 연결 확인':p?.stage??'PSU 갱신 필요',tone:blocked?'hold':p.tone,
   text:stale?'새 지시 수신 전 허가를 재확인하세요':p?.text??'서버 재시작 후 단계별 운항 지시를 받습니다',
   // The instruction carries why *this* aircraft is waiting -- which deck and
@@ -93,7 +93,7 @@ export function pilotGuidance(psu,{distanceM=null}={}){
   due:psu?.departed?(blocked||stopped?'':approach||''):remaining==null?'출발 허가 미발급':remaining>0?`배정 검토까지 ${Math.floor(remaining/60)}분 ${remaining%60}초 · 출발 허가 아님`: '출발 허가 확인 필요 · 시각만으로 이동 불가',
   approach,approachAt:eat,approachIn:countdown,
   approachRevision:arrival?.eat_revision??0,approachMoved:arrival?.eat_moved_s??0,
-  steps,prompt,urgent:Boolean(prompt)&&Number.isFinite(distanceM)&&distanceM<=BOOK_LATE_M,
+  steps,prompt,urgent:requestReady&&Number.isFinite(distanceM)&&distanceM<=BOOK_LATE_M,
   next:{...next,enabled:next.enabled&&!blocked&&!stopped},stopped,blocked,
   route:p?`${p.origin} ${p.departure_gate??'—'} → ${p.departure_fato??'—'} · 도착 ${p.destination} ${p.arrival_fato??'—'} / ${p.arrival_gate??'—'}`:'',
   history:(p?.communications??[]).slice(-6).reverse()};

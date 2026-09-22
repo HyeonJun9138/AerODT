@@ -41,13 +41,14 @@ test('a finished flight has the whole strip behind it', () => {
   assert.ok(view.steps.every(s => s.state === 'done'));
 });
 
-test('the approach reservation is asked for by distance, before the pilot arrives', () => {
-  // It books from a 120 s default estimate, so asking on arrival is asking to
-  // be put at the back of the queue. Nothing said so until they were there.
-  assert.equal(pilotGuidance(flying(ARRIVAL), {distanceM: 40000}).prompt, '', '멀면 조용하다');
+test('the pilot procedure enables the request; distance only enriches the cue', () => {
+  assert.equal(pilotGuidance(flying({...ARRIVAL, enabled:false}), {distanceM: 4200}).prompt, '',
+    '가까워도 조종사 기준 전에는 활성화하지 않는다');
+  assert.match(pilotGuidance(flying(ARRIVAL), {distanceM: 40000}).prompt, /40\.0 km/,
+    '서버 조종사 절차가 활성화했으면 거리가 멀어도 안내한다');
   const near = pilotGuidance(flying(ARRIVAL), {distanceM: 12400});
   assert.match(near.prompt, /12\.4 km/);
-  assert.match(near.prompt, /예약/);
+  assert.match(near.prompt, /요청/);
   assert.equal(near.urgent, false);
   const late = pilotGuidance(flying(ARRIVAL), {distanceM: 4200});
   assert.match(late.prompt, /늦습니다/);
@@ -63,8 +64,8 @@ test('nothing is suggested once the number has been asked for', () => {
 });
 
 test('a distance nobody measured suggests nothing rather than guessing', () => {
-  assert.equal(pilotGuidance(flying(ARRIVAL)).prompt, '');
-  assert.equal(pilotGuidance(flying(ARRIVAL), {distanceM: NaN}).prompt, '');
+  assert.match(pilotGuidance(flying(ARRIVAL)).prompt, /요청 기준 도달/);
+  assert.match(pilotGuidance(flying(ARRIVAL), {distanceM: NaN}).prompt, /요청 기준 도달/);
 });
 
 test('the panel separates the one action from the two that are not', () => {

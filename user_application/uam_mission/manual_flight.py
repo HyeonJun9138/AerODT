@@ -59,7 +59,7 @@ class ManualFlight:
         return {**result,'sample':self.observation}
     def continue_plan(self,plan,advice=None):
         """Keep native pose/energy, but arm guidance and ground work for a new leg."""
-        if not self.observation or self.ground.snapshot(self.observation,self.command).get('phase')!='released':
+        if not self.observation or not self.ground.snapshot(self.observation,self.command).get('turnaround_complete'):
             raise ValueError('지상 절차를 완료하고 문을 닫은 뒤 다음 비행을 준비하세요')
         self.plan=plan
         self.autopilot=ManualAutopilot(plan,self.origin)

@@ -8,10 +8,11 @@
 // through the callbacks it was given. It does not generate the flights: that is
 // asked for and the answer is reported.
 import {buildElement} from '../../../dom_builder.js';
+import {installDemandPreferences} from './demand_preferences.js';
 import {DEFAULT_WEIGHT, DIRECTIONS, FILL_MODES, SEAT_CHOICES, SEAT_CLASSES, WEIGHT_MAX, WEIGHT_MIN, WEIGHT_STEP,
   allPairs, buildRequest, clampWeight, defaultState, describeDemand, describeHours, describeWeights,
   dailyTrips, fitMix, fleetRows, fleetTotals, initialStateDocument, livePairs, pairCounts,
-  resolveSeed, seatCapacity, togglePair, weightRows} from '../../../demand_setup.js';
+  odDemandPlan, operatingTrips, resolveSeed, seatCapacity, togglePair, weightRows} from '../../../demand_setup.js';
 
 const SCRAP_HINT = '지도에서 드래그하면 사각형 안의 버티포트가 모두 선택됩니다. 하나만 누르면 그것만 넣거나 뺍니다.';
 const PAIR_HINT = '목록에서 버티포트를 누르면 그 연결만 지도에 진하게 표시됩니다. 지도의 선을 누르면 그 쌍만 끊거나 다시 잇습니다.';
@@ -19,7 +20,7 @@ const SEED_HINT = '같은 시드는 같은 수요를 다시 만듭니다. 랜덤
 const FLEET_HINT = '일괄로 채운 뒤 버티포트마다 인승별 대수를 고치면 됩니다. 합계가 게이트 수를 넘으면 다른 인승이 그만큼 줄어듭니다.';
 const WEIGHT_HINT = '100%가 평균 버티포트입니다. 받은 서울시 통행 비율을 평균 대비로 환산한 값이 기본값이고, 10% 단위로 올리거나 내리면 됩니다. 0%로 두면 그 버티포트는 출발(또는 도착)하지 않습니다.';
 const STEPS = [['scope', '버티포트 범위'], ['demand', '수요'], ['hours', '이용 시간'], ['seed', '수요 생성 시드'],
-  ['fleet', '초기 상태'], ['manual', '수동 비행']];
+  ['fleet', '초기 상태'], ['planning', '스케줄링 기준'], ['manual', '수동 비행']];
 // Nobody is assigned an aircraft until the day is running, so what can be asked
 // for here is a cabin size and a place to leave from -- the two things that are
 // true of the plan rather than of a flight that does not exist yet.
@@ -46,7 +47,7 @@ export class DemandPanel {
   constructor({api, notify = () => {}, document = globalThis.document, onPairs = () => {},
     onScrap = () => {}, onDemandEditor = () => {}, onFocus = () => {}, onQuiet = () => {},
     plans = null, onPlanLoaded = () => {}, onControlPanel = () => {}, onManualRequest = () => {}, onSummary = null,
-    download = null, now = () => new Date()}) {
+    download = null, now = () => new Date(), storage}) {
     Object.assign(this, {api, notify, document, onPairs, onScrap, onDemandEditor, onFocus, onQuiet, now});
     // A day somebody else planned, read from a file instead of generated here.
     // The panel does not parse it: the file is handed over whole and the server
@@ -54,7 +55,7 @@ export class DemandPanel {
     Object.assign(this, {plans, onPlanLoaded, onControlPanel, onManualRequest, onSummary});
     this.plan = null; this.planBusy = ''; this.planError = '';
     this.download = download ?? ((name, text) => saveFile(document, name, text));
-    this.state = defaultState();
+    installDemandPreferences(this, defaultState(), storage);
     this.records = []; this.root = null; this.open = 'scope'; this.scrapping = false;
     // Which vertiport's own connections are drawn strongly; null draws them all alike.
     this.focused = null;
@@ -105,7 +106,11 @@ export class DemandPanel {
           known: row.known !== false, source: row.source ?? ''};
       }
       this.weightSource = answer?.source ?? '';
-      this.state = {...this.state, weight_defaults: defaults};
+      this.planningDefaults = answer?.schedule_planning ? structuredClone(answer.schedule_planning) : null;
+      this.state = {...this.state, weight_defaults: defaults,
+        hourly_departure_pct: answer?.profile?.hourly_departure_pct ?? [],
+        od_redistribution_rate: answer?.profile?.od_redistribution_rate ?? 0.85,
+        schedule_planning: this.state.schedule_planning ?? structuredClone(this.planningDefaults)};
       return defaults;
     } catch {
       return null; // Every deck simply starts at the average.
@@ -163,7 +168,8 @@ export class DemandPanel {
     try {
       const answer = await this.plans.describe();
       this.plan = answer?.loaded ? answer : null;
-      if (this.plan) await this.onPlanLoaded(this.plan, this.manualRequest());
+      // Reading an existing day must not replace another window's manual request.
+      if (this.plan) await this.onPlanLoaded(this.plan);
       return this.plan;
     } catch {
       return null; // The card simply offers to load one.
@@ -254,11 +260,14 @@ export class DemandPanel {
     if (!root) return;
     root.textContent = '';
     const bodies = {scope: () => this.scopeStep(), demand: () => this.demandStep(), hours: () => this.hoursStep(),
-      seed: () => this.seedStep(), fleet: () => this.fleetStep(), manual: () => this.manualStep()};
+      seed: () => this.seedStep(), fleet: () => this.fleetStep(), planning: () => this.planningStep(), manual: () => this.manualStep()};
     const summaries = {scope: () => this.scopeSummary(), demand: () => describeDemand(this.state.demand),
       hours: () => describeHours(this.state.operating), seed: () => this.seedSummary(), fleet: () => this.fleetSummary(),
-      manual: () => this.manualSummary()};
+      planning: () => this.planningSummary(), manual: () => this.manualSummary()};
     const shell = this.el('div', {class: 'dm'});
+    shell.append(this.el('section', {class: 'ds-block'},
+      this.el('strong', {text: '시설 자원 중심 스케줄링'}),
+      this.el('p', {class: 'dm-note', text: '수요 → 운항시간 선택 → 기체·FATO 배정 → 도착·충전 → 다음 운항'})));
     // The headers are kept so a figure typed into an open step can refresh the
     // one above it: a header still saying 400 seats over a total saying 416 is
     // the panel disagreeing with itself.
@@ -431,6 +440,46 @@ export class DemandPanel {
     const input = this.el('input', {type: 'radio', name, id, checked: checked ? '' : undefined, onchange: () => onchange()});
     input.checked = checked;
     return this.el('label', {class: 'dm-choice'}, input, this.el('span', {text: label}));
+  }
+
+  planningSummary() {
+    const p = this.state.schedule_planning;
+    return p ? `FATO별 ${p.fato_headway_s}초 · 회복여유 ${p.turnaround_recovery_s}초` : '서버 기본값 확인 필요';
+  }
+  planningStep() {
+    const p = this.state.schedule_planning;
+    if (!p) return [this.el('p', {class: 'dm-note', text: '계획 기준을 불러오지 못했습니다. 생성 시 서버 기본값을 사용합니다.'}),
+      this.button('dm-planning-retry', '기준 다시 불러오기', async () => {await this.readWeightDefaults(); this.repaint();})];
+    const rows = [];
+    const control = (key, label, help, phase = false) => {
+      const value = phase ? p.phase_floor_s?.[key] : p[key];
+      const input = this.number(`dm-planning-${key}`, value, {min: 0, max: 3600, step: '0.1',
+        oninput: raw => {
+          const n = raw.trim() === '' ? null : Number(raw);
+          const valid = n !== null && Number.isFinite(n) && n >= 0 && n <= 3600;
+          input.setAttribute('aria-invalid', String(!valid));
+          const current = this.state.schedule_planning;
+          this.state = {...this.state, schedule_planning: phase
+            ? {...current, phase_floor_s: {...current.phase_floor_s, [key]: n}}
+            : {...current, [key]: n}};
+          this.summaryNodes.get('planning').textContent = valid ? this.planningSummary() : '0~3600초 범위를 확인하세요';
+        }});
+      input.setAttribute('aria-describedby', `dm-planning-help-${key}`);
+      return this.el('div', {}, this.field(`${label} (초)`, input),
+        this.el('p', {class: 'dm-note', id: `dm-planning-help-${key}`, text: help}));
+    };
+    rows.push(control('fato_headway_s', '동일 FATO 사용 간격', '같은 패드의 이륙·착륙이 공유하는 간격입니다. 다른 FATO는 동시에 사용할 수 있습니다. 0은 간격 제한을 없앱니다.'));
+    rows.push(control('turnaround_recovery_s', '다음 운항 전 회복여유', '충전·승객 처리 후 추가하는 시간입니다. 120초 = 2분입니다.'));
+    rows.push(this.el('p', {class: 'dm-note', text: '반복 운항은 도착지에서 이어집니다. 충전시간과 기체별 최소 준비시간 중 긴 시간에 회복여유를 더한 뒤 다음 편을 배정합니다.'}));
+    const advanced = this.el('details', {class: 'dm-planning-advanced'}, this.el('summary', {text: '고급 · 단계별 계획시간 하한'}),
+      this.el('p', {class: 'dm-note', text: '계산시간이 입력값보다 짧을 때만 하한을 적용합니다. 순항은 항로별 계산값을 유지합니다. 값은 물리 비행 실측이 아닌 현재 모델의 계획 계산에서 얻었습니다.'}));
+    for (const [key, label] of [['gate_out','출발 지상이동'],['takeoff','수직 이륙'],['climb','상승·정천이'],['descent','강하·역천이'],['landing','수직 착륙'],['gate_in','도착 지상이동']]) {
+      advanced.append(control(key, label, `모델 평균 ${p.phase_mean_s?.[key] ?? '—'}초 · 서버 기준 ${this.planningDefaults?.phase_floor_s?.[key] ?? '—'}초`, true));
+    }
+    rows.push(advanced, this.button('dm-planning-reset', '계획 기준만 기본값으로', () => {
+      this.state = {...this.state, schedule_planning: structuredClone(this.planningDefaults)}; this.repaint();
+    }), this.el('p', {class: 'dm-note', text: '새로 생성하는 계획에만 적용됩니다. 실제 운항 중 PSU 허가 기준은 변경하지 않습니다.'}));
+    return rows;
   }
 
   // ---- 1. which vertiports ----------------------------------------------
@@ -664,7 +713,7 @@ export class DemandPanel {
       this.el('label', {class: 'dm-manual-want'}, want,
         this.el('span', {text: '이 하루에서 한 대를 직접 조종'})),
       this.el('p', {class: 'dm-note',
-        text: '조건에 맞는 곧 출발할 편 한 대를 넘겨받습니다. 그 기체는 하루 안에서 날아가므로 다른 기체가 실제로 피하고 기다립니다. 수동 조종 중에는 배속이 ×1로 내려갑니다.'}),
+        text: '새 계획에서는 선택한 인승·출발지의 첫 편을 가능한 이른 시간에 우선 배치합니다. 수요·항로·자원 조건은 유지하며 기존 계획은 바꾸지 않습니다. 수동 조종 중에는 배속이 ×1로 내려갑니다.'}),
       this.el('div', {class: 'dm-manual-row'},
         this.el('label', {class: 'dm-manual-field'}, this.el('span', {text: '기체'}), seats),
         this.el('label', {class: 'dm-manual-field'}, this.el('span', {text: '출발지'}), port))];
@@ -763,7 +812,6 @@ export class DemandPanel {
     const {request, errors} = buildRequest(this.state, this.records);
     if (errors) {this.say(errors.join(' '), {error: true}); return null;}
     const supply = seatCapacity(fleetRows(this.scopeRecords(), this.state.fleet), this.state.operating);
-    const short = supply > 0 && supply < request.demand.daily_trips;
     if (typeof this.api?.generate !== 'function') {
       this.say('생성기가 아직 연결되지 않았습니다. 아래 내려받기로 설정을 저장해 두세요.');
       return request;
@@ -773,10 +821,30 @@ export class DemandPanel {
       const answer = await this.api.generate(request);
       if(answer?.applied)await this.adoptPlan(answer.applied);
       const flights = answer?.flights ?? answer?.count;
+      const inWindow = Number(answer?.summary?.operating_window_demand_passengers
+        ?? answer?.summary?.demand_passengers ?? request.demand.daily_trips);
+      const schedulable = Number(answer?.summary?.network_schedulable_demand_passengers
+        ?? answer?.summary?.demand_passengers ?? inWindow);
+      const redistributed = Number(answer?.summary?.redistributed_demand_passengers ?? 0);
+      const lost = Number(answer?.summary?.network_lost_demand_passengers ?? 0);
+      const outside = Number(answer?.summary?.out_of_window_demand_passengers ?? 0);
+      const short = supply > 0 && supply < schedulable;
       const blocked = Number(answer?.summary?.blocked_pairs ?? 0);
-      const routeNote = blocked > 0 ? ` · 항로 미연결 ${count(blocked)}개 방향 제외 (직항 대체 없음)` : '';
-      this.say(`생성 완료 · 비행 ${count(flights ?? 0)}편${routeNote}${short ? ' · 좌석 공급이 수요보다 적습니다' : ''}`);
-      this.notify(blocked ? 'warn' : 'ok', blocked ? `항로 미연결 ${count(blocked)}개 방향을 제외했습니다.` : '다중 비행 계획을 생성했습니다.');
+      const delayed = Number(answer?.summary?.capacity_delayed_flights ?? 0);
+      const maxDelay = Number(answer?.summary?.capacity_delay_seconds_max ?? 0);
+      const recovery = Number(answer?.summary?.turnaround_recovery_seconds ?? 0);
+      const routeNote = blocked > 0 ? ` · 항로 미연결 ${count(blocked)}개 방향 (직항 대체 없음)` : '';
+      const capacityNote = delayed > 0
+        ? ` · 계획 슬롯 조정 ${count(delayed)}편${maxDelay > 0 ? ` (최대 ${Math.ceil(maxDelay / 60)}분)` : ''}` : '';
+      const recoveryNote = recovery > 0 ? ` · 회항 회복여유 ${Math.round(recovery / 60)}분` : '';
+      const demandNote = ` · 운항시간 수요 ${count(inWindow)}명 · 항로 반영 ${count(schedulable)}명`
+        + (redistributed > 0 ? ` · 대체 분산 ${count(redistributed)}명` : '')
+        + (lost > 0 ? ` · 수요 이탈 ${count(lost)}명` : '')
+        + (outside > 0 ? ` · 시간 외 ${count(outside)}명` : '');
+      this.say(`생성 완료 · 비행 ${count(flights ?? 0)}편${demandNote}${routeNote}${capacityNote}${recoveryNote}${short ? ' · 좌석 공급이 수요보다 적습니다' : ''}`);
+      this.notify(blocked || lost ? 'warn' : 'ok', blocked || lost
+        ? `연결되지 않은 수요 중 ${count(redistributed)}명은 분산하고 ${count(lost)}명은 이탈 처리했습니다.`
+        : '다중 비행 계획을 생성했습니다.');
       // A day was asked for and a day arrived: the next thing anybody does with
       // it is play it, so the controls come up rather than waiting to be asked
       // for. Only when the generator actually handed one over - a request that
@@ -799,9 +867,14 @@ export class DemandPanel {
     const rows = this.weightRows();
     const scope = this.scopeRecords();
     const fleet = fleetRows(scope, this.state.fleet);
+    const trips = dailyTrips(this.state.demand);
+    const operating = operatingTrips(trips, this.state.operating, this.state.hourly_departure_pct);
+    const pairs = livePairs(this.state.scope, this.state).map(pair => ({from: pair.from, to: pair.to}));
+    const od = odDemandPlan(rows, pairs, operating, this.state.od_redistribution_rate ?? 0.85);
     return {
       request: request ?? null, errors: errors ?? null,
-      trips: dailyTrips(this.state.demand),
+      trips, operating_trips: operating, out_of_window_trips: Math.max(0, trips - operating),
+      od,
       demand: describeDemand(this.state.demand),
       hours: describeHours(this.state.operating),
       seed: this.seedSummary(),
@@ -810,7 +883,7 @@ export class DemandPanel {
       weights: rows,
       fleet: {rows: fleet, totals: fleetTotals(fleet),
         capacity: seatCapacity(fleet, this.state.operating)},
-      pairs: livePairs(this.state.scope, this.state).map(pair => ({from: pair.from, to: pair.to})),
+      pairs,
       source: this.weightSource ?? '',
       document: initialStateDocument(this.state, this.records, {generatedAt: this.now().toISOString()}),
     };
@@ -826,7 +899,9 @@ export class DemandPanel {
     return view;
   }
   reset() {
-    this.state = defaultState();
+    const {weight_defaults, hourly_departure_pct, od_redistribution_rate} = this.state;
+    this.state = {...defaultState(), weight_defaults, hourly_departure_pct, od_redistribution_rate,
+      schedule_planning: structuredClone(this.planningDefaults ?? null)};
     this.focused = null; this.result = null; this.open = 'scope';
     this.setScrapping(false);
     this.repaint();

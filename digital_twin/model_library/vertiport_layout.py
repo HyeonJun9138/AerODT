@@ -24,6 +24,8 @@ display never guesses them.
 """
 import math
 
+from . import terminal_plan
+
 MAX_GATES = 20
 MAX_FATOS = 8
 # What a vertiport belongs to, in the operator's own words: a metropolitan area,
@@ -68,6 +70,14 @@ VEHICLE_CLASSES = [
     {"id": "custom", "label": "직접 입력", "d_m": None, "description": "D값(외접원 지름)을 직접 입력"},
 ]
 DEFAULT_VEHICLE_CLASS = "medium"
+# The storey under the deck. A vertiport deck is a roof, and the only place a
+# terminal can go on a platform whose whole surface is already FATOs, gates and
+# taxiways is beneath it -- which is also how these are built. The deck
+# overhangs that storey, so its outline is the platform's own, set in.
+TERMINAL_STOREY_M = 4.6          # deck slab to floor slab
+TERMINAL_CLEAR_M = 3.4           # floor to ceiling inside
+TERMINAL_INSET_M = 3.0           # how far the deck oversails the storey below
+
 DEFAULT_PLATFORM_HEIGHT_M = 1.0
 DEFAULT_TERMINAL_HEIGHT_M = 30.0
 # Sandbox operating bounds, not certified terminal procedures.
@@ -837,6 +847,103 @@ def _graph(design):
     return nodes, edges
 
 
+def _inset_convex(corners, inset):
+    """A convex outline set in by `inset` metres, edge by edge.
+
+    Exact for a convex ring: every edge is moved along its own inward normal
+    and consecutive edges are intersected again. Scaling towards the centroid
+    would be shorter and wrong -- on a 188 x 134 m deck it sets the long sides
+    in much further than the short ones, and the overhang is a constant.
+    """
+    count = len(corners)
+    if count < 3 or inset <= 0:
+        return [list(point) for point in corners]
+    area = sum(corners[i][0] * corners[(i + 1) % count][1] - corners[(i + 1) % count][0] * corners[i][1]
+               for i in range(count))
+    turn = 1.0 if area > 0 else -1.0
+    lines = []
+    for i in range(count):
+        (x0, y0), (x1, y1) = corners[i], corners[(i + 1) % count]
+        dx, dy = x1 - x0, y1 - y0
+        length = math.hypot(dx, dy)
+        if length < 1e-9:
+            return [list(point) for point in corners]
+        # Inward normal for this winding, and the offset line through it.
+        nx, ny = -dy / length * turn, dx / length * turn
+        lines.append((nx, ny, nx * (x0 + nx * inset) + ny * (y0 + ny * inset)))
+    out = []
+    for i in range(count):
+        a, b = lines[i - 1], lines[i]
+        determinant = a[0] * b[1] - b[0] * a[1]
+        if abs(determinant) < 1e-9:
+            return [list(point) for point in corners]
+        out.append([round((a[2] * b[1] - b[2] * a[1]) / determinant, 3),
+                    round((a[0] * b[2] - b[0] * a[2]) / determinant, 3)])
+    return out
+
+
+def _terminal(corners, boarding_points, platform_height, heading_deg=0.0):
+    """The floor below the deck, and the cores that reach it.
+
+    Nothing here is authored: the plan is the deck's own outline set in, and the
+    way down is the structure already standing beside every charger. Those are
+    2.6 x 3.6 m and 2.8 m tall -- a door and a stair, which is what they have
+    always been; this only says where they lead.
+
+    `platform_height_m` is how far the deck stands above the ground, not a slab
+    thickness: the real decks are 20-35 m up, which is what leaves room for a
+    storey underneath. A deck sitting on the ground has no under-croft and gets
+    no terminal, rather than one buried in the earth.
+    """
+    if platform_height < TERMINAL_STOREY_M + 0.6:
+        return None
+    outline = _inset_convex(corners, TERMINAL_INSET_M)
+    inside = _ring_contains(outline)
+    middle = [sum(point[0] for point in outline) / len(outline),
+              sum(point[1] for point in outline) / len(outline)]
+    cores = []
+    for point in boarding_points:
+        centre = point["center_m"]
+        if not inside(centre):
+            continue
+        # You step *out* of a stair, not into the shaft you just used. Both
+        # landings are put clear of the core's own footprint, along the line
+        # from the middle of the floor through it: inward below, outward above.
+        # Landing inside it would put a person back on the way they came and
+        # send them up and down for ever.
+        span = math.hypot(point["size_m"][0], point["size_m"][1]) / 2 + 1.6
+        away = [centre[0] - middle[0], centre[1] - middle[1]]
+        length = math.hypot(*away) or 1.0
+        step = [away[0] / length * span, away[1] / length * span]
+        landing = [centre[0] - step[0], centre[1] - step[1]]
+        cores.append({"id": "T" + point["id"][1:], "boarding": point["id"], "gate": point["gate"],
+                      "charger": point.get("charger"), "center_m": [round(v, 3) for v in centre],
+                      "size_m": list(point["size_m"]), "deck_height_m": point["height_m"],
+                      # Where a person stands after using it, each way.
+                      "landing_m": [round(v, 3) for v in (landing if inside(landing) else centre)],
+                      "deck_exit_m": [round(centre[0] + step[0], 3), round(centre[1] + step[1], 3)]})
+    plan = terminal_plan.plan(outline, cores, heading_deg)
+    return {"floor_drop_m": TERMINAL_STOREY_M,
+            "storey_m": TERMINAL_STOREY_M, "clear_height_m": TERMINAL_CLEAR_M,
+            "ground_clearance_m": round(platform_height - TERMINAL_STOREY_M, 3),
+            "inset_m": TERMINAL_INSET_M, "outline_m": outline, "cores": cores,
+            **({"plan": plan} if plan else {}),
+            "note": "Derived terminal storey beneath the deck; representative, not a surveyed design."}
+
+
+def _ring_contains(ring):
+    """A point-in-ring test for one fixed ring, by crossing count."""
+    def inside(point):
+        x, y = point[0], point[1]
+        hit = False
+        for i in range(len(ring)):
+            (xi, yi), (xj, yj) = ring[i], ring[i - 1]
+            if (yi > y) != (yj > y) and x < (xj - xi) * (y - yi) / (yj - yi) + xi:
+                hit = not hit
+        return hit
+    return inside
+
+
 def generate_layout(definition):
     """Compile a validated definition into a platform, circles and a taxiway graph."""
     dims = dimensions_for(definition["vehicle_d_m"], definition.get("undercarriage_m"))
@@ -931,6 +1038,9 @@ def generate_layout(definition):
                              "height_m": item["height_m"], "along": item["along"]}
                             for item in boarding],
     }
+    terminal = _terminal(corners, layout["boarding_points"], layout["platform"]["height_m"], heading)
+    if terminal:
+        layout["terminal"] = terminal
     layout["bounds_m"] = {"min": [round(min(c[0] for c in corners), 3), round(min(c[1] for c in corners), 3)],
                           "max": [round(max(c[0] for c in corners), 3), round(max(c[1] for c in corners), 3)]}
     layout["note"] = ("Generated ground layout with representative dimensions derived from the design "

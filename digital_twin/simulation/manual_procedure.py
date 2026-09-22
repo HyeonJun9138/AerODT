@@ -55,6 +55,28 @@ def departure_stop_reason(engine, a, flight):
     return ''
 
 
+def arrival_gate_stop_reason(engine, a, flight, clearance):
+    """Explain whether the observed aircraft can report arrival at its gate.
+
+    As with a FATO, the native manual Runtime's rendered contact altitude and
+    the generated layout's local deck height are different vertical datums.
+    Ground contact is therefore authoritative; gate inclusion is horizontal.
+    """
+    if clearance is None or not clearance.stand:
+        return '착륙 보고와 도착 GATE 배정이 필요합니다'
+    spot = engine._stand_place(flight['destination'], clearance.stand)
+    if spot is None:
+        return f'도착 {clearance.stand} 위치를 확인할 수 없습니다'
+    if a.airborne:
+        return f'도착 {clearance.stand} 접지 상태를 확인하세요'
+    away = distance(a, spot)
+    if away > 3:
+        return f'도착 {clearance.stand} 중심까지 {away:.1f} m 이동하세요'
+    if a.speed_mps > .15:
+        return f'도착 {clearance.stand}에서 완전히 정지하세요 · 현재 {a.speed_mps:.1f} m/s'
+    return ''
+
+
 def fresh(a):
     received = a.external.get('pose_received')
     return received is not None and time.monotonic()-received < 3
@@ -64,6 +86,18 @@ def earliest_departure(engine, a, flight):
     booked = getattr(engine, '_entry_forecasts', {}).get(flight['flight_id']) or {}
     return max(float(flight.get('off_block_s') or 0), float(a.ready_s or 0),
                float(booked.get('departure_s') or 0))
+
+
+def arrival_request_readiness(engine, a, flight, now, decision=None):
+    """The hand-flying pilot's own trigger; PSU is not consulted yet."""
+    decision = decision or engine._pilot_arrival_request_decision(a)
+    if decision['due'] and not a.external.get('arrival_request_ready'):
+        a.external['arrival_request_ready'] = True
+        engine._record(now, 'pilot_arrival_request_ready', flight, role='pilot',
+                       request_mode='manual', trigger_reason=decision['reason'],
+                       remaining_s=round(decision['remaining_s'], 1),
+                       lead_s=decision['lead_s'])
+    return decision
 
 
 def exchange(engine, a, flight, kind, answer, now, request_message=None):
@@ -143,6 +177,7 @@ def observe(engine, a, flight, was_airborne, now):
             and at_pad(engine,a,flight,'arrival') and 'observed_landing_s' not in ext):
         ext['observed_landing_s'] = now
         engine.psu.mark_used(flight['flight_id'], psu.ARRIVAL, now)
+        engine._assign_landed_gates(now)
         engine._record(now,'touchdown',flight,source='manual_observation')
 
 
@@ -151,8 +186,9 @@ def arrival_wait(engine, a, flight, now, *, final=False):
     c=a.clearance
     if not fresh(a):
         return '기체 위치 수신 지연 · 재확인 필요'
-    if not a.airborne or not c or c.released_s is not None or c.state==psu.REFUSED or not c.stand:
-        return '접근 순번과 도착 GATE 배정 확인 필요'
+    if (not a.airborne or not c or c.released_s is not None or c.state==psu.REFUSED
+            or not c.stand and not c.deferred_stand):
+        return '접근 순번과 착륙 자원 확인 필요'
     if 'report_airborne' not in a.external.get('reports',{}):
         return '이륙 완료 보고를 먼저 보내세요'
     if not a.route or a.route.landing_index is None:
@@ -181,13 +217,17 @@ def arrival_wait(engine, a, flight, now, *, final=False):
             return '선행편 접근 개시 대기'
     if a.instruction.get('action') in ('yield','wait_clear') and flight['flight_id'] not in engine.psu.waiting.reservations:
         return a.instruction.get('reason') or '선행 기체 분리 대기'
-    prepared=dict(flight,arrival_fato=c.fato,arrival_stand=c.stand)
+    prepared=dict(flight,arrival_fato=c.fato,
+                  arrival_stand=c.stand or c.planned_stand or flight.get('arrival_stand'))
     blockers=engine._terminal.blockers(prepared,engine._arrival_authority_route(a.route),'arrival')
     if blockers:
         return '접근 경로 점유 · '+', '.join(str(b.get('flight_id','미확인')) for b in blockers)
-    if not engine.psu._stands.free(c.vertiport,c.stand,flight['flight_id']):
+    capacity=engine._arrival_departure_capacity(c.vertiport,c.fato,flight['flight_id'],now)
+    if not capacity.granted:
+        return capacity.reason+' · 접근 또는 최종 하강 대기'
+    if not c.deferred_stand and not engine.psu._stands.free(c.vertiport,c.stand,flight['flight_id']):
         return f'도착 {c.stand} 점유 또는 예약 충돌 · 최종 하강 금지'
-    if engine.ground_control:
+    if engine.ground_control and not c.deferred_stand:
         phase=next((p for p in a.route.phases if p.stage=='gate_in'),None)
         if phase is None:
             return '착륙 후 지상 이동 경로 확인 필요'
@@ -197,9 +237,16 @@ def arrival_wait(engine, a, flight, now, *, final=False):
     if final:
         if engine._compute_remaining_native(a,include_queue=False)>engine.policy['psu']['final_guard_s']:
             return '허가된 도착 경로로 접근하세요 · 최종 접근 구간에서 착륙 요청'
-        if any(port==c.vertiport and owner!=flight['flight_id'] and engine._nearby_pads(port,c.fato,pad)
-               for (port,pad),owner in engine._active_pads.items()):
-            return '최종 패드 점유 대기 · 최종 하강 금지'
+        occupied=sorted((pad,owner) for (port,pad),owner in engine._active_pads.items()
+            if port==c.vertiport and owner!=flight['flight_id']
+            and engine._same_fato(port,c.fato,pad))
+        if occupied:
+            pad,owner=occupied[0]
+            blocking=engine.flights.get(owner,{})
+            aircraft_id=blocking.get('aircraft_id') or owner
+            operation='출발편' if blocking.get('origin')==c.vertiport else '도착편'
+            return (f'{pad} {operation} {aircraft_id} 점유 대기 · '
+                    '최종 하강 금지')
         if any(p is not c and p.kind==psu.ARRIVAL and p.vertiport==c.vertiport and p.fato==c.fato
                and p.released_s is None and p.approach_started_s is not None
                and (p.approach_started_s,p.requested_s,p.flight_id)<(c.approach_started_s,c.requested_s,c.flight_id)
@@ -254,7 +301,8 @@ def act(engine, a, flight, kind, now):
         if reason:
             ext.pop('landing_cleared_s',None)
             return {'state':'hold','reason':reason}
-        prepared = dict(flight,arrival_fato=c.fato,arrival_stand=c.stand)
+        prepared = dict(flight,arrival_fato=c.fato,
+                        arrival_stand=c.stand or c.planned_stand or flight.get('arrival_stand'))
         engine._terminal.acquire(prepared,engine._arrival_authority_route(a.route),'arrival')
         engine._active_pads[(c.vertiport,c.fato)] = flight['flight_id']
         c.state=psu.GRANTED
@@ -270,14 +318,18 @@ def act(engine, a, flight, kind, now):
         if a.airborne or ext.get('observed_landing_s') is None:
             return {'state':'refused','reason':'도착 FATO 접지 관측 후 보고하세요'}
         reports[kind] = now
-        return {'state':'accepted','reason':'착륙 보고 접수 · 지정 GATE까지 지상 이동하세요'}
+        engine._assign_landed_gates(now)
+        c=a.clearance
+        return {'state':'accepted','reason':(
+            f'착륙 보고 접수 · {c.stand}까지 지정 지상경로로 이동하세요'
+            if c and c.stand else '착륙 보고 접수 · FATO 정지 유지 · 접지 순서 GATE 배정 대기')}
     if kind == 'report_gate':
         c = a.clearance
         if not c or not c.stand or 'report_landed' not in reports:
             return {'state':'refused','reason':'착륙 보고와 도착 GATE 배정이 필요합니다'}
-        spot = engine._stand_place(flight['destination'],c.stand)
-        if a.airborne or a.speed_mps > .15 or distance(a,spot)>3 or abs(a.altitude-spot[2])>5:
-            return {'state':'refused','reason':f"도착 {c.stand} 중심에 정차한 뒤 보고하세요"}
+        reason=arrival_gate_stop_reason(engine,a,flight,c)
+        if reason:
+            return {'state':'refused','reason':reason}
         if not engine.psu._stands.free(flight['destination'],c.stand,flight['flight_id']):
             return {'state':'hold','reason':'도착 GATE 점유 · PSU 재확인 필요'}
         # Normal completion accounting, preserving the actual manual pose.
@@ -333,11 +385,20 @@ def guidance(engine,a,flight,now):
     departure=engine.psu.clearance(flight['flight_id'],psu.DEPARTURE)
     ready=earliest_departure(engine,a,flight)
     reason='';tone='hold';stage='준비';text='GATE 대기 · 출발 준비 후 허가 요청'
+    arrival_timing=None
     kind,label,enabled='departure','출발 준비 · 이동 요청',now>=ready
     if not enabled: reason='계획 출발·회항 준비·도착 진입 순서 시각 대기'
     if not ext['departed'] and now<ext.get('initial_priority_until_s',-1):
-        text='초기 우선 출발편 · 재생 후 출발 준비 · 이동 요청'
+        text='초기 우선 출발편 · GATE에서 출발 준비 · 이동 요청'
         if not reason:reason='초기 2분 출발 요청 우선 · 지상 이동 허가는 별도입니다'
+    if not ext['departed'] and not enabled:
+        remaining=max(0,math.ceil(ready-now))
+        stage='출발 시각 대기'
+        text=f'출발 요청까지 {remaining//60}분 {remaining%60}초 · GATE 대기'
+        label=f'출발 요청 대기 · {remaining//60}분 {remaining%60}초'
+        seconds=math.ceil(ready)
+        at=f'{seconds//3600:02d}:{seconds//60%60:02d}:{seconds%60:02d}'
+        reason=f'요청 가능 시각 {at} · 시각 도달은 이동 허가가 아닙니다'
     if ext.get('departure_pending') and not ext['departed']:
         stage,text='출발 배정 대기','출발 요청 접수 · PSU 자동 재검토 중 · GATE 대기 유지'
         label,enabled='요청 접수됨 · 자동 배정 대기',False
@@ -346,17 +407,36 @@ def guidance(engine,a,flight,now):
         reason=f"{flight['destination']} {arrival_gate or 'GATE 미확인'} 도착 보고 완료 · 추가 이동 지시 없음"
         kind,label,enabled=None,'운항 보고 완료',False
     elif not a.airborne and 'report_landed' in reports:
-        stage,text='도착 지상 이동',f"{flight['destination']} · {c.stand if c else 'GATE'}로 이동 후 정차 보고"
-        kind,label,enabled='report_gate','GATE 도착 보고',True
+        if c and c.stand:
+            stage,text='도착 지상 이동',f"{flight['destination']} · {c.stand}로 이동 후 정차 보고"
+            reason=arrival_gate_stop_reason(engine,a,flight,c)
+            kind,label,enabled='report_gate','GATE 도착 보고',not bool(reason)
+        else:
+            stage,text,tone='GATE 배정 대기','FATO 정지 유지 · 접지 순서대로 GATE 배정 중','hold'
+            kind,label,enabled=None,'GATE 배정 대기',False
+            reason='사용 가능한 GATE와 지상경로를 재확인하고 있습니다'
     elif not a.airborne and ext.get('observed_landing_s') is not None:
         stage,text='접지 관측','착륙 보고를 보내세요'
         kind,label,enabled='report_landed','착륙 완료 보고',True
     elif a.airborne:
-        stage,text,tone='항로 비행','항로 유지 · 접근 순번을 요청하세요','info'
-        kind,label,enabled='arrival','접근 순번 요청',True
+        stage,text,tone='항로 비행','항로 유지 · 접근 순번 요청 기준을 기다리세요','info'
+        kind,label,enabled='arrival','접근 순번 요청',False
         if 'report_airborne' not in reports:
             text='이륙 관측 · PSU에 이륙 보고를 보내세요'
             kind,label='report_airborne','이륙 완료 보고'
+            enabled=True
+        else:
+            # This is the same remaining-route ETA used by the pilot's request
+            # trigger. Publish it with the advisory so NAV never shows a
+            # different countdown based only on instantaneous ground speed.
+            arrival_timing=engine._pilot_arrival_request_decision(a)
+        if 'report_airborne' in reports and not c:
+            decision=arrival_request_readiness(engine,a,flight,now,arrival_timing)
+            enabled=bool(decision['due'])
+            reason=decision['reason']
+            if enabled:
+                stage='접근 순번 요청 가능'
+                text='조종사 요청 기준 도달 · PSU에 접근 순번을 요청하세요'
         elif c and c.state!=psu.REFUSED and c.released_s is None:
             approached=c.approach_started_s is not None
             reason=arrival_wait(engine,a,flight,now,final=approached)
@@ -406,7 +486,10 @@ def guidance(engine,a,flight,now):
             'next':{'kind':kind,'label':label,'enabled':enabled},
             'timeline':{'now_s':now,'off_block_s':flight.get('off_block_s'),'ready_s':ready,
                         'takeoff_s':departure.cleared_s if departure else None,
-                        'landing_s':c.cleared_s if c else None},
+                        'landing_s':c.cleared_s if c else None,
+                        'remaining_route_eta_s':None if arrival_timing is None else arrival_timing['remaining_s'],
+                        'arrival_request_lead_s':None if arrival_timing is None else arrival_timing['lead_s'],
+                        'arrival_request_due':None if arrival_timing is None else arrival_timing['due']},
             'ground_chart':ground_chart(engine,a,flight),
             'origin':flight['origin'],'destination':flight['destination'],
             'departure_fato':flight.get('departure_fato'),'departure_gate':flight.get('departure_stand'),

@@ -8,6 +8,28 @@ import math
 import os
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 
+
+class BatchResult:
+    """One aircraft's answer out of a pool task that flew several.
+
+    The same `result()` a Future gives: the sample, or the exception that
+    aircraft's step raised, re-raised as it was. Nothing about one aircraft
+    reaches another; they merely share the thread that flew them.
+    """
+    __slots__ = ('_future', '_index')
+
+    def __init__(self, future, index):
+        self._future, self._index = future, index
+
+    def done(self):
+        return self._future.done()
+
+    def result(self, timeout=None):
+        ok, value = self._future.result(timeout)[self._index]
+        if ok:
+            return value
+        raise value
+
 from communication.python import native_pilot
 from user_application.uam_mission.traffic_awareness import TrafficAwareness
 from user_application.uam_mission import approach_separation
@@ -162,6 +184,45 @@ class ScenarioPilots:
             self._pool = ThreadPoolExecutor(max_workers=self.workers, thread_name_prefix="uam-physics")
         return self._pool.submit(self.advance, aircraft_id, seconds, hold)
 
+    # A step of the day submits every airborne aircraft to the pool, and each
+    # submission is a worker waking up and taking the interpreter lock from
+    # whoever holds it -- the day's own tick, most of the time -- for the
+    # Python around a native call that releases it again at once. Fifty
+    # aircraft were fifty of those a step, against a pool of eight threads
+    # that could only ever fly eight at a time anyway. Flown a handful per
+    # task the pool does the same physics in the same order per aircraft with
+    # a fraction of the hand-offs, which is what the sockets waiting on that
+    # same lock notice.
+    def submit_many(self, requests):
+        """`submit` for several (aircraft_id, seconds, hold) at once, answered
+        one BatchResult per request in the order given."""
+        requests = [tuple(request) for request in requests]
+        if not requests:
+            return []
+        if self.workers == 1:
+            answers = []
+            for aircraft_id, seconds, hold in requests:
+                answer = Future()
+                try:
+                    answer.set_result(self.advance(aircraft_id, seconds, hold))
+                except Exception as error:
+                    answer.set_exception(error)
+                answers.append(answer)
+            return answers
+        if self._pool is None:
+            self._pool = ThreadPoolExecutor(max_workers=self.workers, thread_name_prefix="uam-physics")
+        batch = self._pool.submit(self._advance_many, requests)
+        return [BatchResult(batch, index) for index in range(len(requests))]
+
+    def _advance_many(self, requests):
+        outcomes = []
+        for aircraft_id, seconds, hold in requests:
+            try:
+                outcomes.append((True, self.advance(aircraft_id, seconds, hold)))
+            except BaseException as error:  # noqa: BLE001 - re-raised per aircraft by BatchResult
+                outcomes.append((False, error))
+        return outcomes
+
     def start(self, aircraft_id, route, heading):
         self.finish(aircraft_id)
         self.flights[aircraft_id] = FlightPilot(self.library, route, heading,
@@ -169,6 +230,25 @@ class ScenarioPilots:
 
     def advance(self, aircraft_id, seconds, hold=None):
         return self.flights[aircraft_id].advance(seconds, hold)
+
+    def arrival_request_decision(self, *, remaining_s, phase_index, descent_index,
+                                 near_entry=False):
+        """Decide when this pilot should ask PSU for an arrival sequence.
+
+        The simulation supplies observations only.  Whether those observations
+        are far enough along to make a request is pilot procedure: an automatic
+        pilot sends it immediately, while a manual cockpit uses the same answer
+        to enable the request control.
+        """
+        lead_s = float(self.policy.get("arrival_request_lead_s", 180.0))
+        due = bool(remaining_s <= lead_s or phase_index >= descent_index or near_entry)
+        if due:
+            reason = ("도착 진입 구간 도달" if phase_index >= descent_index or near_entry
+                      else f"예상 접지 {max(0, round(remaining_s))}초 전")
+        else:
+            reason = f"접근 순번 요청 기준까지 약 {max(1, math.ceil(remaining_s-lead_s))}초"
+        return {"due": due, "lead_s": lead_s, "remaining_s": float(remaining_s),
+                "reason": reason, "owner": "pilot"}
 
     def traffic_commands(self, observations, policy, now_s):
         return self.awareness.commands(observations, policy, now_s)

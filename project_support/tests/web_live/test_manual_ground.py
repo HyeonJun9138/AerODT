@@ -111,6 +111,30 @@ class NativeGroundIntegrationTests(unittest.TestCase):
                 ws.send_json(command);again=ws.receive_json();self.assertTrue(again['accepted']);self.assertEqual(again['sample']['ground_handling']['start_s'],reply['sample']['ground_handling']['start_s'])
                 ws.send_json({'type':'stop'})
 
+    def test_next_plan_uses_closed_door_completion_without_legacy_release(self):
+        from communication.python.manual_runtime import ManualRuntime
+        from user_application.uam_mission.manual_flight import ManualFlight
+        g,s,zero=fixture(2);zero['flight_mode']='multirotor'
+        plan={**g.plan,'totals':{'battery_start_pct':90},
+              'vehicle':{'passengers':2,'capacity':4}}
+        with TemporaryDirectory() as directory:
+            flight=ManualFlight(plan,g.origin,ManualRuntime(),Path(directory),g.decks,
+                                records=list(g.records.values()))
+            try:
+                flight.step(zero,25)
+                self.assertTrue(flight.ground_request('disembark','pax')['accepted'])
+                for _ in range(1600):
+                    state=flight.step(zero,25)
+                    if state['ground_handling']['phase']=='awaiting_charge':break
+                self.assertEqual(state['ground_handling']['phase'],'awaiting_charge')
+                self.assertTrue(flight.ground_request('close_door','door')['accepted'])
+                for _ in range(100):state=flight.step(zero,25)
+                self.assertTrue(state['ground_handling']['turnaround_complete'])
+                self.assertNotEqual(state['ground_handling']['phase'],'released')
+                continued=flight.continue_plan(plan)
+                self.assertEqual(continued['stage_label'],'다음 비행 출발 준비')
+            finally:flight.close()
+
 
 
 class TurnaroundRepeatTests(unittest.TestCase):
@@ -285,6 +309,59 @@ class StandReassignmentTests(unittest.TestCase):
 
 
 class ExplicitChargingTests(unittest.TestCase):
+    def test_door_alighting_and_charge_are_three_separate_actions(self):
+        g,s,c=fixture()
+        self.assertTrue(g.request('open_door','door',s,c)['accepted'])
+        self.assertIsNone(g.operation['alighting_start_s'])
+        s['time_s']+=2
+        state=g.snapshot(s,c)
+        self.assertEqual(state['phase'],'door_open')
+        self.assertEqual(state['passengers_remaining'],g.plan['vehicle']['passengers'])
+        self.assertFalse(g.request('charge','early-charge',s,c)['accepted'])
+        self.assertTrue(g.request('disembark','pax',s,c)['accepted'])
+        self.assertEqual(g.snapshot(s,c)['phase'],'alighting')
+        s['time_s']=g.operation['alighting_end_s']
+        self.assertEqual(g.snapshot(s,c)['phase'],'awaiting_charge')
+        self.assertTrue(g.request('charge','charge',s,c)['accepted'])
+
+    def test_door_can_close_and_reopen_before_passenger_alighting(self):
+        g,s,c=fixture();g.request('open_door','door',s,c);s['time_s']+=2
+        self.assertTrue(g.request('close_door','close',s,c)['accepted'])
+        s['time_s']+=2
+        state=g.snapshot(s,c)
+        self.assertEqual(state['phase'],'door_closed');self.assertFalse(state['turnaround_complete'])
+        self.assertTrue(state['door_control_available']);self.assertTrue(state['locked'])
+        self.assertTrue(g.request('open_door','again',s,c)['accepted'])
+        s['time_s']+=2
+        self.assertEqual(g.snapshot(s,c)['phase'],'door_open')
+
+    def test_door_close_does_not_disconnect_charger_or_end_controls(self):
+        g,s,c=fixture();g.request('disembark','pax',s,c)
+        s['time_s']=g.operation['alighting_end_s']+1
+        self.assertTrue(g.request('charge','charge',s,c)['accepted'])
+        s['time_s']=g.operation['start_s']+g.operation['charge_at_s']+1
+        self.assertEqual(g.snapshot(s,c)['phase'],'charging')
+        self.assertTrue(g.request('close_door','door-close',s,c)['accepted'])
+        self.assertNotIn('release_s',g.operation)
+        self.assertNotIn('disconnect_s',g.operation)
+        s['time_s']+=2
+        state=g.snapshot(s,c)
+        self.assertEqual(state['phase'],'charging')
+        self.assertEqual(state['door_state'],'closed')
+        self.assertIsNotNone(state['charge_requested_s'])
+        self.assertTrue(state['door_control_available'])
+        self.assertTrue(g.request('open_door','door-open',s,c)['accepted'])
+
+    def test_charge_remains_available_after_door_is_closed(self):
+        g,s,c=fixture();g.request('disembark','pax',s,c)
+        s['time_s']=g.operation['alighting_end_s']+1
+        self.assertTrue(g.request('close_door','door-close',s,c)['accepted'])
+        s['time_s']+=2
+        state=g.snapshot(s,c)
+        self.assertEqual(state['phase'],'awaiting_charge')
+        self.assertEqual(state['door_state'],'closed')
+        self.assertTrue(g.request('charge','charge-closed',s,c)['accepted'])
+
     def test_indefinite_wait_has_open_door_but_no_crew_and_can_close_without_charging(self):
         g,s,c=fixture()
         self.assertFalse(g.request('charge','no-door',s,c)['accepted'])
@@ -300,6 +377,31 @@ class ExplicitChargingTests(unittest.TestCase):
         self.assertEqual(g.snapshot(s,c)['phase'],'closing')
         s['time_s']+=2
         self.assertEqual(g.snapshot(s,c)['phase'],'released')
+
+    def test_a_door_closed_before_charging_can_be_reopened_without_repeating_alighting(self):
+        g,s,c=fixture()
+        self.assertTrue(g.request('disembark','open',s,c)['accepted'])
+        s['time_s']+=3600
+        before=copy.deepcopy(g.operation['walk'])
+        self.assertTrue(g.request('release','close',s,c)['accepted'])
+        s['time_s']+=2
+        state=g.snapshot(s,c)
+        self.assertEqual(state['phase'],'released')
+        self.assertTrue(state['reopen_allowed'])
+        self.assertTrue(g.request('reopen','open-again',s,c)['accepted'])
+        state=g.snapshot(s,c)
+        self.assertEqual(state['phase'],'awaiting_charge')
+        self.assertEqual(state['door_open'],1)
+        self.assertEqual(state['passengers_remaining'],0)
+        self.assertEqual(g.operation['walk'],before,'passengers are not made to alight twice')
+        self.assertTrue(g.request('charge','charge-after-reopen',s,c)['accepted'])
+
+    def test_reopen_obeys_the_same_stopped_gate_safety_checks(self):
+        g,s,c=fixture();g.request('disembark','open',s,c);s['time_s']+=3600
+        g.request('release','close',s,c);s['time_s']+=2
+        s['speed_mps']=1
+        answer=g.request('reopen','moving',s,c)
+        self.assertFalse(answer['accepted']);self.assertIn('정지',answer['message'])
 
     def test_charge_requires_safe_contact_and_is_idempotent(self):
         for field,value in [('airborne',True),('speed_mps',1),('rotor_radps',10)]:

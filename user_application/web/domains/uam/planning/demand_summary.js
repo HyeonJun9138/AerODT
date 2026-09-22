@@ -66,6 +66,13 @@ export class DemandSummary {
     const body = this.el('div', {class: 'ds-body'});
     if (view.errors?.length) body.append(this.problems(view.errors));
     body.append(this.figures(view));
+    const planning = view.request?.planning;
+    body.append(this.el('section', {class: 'ds-block', id: 'demand-summary-planning'},
+      this.el('h3', {text: '적용할 스케줄링 기준'}),
+      this.el('p', {text: planning ? `FATO별 ${planning.fato_headway_s}초 간격 · 회복여유 ${planning.turnaround_recovery_s}초` : '서버 기본값 사용'}),
+      this.el('p', {text: 'GATE·FATO·기체 가용시간을 반영합니다.'}),
+      this.el('p', {text: '도착과 충전·승객 처리 후 같은 기체를 다음 운항에 배정합니다. 현재 운항의 PSU 허가는 바뀌지 않습니다.'})));
+    if (view.od?.disconnected_trips > 0) body.append(this.networkDemand(view.od));
     body.append(this.distribution(view));
     body.append(this.pairs(view));
     body.append(this.fleet(view));
@@ -87,12 +94,21 @@ export class DemandSummary {
       this.el('span', {text: label}), this.el('strong', {text: value}),
       note ? this.el('small', {text: note}) : null);
     return this.el('div', {class: 'ds-figures', id: 'demand-summary-figures'},
-      cell('하루 수요', `${count(view.trips)}명`, view.demand),
+      cell('운항시간 수요', `${count(view.operating_trips ?? view.trips)}명`,
+        `24시간 ${count(view.trips)}명 · 시간 외 ${count(view.out_of_window_trips)}명`),
       cell('버티포트', `${count(view.scope?.count)}곳`,
         `연결 ${count(view.scope?.pairs)} / ${count(view.scope?.total_pairs)}쌍`),
       cell('운영 시간', view.hours ?? '', view.seed ?? ''),
       cell('배치 기체', `${count(view.fleet?.totals?.aircraft)}대`,
         `${count(view.fleet?.totals?.seats)}석`));
+  }
+
+  networkDemand(od) {
+    return this.el('p', {class: 'ds-note', id: 'demand-summary-network-demand',
+      text: `연결되지 않은 OD 수요 ${count(od.disconnected_trips)}명 중 `
+        + `${count(od.redistributed_trips)}명은 대체 항로로 분산하고 `
+        + `${count(od.lost_trips)}명은 다른 교통수단·시간대로 이탈합니다. `
+        + `최종 항로 반영 수요는 ${count(od.schedulable_trips)}명입니다.`});
   }
 
   // The shape of the day: which decks carry it, drawn rather than listed. Both
@@ -132,7 +148,8 @@ export class DemandSummary {
   // What the two sets of weights come to, pair by pair. This is an estimate for
   // reading, not the schedule: it says which routes the day is mostly about.
   pairs(view) {
-    const legs = odEstimates(view.weights ?? [], view.pairs ?? [], view.trips ?? 0).slice(0, TOP_PAIRS);
+    const legs = (view.od?.legs ?? odEstimates(view.weights ?? [], view.pairs ?? [],
+      view.operating_trips ?? view.trips ?? 0)).slice(0, TOP_PAIRS);
     const list = this.el('ul', {class: 'ds-pairs', id: 'demand-summary-pairs'});
     const largest = legs[0]?.share ?? 0;
     for (const leg of legs) {
@@ -153,7 +170,7 @@ export class DemandSummary {
   fleet(view) {
     const totals = view.fleet?.totals ?? {};
     const capacity = view.fleet?.capacity ?? 0;
-    const trips = view.trips ?? 0;
+    const trips = view.od?.schedulable_trips ?? view.operating_trips ?? view.trips ?? 0;
     const short = capacity > 0 && capacity < trips;
     const rows = (view.fleet?.rows ?? []).filter(row => row.aircraft > 0);
     const list = this.el('ul', {class: 'ds-fleet', id: 'demand-summary-fleet'});
@@ -168,7 +185,7 @@ export class DemandSummary {
       this.el('h3', {text: '초기 배치와 좌석 공급'}),
       this.el('p', {class: short ? 'ds-warn' : 'ds-note', id: 'demand-summary-capacity',
         text: capacity > 0
-          ? `운영 시간 동안 실을 수 있는 좌석 ${count(capacity)}석 · 하루 수요 ${count(trips)}명`
+          ? `운영 시간 동안 실을 수 있는 좌석 ${count(capacity)}석 · 항로 반영 수요 ${count(trips)}명`
             + (short ? ' · 공급이 수요보다 적습니다' : '')
           : '배치된 기체가 없어 좌석 공급을 계산할 수 없습니다.'}),
       rows.length ? list : this.el('p', {class: 'ds-empty', text: '배치된 기체가 없습니다.'}));

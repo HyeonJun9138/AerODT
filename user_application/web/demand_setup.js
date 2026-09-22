@@ -63,8 +63,9 @@ export function defaultState() {
 }
 
 // ---- demand ------------------------------------------------------------
-// How many trips a day the generator is asked to place. Only the chosen mode
-// counts: the other row stays on screen at its own value but says nothing.
+// The 24-hour potential UAM demand. Only the chosen mode counts: the other row
+// stays on screen at its own value but says nothing. The generator later clips
+// this total to the operating window using the hourly reference curve.
 export function dailyTrips(demand = {}) {
   if (demand.mode === 'direct') {
     const riders = Number(demand.riders);
@@ -137,27 +138,82 @@ export function describeWeights(rows = []) {
 // It is an estimate for the summary to draw, not the schedule. Whoever builds
 // the schedule is given the shares and does this again properly.
 export function odEstimates(rows = [], pairs = [], trips = 0) {
+  return odDemandPlan(rows, pairs, trips).legs;
+}
+
+export const OD_REDISTRIBUTION_RATE = 0.85;
+
+function largestRemainder(total, shares) {
+  const count = Math.max(0, Math.round(Number(total) || 0));
+  const weight = shares.reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0);
+  if (!(count > 0) || !(weight > 0)) return shares.map(() => 0);
+  const exact = shares.map(value => count * Math.max(0, Number(value) || 0) / weight);
+  const out = exact.map(Math.floor);
+  const order = exact.map((value, index) => ({index, rest: value - out[index]}))
+    .sort((a, b) => b.rest - a.rest || a.index - b.index);
+  for (let left = count - out.reduce((sum, value) => sum + value, 0), i = 0; left > 0; left -= 1, i += 1) {
+    out[order[i].index] += 1;
+  }
+  return out;
+}
+
+// The unconstrained OD market is formed before the operator's connected pairs
+// are applied. A cut leg transfers only part of its demand: same-origin routes
+// first, then same-destination routes, then routes touching either endpoint.
+// The remainder leaves this UAM day instead of being silently manufactured on
+// the routes that remain.
+export function odDemandPlan(rows = [], pairs = [], trips = 0,
+  redistributionRate = OD_REDISTRIBUTION_RATE) {
   const byId = new Map(rows.map(row => [row.id, row]));
-  const legs = [];
-  for (const pair of pairs) {
-    for (const [from, to] of [[pair.from, pair.to], [pair.to, pair.from]]) {
-      const start = byId.get(from), end = byId.get(to);
-      if (!start || !end) continue;
+  const potential = [];
+  for (const start of rows) {
+    for (const end of rows) {
+      const from = start.id, to = end.id;
+      if (from === to) continue;
       const rest = rows.reduce((sum, row) => row.id === from ? sum : sum + row.arrival_share, 0);
       const share = rest > 0 ? start.departure_share * end.arrival_share / rest : 0;
-      legs.push({from, to, from_name: start.name, to_name: end.name, share,
-        trips: Math.round(trips * share)});
+      potential.push({from, to, from_name: start.name, to_name: end.name, share});
     }
   }
-  const total = legs.reduce((sum, leg) => sum + leg.share, 0);
-  // The pairs the operator cut carry nothing, so what is left is re-shared
-  // among the ones that remain rather than quietly losing that demand.
-  for (const leg of legs) {
-    leg.share = total > 0 ? leg.share / total : 0;
-    leg.trips = Math.round(trips * leg.share);
+  const whole = potential.reduce((sum, leg) => sum + leg.share, 0);
+  for (const leg of potential) leg.share = whole > 0 ? leg.share / whole : 0;
+  const connected = new Set();
+  for (const pair of pairs) {
+    if (!byId.has(pair.from) || !byId.has(pair.to) || pair.from === pair.to) continue;
+    connected.add(`${pair.from}\u0000${pair.to}`);
+    connected.add(`${pair.to}\u0000${pair.from}`);
   }
+  const rate = Math.max(0, Math.min(1, Number(redistributionRate) || 0));
+  const legs = potential.filter(leg => connected.has(`${leg.from}\u0000${leg.to}`))
+    .map(leg => ({...leg, direct_share: leg.share, redistributed_share: 0}));
+  const missing = potential.filter(leg => !connected.has(`${leg.from}\u0000${leg.to}`));
+  for (const cut of missing) {
+    let alternatives = legs.filter(leg => leg.from === cut.from && leg.direct_share > 0);
+    if (!alternatives.length) alternatives = legs.filter(leg => leg.to === cut.to && leg.direct_share > 0);
+    if (!alternatives.length) alternatives = legs.filter(leg =>
+      leg.direct_share > 0 && ([leg.from, leg.to].includes(cut.from) || [leg.from, leg.to].includes(cut.to)));
+    if (!alternatives.length) alternatives = legs.filter(leg => leg.direct_share > 0);
+    const weight = alternatives.reduce((sum, leg) => sum + Math.max(0, leg.direct_share), 0);
+    for (const alternative of alternatives) {
+      const portion = weight > 0 ? Math.max(0, alternative.direct_share) / weight : 1 / alternatives.length;
+      alternative.redistributed_share += cut.share * rate * portion;
+    }
+  }
+  for (const leg of legs) leg.share = leg.direct_share + leg.redistributed_share;
   legs.sort((a, b) => b.share - a.share);
-  return legs;
+  const directShare = legs.reduce((sum, leg) => sum + leg.direct_share, 0);
+  const disconnectedShare = missing.reduce((sum, leg) => sum + leg.share, 0);
+  const redistributedShare = legs.reduce((sum, leg) => sum + leg.redistributed_share, 0);
+  const lostShare = Math.max(0, 1 - directShare - redistributedShare);
+  const [directTrips, redistributedTrips, lostTrips] = largestRemainder(
+    trips, [directShare, redistributedShare, lostShare]);
+  const scheduledTrips = directTrips + redistributedTrips;
+  const counts = largestRemainder(scheduledTrips, legs.map(leg => leg.share));
+  legs.forEach((leg, index) => {leg.trips = counts[index];});
+  return {legs, operating_trips: Math.max(0, Math.round(Number(trips) || 0)),
+    direct_trips: directTrips, disconnected_trips: redistributedTrips + lostTrips,
+    redistributed_trips: redistributedTrips, lost_trips: lostTrips,
+    schedulable_trips: scheduledTrips, redistribution_rate: rate};
 }
 
 // ---- pairs -------------------------------------------------------------
@@ -217,6 +273,22 @@ export function operatingMinutes({start, end} = {}) {
   const from = clockMinutes(start), to = clockMinutes(end);
   if (from === null || to === null) return 0;
   return to > from ? to - from : (to === from ? 0 : 24 * 60 - from + to);
+}
+export function operatingTrips(daily, operating = {}, hourlyDeparturePct = []) {
+  const from = clockMinutes(operating.start), to = clockMinutes(operating.end);
+  const curve = Array.isArray(hourlyDeparturePct) ? hourlyDeparturePct.map(Number) : [];
+  const whole = curve.length === 24 ? curve.reduce((sum, value) => sum + Math.max(0, value), 0) : 0;
+  if (from === null || to === null || from === to || !(whole > 0) || !(daily > 0)) return 0;
+  const span = (to - from + 24 * 60) % (24 * 60);
+  let minute = from, weight = 0;
+  while (minute < from + span) {
+    const hour = Math.floor(minute / 60) % 24;
+    const edge = Math.floor(minute / 60 + 1) * 60;
+    const held = Math.min(edge, from + span) - minute;
+    weight += Math.max(0, curve[hour]) * held / 60;
+    minute = edge;
+  }
+  return Math.round(Number(daily) * weight / whole);
 }
 export function describeHours(operating = {}) {
   const minutes = operatingMinutes(operating);
@@ -338,12 +410,26 @@ export function buildRequest(state, vertiports = []) {
   // operator can reach by hand and never one they meant.
   if (scope.length >= 2 && weights.every(row => row.departure === 0)) errors.push('출발 수요 비율이 모두 0입니다. 한 곳 이상 올려 주세요.');
   if (scope.length >= 2 && weights.every(row => row.arrival === 0)) errors.push('도착 수요 비율이 모두 0입니다. 한 곳 이상 올려 주세요.');
+  if (state.schedule_planning) {
+    const p = state.schedule_planning;
+    const labels = {fato_headway_s: '동일 FATO 사용 간격', turnaround_recovery_s: '다음 운항 전 회복여유',
+      gate_out: '출발 지상이동', takeoff: '수직 이륙', climb: '상승·정천이',
+      descent: '강하·역천이', landing: '수직 착륙', gate_in: '도착 지상이동'};
+    for (const [key, value] of Object.entries({fato_headway_s: p.fato_headway_s,
+      turnaround_recovery_s: p.turnaround_recovery_s, ...p.phase_floor_s})) {
+      if (value === undefined) continue;
+      if (value === null || value === '' || !Number.isFinite(Number(value)) || Number(value) < 0 || Number(value) > 3600)
+        errors.push(`스케줄링 기준 ${labels[key] ?? key}: 0~3600초를 입력하세요.`);
+    }
+  }
   if (errors.length) return {errors};
   const demand = state.demand ?? {};
   return {request: {
     version: 1,
+    ...(state.manual?.want ? {manual: {want: true, seats: state.manual.seats || null, vertiport: state.manual.vertiport || null}} : {}),
     vertiports: scope,
     pairs: pairs.map(pair => ({from: pair.from, to: pair.to})),
+    ...(state.schedule_planning ? {planning: state.schedule_planning} : {}),
     demand: {mode: demand.mode === 'direct' ? 'direct' : 'baseline',
       baseline_trips: Number(demand.baseline), conversion_pct: Number(demand.conversion_pct),
       daily_riders: Number(demand.riders), daily_trips: trips,

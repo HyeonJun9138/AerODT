@@ -1,4 +1,4 @@
-import {pilotGuidance,operationClock,PSU_PILOT_HELP,PSU_STEPS} from '../operations/psu_pilot_guidance.js?v=20260921-arrival2';
+import {pilotGuidance,operationClock,PSU_PILOT_HELP,PSU_STEPS} from '../operations/psu_pilot_guidance.js?v=20260921-pilot-arrival';
 // Repeated attributes invalidate style on every cockpit frame, even at rest.
 const attribute=(node,name,value)=>{const next=String(value);if(node.getAttribute(name)!==next)node.setAttribute(name,next);};
 import {buildElement as el} from '../../../dom_builder.js';
@@ -8,7 +8,7 @@ export function consoleSurface(profile){
  return {...n,id:'console',center:n.center.map((x,i)=>x-(n.up??[0,1,0])[i]*n.height*.96+(n.right??[0,0,1])[i]*n.width*.50),width:n.width*2.10,height:n.height*.72};
 }
 const set=(node,text)=>{if(node.textContent!==text)node.textContent=text;};
-const phaseIndex=phase=>phase==='awaiting_charge'?1:['opening','alighting','connecting','charging','complete'].indexOf(phase);
+const phaseIndex=phase=>phase==='door_open'?0:phase==='awaiting_charge'?1:['opening','alighting','connecting','charging','complete'].indexOf(phase);
 // MFD actions stay with their displays. Only simulation input/session settings
 // are mounted in the application dock; the runtime still owns ground procedures.
 export class CockpitConsole{
@@ -32,9 +32,13 @@ export class CockpitConsole{
   this.tune=button('조이스틱 설정',()=>onControl('tune'));this.tune.className='cockpit-dock-setting';
   this.findAircraft=button('내 기체 찾기',()=>{if(!this.findAircraft.disabled)onControl('find_aircraft');});this.findAircraft.className='cockpit-dock-setting';
   this.pause=button('일시정지',()=>onControl(this.state?.active?'pause':'resume'));this.pause.className='cockpit-dock-act';
-  this.groundAction='disembark';
-  this.ground=button('문 열기 · 하차 요청',()=>{if(!this.ground.disabled)onGround(this.groundAction);});
-  this.releaseButton=button('충전 해제 · 문 닫기',()=>{if(!this.releaseButton.disabled)onGround('release');});
+  this.doorAction='open_door';
+  this.ground=button('문 열기',()=>{if(!this.ground.disabled)onGround(this.doorAction);});
+  this.passengerButton=button('승객 하차',()=>{if(!this.passengerButton.disabled)onGround('disembark');});
+  this.chargeButton=button('충전 요청',()=>{if(!this.chargeButton.disabled)onGround('charge');});
+  this.releaseButton=button('다음 비행 이어가기',()=>{if(!this.releaseButton.disabled)onGround('next_flight');});
+  this.ground.className='cockpit-door-action';this.passengerButton.className='cockpit-passenger-action';
+  this.chargeButton.className='cockpit-charge-action';this.releaseButton.className='cockpit-next-flight-action';
   this.controlOwner=e('strong',{class:'cockpit-control-owner',text:'내 기체'});
   this.controlState=e('span',{class:'cockpit-control-state',text:'연결 대기'});
   this.inputGuide=e('div',{class:'cockpit-input-guide'});
@@ -67,7 +71,7 @@ export class CockpitConsole{
   this.turnaroundScreen=e('section',{class:'cockpit-screen cockpit-ground-mfd cockpit-turnaround-mfd','aria-label':'TURNAROUND 지상 지원 계기'},title('TURNAROUND','GROUND SYSTEMS','turnaround'),
    e('div',{class:'cockpit-ground-heading'},this.groundStatus,this.phase),this.progress,
    e('div',{class:'cockpit-ground-grid'},field('DOOR',this.door),field('PAX ON BOARD',this.passengers),field('CHARGER',this.charger),field('BATTERY',this.energy)),
-   this.nextSchedule,e('footer',{class:'cockpit-ground-footer'},this.groundNote),e('nav',{class:'cockpit-mfd-actions','aria-label':'TURNAROUND 기능'},this.ground,this.releaseButton));
+   this.nextSchedule,e('footer',{class:'cockpit-ground-footer'},this.groundNote),e('nav',{class:'cockpit-mfd-actions','aria-label':'TURNAROUND 기능'},this.ground,this.passengerButton,this.chargeButton,this.releaseButton));
   this.psuState=e('strong',{text:'지시 수신 대기'});this.psuFlight=e('span',{text:'—'});
   this.psuTakeoff=e('strong',{text:'미정'});this.psuLanding=e('strong',{text:'미정'});
   // These two rows carry a forecast when no slot has been issued, and the
@@ -202,6 +206,9 @@ export class CockpitConsole{
  release(){this.onControl('stick',{x:0,y:0});this.onControl('yaw',0);}
  updateControls(controls){
   this.state=controls;const manual=Boolean(controls),enabled=Boolean(controls?.enabled),screen=controls?.source==='screen';
+  const key=JSON.stringify([manual,enabled,controls?.entity_id,controls?.source,controls?.active,controls?.viewingOther,controls?.mode]);
+  if(key===this.controlPaintKey)return;
+  this.controlPaintKey=key;
   this.controlsRoot.hidden=!manual;
   set(this.controlOwner,controls?.entity_id?.startsWith('scenario:')?`배정 기체 · ${controls.entity_id.slice(9)}`:'단일 비행 · 내 기체');
   set(this.controlState,controls?.viewingOther?'다른 기체 관찰 중 · 조종 대상 유지':controls?.active?(enabled?'입력 연결됨':'지상 절차 진행 중'):'입력 일시정지');
@@ -243,8 +250,12 @@ export class CockpitConsole{
    door_state:ground?.door_state??'CLOSED',charger_state:'NOT IN USE',
    reason:'비행 중 · 착륙 후 GATE 도착 보고를 마치면 지상 절차를 시작합니다'};
   this.updateControls(dockControls);const manual=Boolean(controls);
-  this.groundAction=ground?.phase==='awaiting_charge'?'charge':'disembark';
-  set(this.ground,this.groundAction==='charge'?'충전 연결 요청':'문 열기 · 하차 요청');
+  const phase=ground?.phase;
+  const doorState=ground?.door_state;
+  const mayClose=doorState?['open','opening'].includes(doorState):['door_open','awaiting_charge','connecting','charging','complete'].includes(phase);
+  this.doorAction=mayClose?'close_door':ground?.reopen_allowed&&!doorState?'reopen':'open_door';
+  set(this.ground,mayClose?'문 닫기':'문 열기');
+  set(this.passengerButton,'승객 하차');set(this.chargeButton,'충전 요청');
   const next=ground?.next_flight,target=Number(next?.target_soc_pct),battery=Number(telemetry?.battery_pct);
   const charged=!Number.isFinite(target)||(Number.isFinite(battery)&&battery+1e-6>=target);
   this.nextSchedule.hidden=!next&&!ground?.flight_completed;
@@ -252,17 +263,19 @@ export class CockpitConsole{
    set(this.nextFlight,`${next.flight_id} · ${next.origin} → ${next.destination}`);
    set(this.nextDeparture,[Number.isFinite(next.off_block_s)?`ETD ${operationClock(next.off_block_s)}`:'',Number.isFinite(next.ready_s)?`출발 준비 ${operationClock(next.ready_s)}`:'',Number.isFinite(target)?`목표 ${target.toFixed(0)}%`:''].filter(Boolean).join(' · '));
   }else if(ground?.flight_completed){set(this.nextFlight,'오늘 남은 예정 비행 없음');set(this.nextDeparture,'이 기체의 일정이 완료되었습니다');}
-  const continuing=ground?.phase==='released'&&Boolean(next);
-  set(this.releaseButton,continuing?'다음 비행 이어가기':ground?.phase==='released'&&ground?.flight_completed?'오늘 운항 완료':ground?.phase==='awaiting_charge'||ground?.phase==='complete'?'문 닫기':'충전 해제 · 문 닫기');
-  this.releaseButton.onclick=event=>{event.stopPropagation?.();if(!this.releaseButton.disabled)this.onGround(continuing?'next_flight':'release');};
-  this.ground.disabled=Boolean(ground?.readOnly)||(this.groundAction==='charge'&&controls?.groundChargeSupported===false)||stale||controls?.groundSupported===false||!manual||controls?.active===false||!(ground?.available||ground?.phase==='awaiting_charge')||Boolean(controls?.pending);
-  this.releaseButton.disabled=Boolean(ground?.readOnly)||stale||controls?.groundSupported===false||!manual||controls?.active===false||Boolean(controls?.pending)||
-   (continuing?(controls?.nextFlightSupported===false||!charged):!['awaiting_charge','charging','complete'].includes(ground?.phase));
-  const phases={airborne:'비행 중',boarding:'승객 탑승',taxi:'지상 이동',parked:'주기',unknown:'운항 상태 미수신',idle:'지상 절차 대기',opening:'출입문 개방',alighting:'승객 하차',awaiting_charge:'충전 요청 대기',connecting:'충전기 연결',charging:'충전 중',complete:'하차 완료',disconnecting:'충전기 분리',closing:'출입문 닫힘',released:'출발 준비'};
+  const continuing=Boolean(next)&&Boolean(ground?.turnaround_complete);
+  set(this.releaseButton,ground?.flight_completed&&!next?'오늘 운항 완료':'다음 비행 이어가기');
+  const commonDisabled=Boolean(ground?.readOnly)||stale||controls?.groundSupported===false||controls?.groundProcedureSeparated===false||!manual||controls?.active===false||Boolean(controls?.pending);
+  this.ground.disabled=commonDisabled||!(ground?.available||ground?.reopen_allowed||ground?.door_control_available||mayClose);
+  this.passengerButton.disabled=commonDisabled||!ground?.alight_allowed;
+  this.chargeButton.disabled=commonDisabled||controls?.groundChargeSupported===false||phase!=='awaiting_charge';
+  this.releaseButton.hidden=!ground?.turnaround_complete;
+  this.releaseButton.disabled=commonDisabled||!continuing||controls?.nextFlightSupported===false||!charged;
+  const phases={airborne:'비행 중',boarding:'승객 탑승',taxi:'지상 이동',parked:'주기',unknown:'운항 상태 미수신',idle:'지상 절차 대기',opening:'출입문 개방',door_open:'문 열림',door_closed:'문 닫힘',alighting:'승객 하차',awaiting_charge:'충전 요청 대기',connecting:'충전기 연결',charging:'충전 중',complete:'하차 완료',disconnecting:'충전기 분리',closing:'출입문 작동',released:'지상 절차 완료'};
   set(this.groundStatus,stale?'관측 지연':phases[ground?.phase]??'상태 미수신');set(this.phase,stale?'STALE':ground?.phase?.toUpperCase()??'STANDBY');
   const index=ground?.readOnly?-1:phaseIndex(ground?.phase);
   [...this.progress.children].forEach((node,i)=>{attribute(node,'data-done',String(index>=0&&i<index));attribute(node,'data-active',String(i===Math.min(index,3)));});
-  set(this.door,ground?.readOnly?ground.door_state:ground?(['alighting','awaiting_charge','connecting','charging','complete','disconnecting'].includes(ground.phase)?'OPEN':ground.phase==='opening'?'OPENING':ground.phase==='closing'?'CLOSING':'CLOSED'):'—');
+  set(this.door,ground?.readOnly?ground.door_state:ground?({open:'OPEN',opening:'OPENING',closing:'CLOSING',closed:'CLOSED'}[ground.door_state]??(['door_open','alighting','awaiting_charge','connecting','charging','complete','disconnecting'].includes(ground.phase)?'OPEN':ground.phase==='opening'?'OPENING':ground.phase==='closing'?'CLOSING':'CLOSED')):'—');
   set(this.passengers,Number.isFinite(ground?.passengers_remaining)?String(ground.passengers_remaining):Number.isFinite(telemetry?.passengers)?String(telemetry.passengers):'—');
   set(this.charger,ground?.readOnly?ground.charger_state:ground?(ground.phase==='charging'?'CONNECTED':ground.phase==='complete'?'NOT AVAILABLE':ground.phase==='connecting'?'CONNECTING':ground.phase==='disconnecting'?'RELEASING':'STANDBY'):'—');
   set(this.energy,Number.isFinite(telemetry?.battery_pct)?`${telemetry.battery_pct.toFixed(0)} %`:'—');

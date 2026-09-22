@@ -4,7 +4,7 @@
    left and the leg on the right, and the actions under them. */
 .aircraft-dashboard{position:fixed;left:calc(var(--left-offset) + var(--edge));right:var(--edge);bottom:0;z-index:5;display:flex;justify-content:center;pointer-events:none;transition:left .22s ease;font-size:12px;font-variant-numeric:tabular-nums}
 .aircraft-dashboard[hidden]{display:none}
-.adb-surface{pointer-events:auto;width:min(1040px,100%);display:grid;grid-template-columns:minmax(150px,auto) 1fr minmax(200px,auto);grid-template-areas:"identity tiles route" "actions actions actions";gap:10px 18px;padding:12px 16px 10px;color:#e9f1f5;border:1px solid var(--glass-border);border-radius:12px 12px 0 0;background:var(--chrome-surface);box-shadow:inset 0 1px 0 #ffffff14,0 14px 40px #0a141b73;-webkit-backdrop-filter:blur(16px) saturate(.85);backdrop-filter:blur(16px) saturate(.85);transform:translateY(0);opacity:1;transition:transform .22s ease,opacity .2s ease}
+.adb-surface{pointer-events:auto;width:min(1200px,100%);display:grid;grid-template-columns:minmax(150px,auto) 1fr minmax(200px,auto);grid-template-areas:"identity tiles route" "actions actions actions";gap:10px 18px;padding:12px 16px 10px;color:#e9f1f5;border:1px solid var(--glass-border);border-radius:12px 12px 0 0;background:var(--chrome-surface);box-shadow:inset 0 1px 0 #ffffff14,0 14px 40px #0a141b73;-webkit-backdrop-filter:blur(16px) saturate(.85);backdrop-filter:blur(16px) saturate(.85);transform:translateY(0);opacity:1;transition:transform .22s ease,opacity .2s ease}
 .aircraft-dashboard[data-open=false] .adb-surface{transform:translateY(12px);opacity:0}
 .adb-identity{grid-area:identity;display:flex;flex-direction:column;justify-content:center;gap:6px;min-width:0}
 .adb-title{display:flex;align-items:center;gap:8px;min-width:0}
@@ -19,13 +19,22 @@
 .adb-phase[data-phase=parked],.adb-phase[data-phase=charge]{color:#c9d6dc}
 .adb-phase[data-phase=hold],.adb-phase[data-phase=hold_exit],.adb-phase[data-phase=hold_return]{color:#ffd28a}
 .adb-mode{font-size:11px;color:#b8cbd5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.adb-tiles{grid-area:tiles;display:flex;gap:0;min-width:0;overflow:hidden;align-items:stretch}
-.adb-tile{flex:1 1 0;min-width:0;padding:2px 14px 0;border-left:1px solid #9cbcca24;display:flex;flex-direction:column;gap:3px}
+/* Measured at the old width: the tiles shared 559 px between six of them, so
+   each had 67-82 px of content box while the readings needed up to 74 -- and
+   with the battery tile there are seven. Nothing clipped, so a label ran into
+   its neighbour's and 3,151 rpm met 80 % as '3,15180 %'. Three changes: the
+   surface is wider, a tile has a floor and the row wraps rather than crushing
+   below it, and every text inside a tile clips instead of spilling. */
+.adb-tiles{grid-area:tiles;display:flex;flex-wrap:wrap;gap:0;min-width:0;align-items:stretch}
+.adb-tile{flex:1 1 98px;min-width:98px;padding:2px 11px 0;border-left:1px solid #9cbcca24;display:flex;flex-direction:column;gap:3px;overflow:hidden}
 .adb-tile[hidden]{display:none}
 .adb-tile:first-child{border-left:0;padding-left:0}
-.adb-label{font-size:10px;letter-spacing:.4px;color:#adc1cc;white-space:nowrap}
-.adb-reading{display:flex;align-items:baseline;gap:3px;white-space:nowrap}
-.adb-value{font-size:22px;font-weight:600;letter-spacing:-.5px;line-height:1.15;color:#f0f7fb}
+.adb-label{font-size:10px;letter-spacing:.4px;color:#adc1cc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adb-reading{display:flex;align-items:baseline;gap:3px;white-space:nowrap;min-width:0}
+/* A clipped number is a wrong number, so the value keeps its own width and the
+   unit beside it gives way first. */
+.adb-value{font-size:21px;font-weight:600;letter-spacing:-.5px;line-height:1.15;color:#f0f7fb;flex:none}
+.adb-unit{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .adb-unit{font-size:11px;color:#b8cbd5}
 .adb-arrow-mark{font-style:normal;font-size:13px;color:#93d8e8;margin-left:4px;display:inline-block;transform-origin:center}
 .adb-arrow-mark[hidden]{display:none}

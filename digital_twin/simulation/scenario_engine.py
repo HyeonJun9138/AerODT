@@ -28,6 +28,7 @@ either end if there is not.
 import math
 import hashlib
 import json
+import time
 from collections.abc import MutableMapping
 from copy import deepcopy
 
@@ -36,7 +37,8 @@ from digital_twin.model_library.ground_routes import route_geometry
 from digital_twin.model_library import (flight_mode, flight_plan, flight_schedule,
                                         scheduled_route, ground_motion, terminal_paths)
 from digital_twin.simulation import decision_policy, psu_sequencing, fato_assignment, arrival_allocation
-from digital_twin.simulation.holding_queue import positions as holding_positions, relative as holding_relative
+from digital_twin.simulation.holding_queue import (positions as holding_positions,
+    fato_positions as fato_holding_positions, relative as holding_relative)
 from digital_twin.simulation.terminal_reservations import TerminalReservations
 from digital_twin.model_library.uam_energy import energy_profile
 from digital_twin.simulation.uam_energy import BatteryState
@@ -254,6 +256,25 @@ class Route:
         return total
 
 
+class _NativeSlot:
+    """An aircraft's place in a pool task that has not been submitted yet."""
+    __slots__ = ('_answer',)
+
+    def __init__(self):
+        self._answer = None
+
+    def bind(self, answer):
+        self._answer = answer
+
+    def done(self):
+        return self._answer is not None and self._answer.done()
+
+    def result(self, timeout=None):
+        if self._answer is None:
+            raise RuntimeError('native step was never submitted')
+        return self._answer.result(timeout)
+
+
 class Aircraft:
     """One airframe through the day: where it is and what it is doing."""
 
@@ -379,6 +400,7 @@ class ScenarioEngine:
             self.psu.attach_vertiports(self.vertiport_operators, now_s=float(schedule["window"]["start_s"]))
         self._deck_heights = {}
         self._routes = {}
+        self._ground_observation_cache = None
         self._route_order = []
         self._corridors = self._corridor_bearings()
         self._holds = {}
@@ -403,6 +425,7 @@ class ScenarioEngine:
         self.opens_s = float(schedule["window"]["start_s"])
         self.closes_s = float(schedule["window"]["end_s"])
         self.events = []
+        self.diagnostics = []
         self.problems = []
         self.direct_flights = 0
         self.started = False
@@ -429,7 +452,7 @@ class ScenarioEngine:
             self.ground_control.reset()
             self._configure_ground_routes()
         self.time_s = self.opens_s
-        self.events, self.problems = [], []
+        self.events, self.diagnostics, self.problems = [], [], []
         self.direct_flights = 0
         self._holds = {}
         self._entry_forecasts = {}
@@ -441,7 +464,10 @@ class ScenarioEngine:
                                                assume_mixed_separated=self.policy['psu'].get('assume_mixed_separated', True),
                                                assume_distinct_fatos_separated=self.policy['psu'].get('assume_distinct_fatos_separated', True))
         self._assignment_options, self._assigned_plans, self._decision_states = {}, {}, {}
-        self._event_sequence = 0
+        # (flight, stand) -> the review stamp its options were made under.
+        self._assignment_stamps = {}
+        self._ground_proposal_states = {}
+        self._event_sequence = self._diagnostic_sequence = 0
         self.started = False
         for record in self.schedule["aircraft"]:
             aircraft = self.aircraft[record["aircraft_id"]]
@@ -513,6 +539,10 @@ class ScenarioEngine:
                 self._release_pad_observation(pad, flight_id, now_s)
 
     def _configure_ground_routes(self):
+        if hasattr(self.ground_control, 'configure_vertiport'):
+            for port in self._vertiports:
+                self.ground_control.configure_vertiport(port, self._layout(port), alternatives=2)
+            return
         if not hasattr(self.ground_control,'configure_routes'): return
         for port in self._vertiports:
             layout=self._layout(port)
@@ -525,6 +555,77 @@ class ScenarioEngine:
                         points,_,_,_=ground_motion.prepare(taxi['points'],4,0)
                         paths.append(tuple(self._ground_xy(port,p) for p in points))
             self.ground_control.configure_routes(port,paths)
+
+    def _departure_ground_proposals(self, flight):
+        """Project vertiport-authored local proposals into executable points.
+
+        Path search and live ground-blocker review stay in the injected
+        vertiport ground controller.  This conversion only places its selected
+        north/east metre geometry in the simulation's geographic frame.
+        """
+        if not self.ground_control or not hasattr(self.ground_control, 'propose_routes'):
+            return ()
+        port = flight['origin']
+        arguments = dict(
+            aircraft_id=flight.get('aircraft_id'), observations=self._ground_observations(),
+            radius_m=self._ground_radius(self.aircraft[flight['aircraft_id']]), limit=2)
+        try:
+            proposals = self.ground_control.propose_routes(
+                port, flight['departure_stand'], flight['departure_fato'], **arguments)
+        except KeyError:
+            # Some embedded/test hosts inject a facility controller after the
+            # day was constructed. Configuration still asks that controller to
+            # own the graph calculation; Simulation does not search it itself.
+            self.ground_control.configure_vertiport(port, self._layout(port), alternatives=2)
+            proposals = self.ground_control.propose_routes(
+                port, flight['departure_stand'], flight['departure_fato'], **arguments)
+        frame = self._layout(port).get('frame') or {}
+        result = []
+        for proposal in proposals:
+            points = [flight_plan._local_to_global(frame, east, north)
+                      for north, east in proposal.path_m]
+            result.append({
+                'route_id': proposal.route_id,
+                'rank': proposal.rank,
+                'nodes': list(proposal.node_ids),
+                'points': points,
+                'distance_m': proposal.distance_m,
+                'clear_distance_m': proposal.clear_distance_m,
+                'blocked_by': list(proposal.blocked_by),
+            })
+        return tuple(result)
+
+    def _arrival_ground_proposals(self, aircraft, stand, observations=None):
+        """Ask the destination vertiport for FATO-to-GATE alternatives.
+
+        The facility owns graph search and live blocker annotation.  Simulation
+        only projects the returned local geometry into the runtime frame.
+        """
+        if not self.ground_control or not hasattr(self.ground_control, 'propose_routes'):
+            return ()
+        flight, clearance = aircraft.flight, aircraft.clearance
+        if not flight or not clearance:
+            return ()
+        port, fato = flight['destination'], clearance.fato
+        arguments = dict(
+            aircraft_id=aircraft.aircraft_id,
+            observations=tuple(self._ground_observations()) if observations is None else observations,
+            radius_m=self._ground_radius(aircraft), limit=2)
+        try:
+            proposals = self.ground_control.propose_routes(port, fato, stand, **arguments)
+        except KeyError:
+            self.ground_control.configure_vertiport(port, self._layout(port), alternatives=2)
+            proposals = self.ground_control.propose_routes(port, fato, stand, **arguments)
+        frame = self._layout(port).get('frame') or {}
+        return tuple({
+            'route_id': proposal.route_id, 'rank': proposal.rank,
+            'nodes': list(proposal.node_ids),
+            'points': [flight_plan._local_to_global(frame, east, north)
+                       for north, east in proposal.path_m],
+            'distance_m': proposal.distance_m,
+            'clear_distance_m': proposal.clear_distance_m,
+            'blocked_by': list(proposal.blocked_by),
+        } for proposal in proposals)
 
     def _deck_height(self, vertiport_id):
         if vertiport_id in self._deck_heights:
@@ -566,19 +667,109 @@ class ScenarioEngine:
             heading = _bearing(taxi["points"][0], taxi["points"][1])
         return latitude, longitude, self._deck_height(vertiport_id), heading
 
-    def _nearby_pads(self, vertiport_id, first, second):
-        if first == second:
-            return True
-        pads={p['id']:p['center_m'] for p in self._layout(vertiport_id).get('fatos',())}
-        # How close two pads on one deck are before one in use closes the
-        # other. This is the PSU's own number: it used to borrow the pilot's
-        # en-route traffic distance, and at 120 m that made every pad on a
-        # four-FATO deck (36 m pitch, 108 m end to end) adjacent to every
-        # other, so the deck could never run two operations at once.
-        limit=self.policy['psu'].get('pad_adjacency_m')
-        if limit is None:limit=self.policy['pilot']['traffic_horizontal_m']
-        return (first in pads and second in pads and
-                math.dist(pads[first],pads[second]) < limit)
+    @staticmethod
+    def _same_fato(vertiport_id, first, second):
+        """Physical occupancy closes only the named FATO.
+
+        Separate FATOs are separate resources regardless of centre distance.
+        Conflicting taxi, departure and approach geometry is still handled by
+        the ground and terminal route checks; it is not inferred from a radius
+        around an otherwise independent pad.
+        """
+        return first == second
+
+    def _pending_departure_ids(self, vertiport_id, now_s):
+        """Observed or scheduled departures inside PSU's protection horizon."""
+        horizon = float(self.policy['psu'].get('departure_reserve_lookahead_s', 300.))
+        deadline = float(now_s) + horizon
+        pending = set()
+        for clearance in self.psu.clearances(kind=psu_sequencing.DEPARTURE, active_only=True):
+            if clearance.vertiport == vertiport_id:
+                pending.add(clearance.flight_id)
+        for aircraft in self.aircraft.values():
+            active = aircraft.flight
+            if active and active.get('origin') == vertiport_id:
+                clearance = self.psu.clearance(active['flight_id'], psu_sequencing.DEPARTURE)
+                if (clearance is not None and clearance.released_s is None) or (
+                        clearance is None and aircraft.phase in ('gate_out','takeoff')):
+                    pending.add(active['flight_id'])
+            if aircraft.next_flight >= len(aircraft.flights):
+                continue
+            planned = self.flights.get(aircraft.flights[aircraft.next_flight])
+            booked = self._entry_forecasts.get(planned['flight_id']) if planned else None
+            if (planned and planned.get('origin') == vertiport_id
+                    and not aircraft.failed and not aircraft.finished
+                    and aircraft.phase == 'parked' and aircraft.vertiport == vertiport_id
+                    and max(float(planned.get('off_block_s') or 0.), float(aircraft.ready_s or 0.),
+                            float(booked['departure_s']) if booked else 0.) <= deadline):
+                pending.add(planned['flight_id'])
+        return tuple(sorted(pending))
+
+    def _arrival_departure_capacity(self, vertiport_id, fato_id, flight_id, now_s):
+        """Give PSU the facts needed to preserve usable takeoff positions.
+
+        Layout geometry and reported facility state are observations.  PSU's
+        ``protect_departure_capacity`` method decides whether one more landing
+        may consume them.  Final approaches already committed and aircraft
+        actually on a FATO are included, so simultaneous landing decisions cannot
+        each assume the same departure capacity remains.
+        """
+        layout = self._layout(vertiport_id)
+        pads = tuple(layout.get('fatos') or ())
+        # Capacity sharing applies only to dual-use pads. Dedicated departure
+        # and arrival roles are never reallocated by this quota.
+        takeoff = tuple(pad['id'] for pad in pads if pad.get('role') == 'both')
+        if fato_id not in takeoff:
+            return self.psu.protect_departure_capacity(takeoff_fatos=())
+        dedicated = tuple(pad['id'] for pad in pads if pad.get('role') == 'takeoff')
+        pending = self._pending_departure_ids(vertiport_id, now_s)
+        if not takeoff or not pending or not self.policy['psu'].get('protect_departure_capacity', True):
+            return self.psu.protect_departure_capacity(
+                takeoff_fatos=takeoff, dedicated_takeoff_fatos=dedicated,
+                pending_departures=pending,
+                reserve_ratio=self.policy['psu'].get('departure_fato_reserve_ratio', .5),
+                enabled=self.policy['psu'].get('protect_departure_capacity', True))
+
+        unavailable = set()
+        current_landing_pads = set()
+        if self.psu.resource_monitor is not None:
+            for pad in takeoff:
+                resource = self.psu.resource_monitor.resource(vertiport_id, 'fato', pad, now_s)
+                if resource is None or not resource.usable:
+                    unavailable.add(pad)
+        for clearance in self.psu.clearances(kind=psu_sequencing.ARRIVAL, active_only=True):
+            if (clearance.flight_id != flight_id and clearance.vertiport == vertiport_id
+                    and (clearance.used_s is not None or clearance.approach_started_s is not None
+                         and clearance.approach_mode != 'initial')):
+                current_landing_pads.add(clearance.fato)
+        for (port, pad), owner in self._active_pad_items():
+            if port != vertiport_id or owner == flight_id:
+                continue
+            arrival = self.psu.clearance(owner, psu_sequencing.ARRIVAL)
+            departure = self.psu.clearance(owner, psu_sequencing.DEPARTURE)
+            if arrival and arrival.released_s is None:
+                current_landing_pads.add(pad)
+            elif not departure or departure.released_s is not None:
+                # An unknown or failed occupant is physical closure, not usable
+                # departure capacity.  Apply the same adjacency rule as every
+                # other observed FATO occupant.
+                current_landing_pads.add(pad)
+        currently_blocked = {pad for pad in takeoff for occupied in current_landing_pads
+                             if self._same_fato(vertiport_id, pad, occupied)}
+        candidate_blocked = {pad for pad in takeoff
+                             if self._same_fato(vertiport_id, pad, fato_id)}
+        simultaneous = max((sum(not self._same_fato(vertiport_id, dep, landing['id'])
+                                for dep in takeoff)
+                            for landing in pads if landing.get('role') in ('landing','both')), default=0)
+        return self.psu.protect_departure_capacity(
+            takeoff_fatos=takeoff, dedicated_takeoff_fatos=dedicated,
+            unavailable_fatos=unavailable,
+            currently_blocked_fatos=currently_blocked,
+            candidate_blocked_fatos=candidate_blocked,
+            simultaneous_departure_capacity=simultaneous,
+            pending_departures=pending,
+            reserve_ratio=self.policy['psu'].get('departure_fato_reserve_ratio', .5),
+            enabled=self.policy['psu'].get('protect_departure_capacity', True))
 
     def _ground_height(self, latitude, longitude, fallback):
         """Metres above the ellipsoid under a point, or the fallback.
@@ -644,6 +835,7 @@ class ScenarioEngine:
         key = (flight["origin"], flight["destination"], flight["departure_stand"],
                flight["arrival_stand"], flight["seat_class"], tuple(flight.get("route_path") or ()),
                flight.get("departure_fato"), flight.get("arrival_fato"),
+               (flight.get('_departure_ground_route') or {}).get('route_id'),
                # How many people board is part of the geometry: the aircraft
                # waits on its stand until the last of them is aboard, so two
                # flights carrying different loads do not share a taxi.
@@ -684,7 +876,8 @@ class ScenarioEngine:
         # Old CSVs may omit route_path. Resolve those against the drawn network,
         # but never invent a direct flight when the network cannot join them.
         plan = flight_plan.build_plan(request, records, self._network,
-            supplied_air_path=supplied, profile=self._profile)
+            supplied_air_path=supplied, profile=self._profile,
+            departure_taxi=flight.get('_departure_ground_route'))
         decks = (self._deck_height(flight["origin"]) + self._deck_height(flight["destination"])) / 2.0
         phases = []
         for leg in plan["legs"]:
@@ -756,6 +949,15 @@ class ScenarioEngine:
             if aircraft.external:
                 manual_takeover.advance_request(self, aircraft, now)
         self._native_batch = [] if self.pilots and hasattr(self.pilots, "submit") else None
+        # Submissions waiting to go to the pool as one task, and how many make
+        # one: the airborne count spread over the pool's threads, so every
+        # thread still has a task and no aircraft waits behind more than a few.
+        self._native_pending = []
+        if self._native_batch is not None and hasattr(self.pilots, 'submit_many'):
+            airborne = sum(1 for a in self.aircraft.values() if a.phase != PHASE_PARKED and not a.failed)
+            self._native_chunk = max(1, -(-airborne // max(1, int(getattr(self.pilots, 'workers', 1) or 1))))
+        else:
+            self._native_chunk = 0
         starting = set()
         for aircraft in self.aircraft.values():
             scenario_energy.advance(self, aircraft, now, step)
@@ -783,6 +985,7 @@ class ScenarioEngine:
                 self._fly(aircraft, now, step,ground_observations)
         # Barrier before the next logical step. Commit in stable fleet order,
         # never on worker threads, so resource arbitration remains deterministic.
+        self._flush_native()
         for aircraft, route, target, future in self._native_batch or ():
             try:
                 self._observe_native(aircraft, route, target, future.result(), now)
@@ -802,10 +1005,55 @@ class ScenarioEngine:
                                  'terminal_departure':'departure_terminal'}.get(node, 'pad'), outcome=outcome,
                      reason=reason, policy_id=self._policy_id, **detail)
 
+    def _diagnostic(self, now, component, kind, **detail):
+        """Keep developer evidence separate from the operational event log."""
+        self._diagnostic_sequence += 1
+        self.diagnostics.append({
+            'diagnostic_sequence': self._diagnostic_sequence,
+            'time_s': round(float(now), 3), 'clock': flight_schedule.clock_text(now),
+            'component': component, 'kind': kind, **detail,
+        })
+        if len(self.diagnostics) > 50000:
+            del self.diagnostics[:10000]
+
+    def _audit_ground_route_proposals(self, now, flight, available, rejected):
+        proposals = {}
+        for candidate, _ in available:
+            ground = candidate.get('_departure_ground_route') or {}
+            route_id = ground.get('route_id')
+            if not route_id:
+                continue
+            key = (candidate['departure_fato'], route_id)
+            proposals[key] = {
+                'departure_fato': candidate['departure_fato'],
+                'route_id': route_id, 'rank': ground.get('rank'),
+                'distance_m': round(float(ground.get('distance_m') or 0.0), 2),
+                'clear_distance_m': round(float(ground.get('clear_distance_m') or 0.0), 2),
+                'blocked_by': list(ground.get('blocked_by') or ()),
+                'nodes': list(ground.get('nodes') or ()),
+            }
+        if not proposals:
+            return
+        rows = [proposals[key] for key in sorted(proposals)]
+        state = json.dumps(rows, sort_keys=True, ensure_ascii=False)
+        identifier = flight['flight_id']
+        if self._ground_proposal_states.get(identifier) == state:
+            return
+        self._ground_proposal_states[identifier] = state
+        # Operations keeps the decision-relevant summary. Node-by-node detail
+        # and rejected construction evidence go to the developer log only.
+        self._record(now, 'ground_route_proposals', flight, role='vertiport',
+                     vertiport=flight['origin'], proposal_count=len(rows),
+                     proposals=[{key: value for key, value in row.items() if key != 'nodes'}
+                                for row in rows])
+        self._diagnostic(now, 'vertiport_ground_control', 'route_proposals',
+                         flight_id=identifier, aircraft_id=flight['aircraft_id'],
+                         vertiport=flight['origin'], proposals=rows, rejected=list(rejected))
+
     def _audit_clearances(self, now):
         # Semantic changes only. Numerical ETA revisions remain in the live
         # clearance; they do not masquerade as a new operational decision.
-        for c in self.psu._clearances.values():
+        for c in self.psu.clearances():
             if c.released_s is not None or c.flight_id not in self.flights:
                 continue
             self._decision(now, self.flights[c.flight_id], 'slot_' + c.kind, c.state, c.reason,
@@ -818,53 +1066,86 @@ class ScenarioEngine:
                 fato=aircraft.flight[kind + '_fato'])
 
     def _resource_departure_blockers(self, flight, route=None):
-        blocked = []
-        if self.psu.resource_monitor is not None:
-            resource = self.psu.resource_monitor.resource(
-                flight['origin'], 'fato', flight['departure_fato'], self.time_s)
-            if resource is None or not resource.usable:
-                blocked.append({'flight_id': f"resource:{flight['origin']}:{flight['departure_fato']}",
-                                'reason': 'fato_unavailable',
-                                'vertiport': flight['origin'], 'fato': flight['departure_fato']})
-        return blocked
+        return self.psu.departure_blockers(
+            flight_id=flight['flight_id'], origin=flight['origin'],
+            fato=flight['departure_fato'], now_s=self.time_s)
+
+    def _departure_arrival_window(self, flight, route, arrival):
+        """Observed arrival deadline versus a complete automatic departure.
+
+        This is a forecast, never a release of physical ground/pad occupancy.
+        Native final-entry checks still stop an arrival if a departure is late.
+        """
+        claim = self._terminal.claims.get((arrival.flight['flight_id'], 'arrival')) if arrival.flight else None
+        if not claim or not arrival.clearance or arrival.clearance.approach_mode != 'initial':
+            return None
+        departure = self.aircraft.get(flight['aircraft_id'])
+        result = {'fits': False, 'reason': 'departure_window_unproven'}
+        if (not self.pilots or not departure or departure.external or arrival.external
+                or arrival.failed or not arrival.airborne or arrival.speed_mps <= .05):
+            return result
+        remaining = self._remaining_native(arrival)
+        phases = [p for p in route.phases if p.stage in ('gate_out', 'takeoff', 'climb')]
+        if not {'gate_out', 'takeoff', 'climb'}.issubset({p.stage for p in phases}):
+            return result
+        seconds = sum(max(p.duration_s, sum(self._native_leg_seconds(p,a,b)
+            for a,b in zip(p.points,p.points[1:]))) for p in phases)
+        rules = self.policy['psu']
+        guard = max(rules['final_guard_s'], self.psu.tuning.mixed_separation_s)+rules['prediction_buffer_s']
+        if not math.isfinite(seconds) or not math.isfinite(remaining):
+            return result
+        return {'fits': seconds+guard < remaining,
+                'reason': 'arrival_window_too_short',
+                'departure_clear_s': self.time_s+seconds,
+                'arrival_guard_s': self.time_s+remaining-guard}
 
     def _departure_blockers(self, flight, route):
-        blocked = self._terminal.blockers(flight, route, 'departure')
-        blocked.extend(self._resource_departure_blockers(flight, route))
-        for (place, pad), owner in self._active_pad_items():
-            if (place == flight['origin'] and owner != flight['flight_id']
-                    and self._nearby_pads(place, flight['departure_fato'], pad)):
-                blocked.append({'flight_id': owner, 'reason': 'pad_occupied', 'vertiport': place, 'fato': pad})
-        if self.policy['psu']['predictive_arrivals'] and self._terminal.enabled:
-            # A stream of taxi-out reservations must not starve a usable
-            # arrival. Yield only to observed holding traffic with a secured
-            # exit; blocked/full gates must still be allowed to drain.
-            for a in self.aircraft.values():
-                c = a.clearance
-                if (not a.airborne or a.failed or not c or c.released_s is not None
-                        or c.state == psu_sequencing.REFUSED or c.stand is None or c.approach_s is None
-                        or a.hold_seconds < max(self.psu.tuning.landing_separation_s,
-                                               self.psu.tuning.mixed_separation_s)):
+        # Simulation supplies geometry and observed motion only.  PSU owns the
+        # rules that interpret those facts as a hold or an executable departure.
+        adjacent = [pad['id'] for pad in self._layout(flight['origin']).get('fatos', ())
+                    if self._same_fato(flight['origin'], flight['departure_fato'], pad['id'])]
+        arrivals = []
+        if self._terminal.enabled:
+            for aircraft in self.aircraft.values():
+                clearance = aircraft.clearance
+                if not clearance or aircraft.route is None:
                     continue
-                assignment=self.psu.waiting.reservations.get(c.flight_id)
-                if c.approach_started_s is None and (
-                        c.approach_s>self.time_s+.5 or
-                        assignment and (assignment['state']!='holding' or not self._queue_return_clear(a)) or
-                        not assignment and a.instruction.get('action') in ('yield','wait_clear')):
-                    # An unexecutable waiting flight cannot prevent the ground
-                    # departure that would make its arrival resources available.
+                overlap = self._terminal.overlap(route, 'departure', aircraft.route, 'arrival')
+                if not overlap:
                     continue
-                if (self._terminal.assume_distinct_fatos_separated
-                        and flight['origin'] == c.vertiport and flight['departure_fato'] != c.fato):
-                    continue
-                overlap = self._terminal.overlap(route,'departure',a.route,'arrival')
-                if overlap:
-                    blocked.append(dict(overlap,flight_id=c.flight_id,reason='waiting_arrival_priority',
-                                        vertiport=c.vertiport,fato=c.fato))
-        return blocked
+                assignment = self.psu.waiting.reservations.get(clearance.flight_id)
+                arrivals.append({
+                    'departure_window': self._departure_arrival_window(flight, route, aircraft),
+                    'flight_id': clearance.flight_id,
+                    'airborne': aircraft.airborne,
+                    'failed': aircraft.failed,
+                    'clearance_state': clearance.state,
+                    'clearance_released_s': clearance.released_s,
+                    'stand': clearance.stand,
+                    'approach_s': clearance.approach_s,
+                    'approach_started_s': clearance.approach_started_s,
+                    'hold_seconds': aircraft.hold_seconds,
+                    'assignment': dict(assignment) if assignment else None,
+                    'queue_return_clear': self._queue_return_clear(aircraft),
+                    'instruction_action': aircraft.instruction.get('action'),
+                    'vertiport': clearance.vertiport,
+                    'fato': clearance.fato,
+                    'overlap': overlap,
+                })
+        return self.psu.departure_blockers(
+            flight_id=flight['flight_id'], origin=flight['origin'],
+            fato=flight['departure_fato'], now_s=self.time_s,
+            terminal_conflicts=self._terminal.blockers(flight, route, 'departure'),
+            pad_occupants=self._active_pad_items(), adjacent_fatos=adjacent,
+            arrival_conflicts=arrivals,
+            predictive_arrivals=self.policy['psu']['predictive_arrivals'],
+            terminal_enabled=self._terminal.enabled,
+            distinct_fatos_separated=self._terminal.assume_distinct_fatos_separated)
 
     def _select_fatos(self, flight, now):
         identifier = flight['flight_id']
+        dynamic_ground = bool(self.ground_control and
+                              hasattr(self.ground_control, 'propose_routes'))
         if identifier in self._assigned_plans:
             selected, route = self._assigned_plans[identifier]
             aircraft = self.aircraft[flight['aircraft_id']]
@@ -877,9 +1158,7 @@ class ScenarioEngine:
                     and self.psu.clearance(identifier, psu_sequencing.DEPARTURE) is None
                     and self._departure_blockers(selected, route)):
                 key = (identifier, flight['departure_stand'])
-                if key not in self._assignment_options:
-                    self._assignment_options[key] = fato_assignment.options(self, flight)
-                alternatives = [(f,r) for f,r in self._assignment_options[key][0]
+                alternatives = [(f,r) for f,r in self._departure_options(flight, dynamic_ground)[0]
                     if f['arrival_fato'] == selected['arrival_fato']
                     and f['departure_fato'] != selected['departure_fato']
                     and not self._departure_blockers(f,r)
@@ -890,7 +1169,7 @@ class ScenarioEngine:
                         and self._terminal.overlap(r,'departure',claim['route'],'departure')
                         for (owner,kind),claim in self._terminal.claims.items())]
                 if alternatives:
-                    replacement, alternative, _ = fato_assignment.choose(alternatives,self.psu,now,[],
+                    replacement, alternative, _ = self.psu.select_departure_plan(alternatives,now,[],
                         self._departure_blockers,entry_wait=lambda f,r,t:self._preview_arrival_entry(
                             aircraft,f,r,t,cached_only=True)['departure_s']-t)
                     self._assigned_plans[identifier] = (replacement, alternative)
@@ -899,16 +1178,14 @@ class ScenarioEngine:
                         departure_fato=replacement['departure_fato'],arrival_fato=replacement['arrival_fato'])
                     return replacement, alternative
             return selected, route
-        key = (identifier, flight['departure_stand'])
-        if key not in self._assignment_options:
-            self._assignment_options[key] = fato_assignment.options(self, flight)
-        available, rejected = self._assignment_options[key]
+        available, rejected = self._departure_options(flight, dynamic_ground)
+        self._audit_ground_route_proposals(now, flight, available, rejected)
         forecasts = [{'flight_id': a.flight['flight_id'], 'vertiport': a.flight['destination'],
                       'fato': a.flight['arrival_fato'], 'eta_s': now + (self._remaining_native(a) if self.pilots
                           else a.route.remaining_to_touchdown(a.index, a.elapsed))}
                      for a in self.aircraft.values() if a.flight and a.route and not a.failed
                      and a.index <= a.route.landing_index]
-        selected, route, assessment = fato_assignment.choose(available, self.psu, now, forecasts,
+        selected, route, assessment = self.psu.select_departure_plan(available, now, forecasts,
             self._departure_blockers if self.pilots else self._resource_departure_blockers,
             entry_wait=(lambda f,r,t: self._preview_arrival_entry(
                 self.aircraft[f['aircraft_id']],f,r,t,cached_only=True)['departure_s']-t) if self.pilots else None)
@@ -916,8 +1193,52 @@ class ScenarioEngine:
             departure_fato=selected['departure_fato'], arrival_fato=selected['arrival_fato'],
             planned_departure_fato=flight['departure_fato'], planned_arrival_fato=flight['arrival_fato'],
             eligible_count=len(available), rejected=rejected,
-            blocked_by=[r['flight_id'] for r in assessment['blockers']])
+            blocked_by=[r['flight_id'] for r in assessment['blockers']],
+            ground_route_id=assessment.get('ground_route_id'),
+            ground_route_rank=assessment.get('ground_route_rank'),
+            ground_route_distance_m=assessment.get('ground_route_distance_m'),
+            ground_route_blocked_by=assessment.get('ground_route_blocked_by', []))
         return selected, route
+
+    def _ground_review_stamp(self, port):
+        """What a departure-pad review at `port` can turn on, or None when the
+        ground controller cannot say. The aircraft standing on that deck, as the
+        fleet walk sees them, and the controller's own stamp for the port; every
+        other input to the review is fixed for the day."""
+        control = self.ground_control
+        claims = control.review_stamp(port) if hasattr(control, 'review_stamp') else None
+        if claims is None:
+            return None
+        return (tuple(o for o in self._ground_observations() if o.vertiport_id == port), claims)
+
+    def _departure_options(self, flight, dynamic_ground):
+        """The executable pad alternatives for `flight`, reviewed again only when
+        what a review reads has changed.
+
+        With a ground controller the review used to be made afresh on every
+        tick for every aircraft waiting on a stand -- taxi proposals, blocker
+        checks against every observation on the deck, a route per candidate --
+        and measured as the largest single cost of a busy tick. A review is a
+        function of the deck's observations and the controller's claims, so
+        it is kept under the stamp of those and remade when the stamp moves:
+        an aircraft taxiing across the deck moves it every tick, a quiet deck
+        never does. Without a controller the options never change and are
+        kept as before."""
+        key = (flight['flight_id'], flight['departure_stand'])
+        stamps = self._assignment_stamps
+        if not dynamic_ground:
+            if key not in self._assignment_options:
+                self._assignment_options[key] = fato_assignment.options(self, flight)
+            return self._assignment_options[key]
+        stamp = self._ground_review_stamp(flight['origin'])
+        if key in self._assignment_options and stamp is not None and stamps.get(key, stamps) == stamp:
+            return self._assignment_options[key]
+        self._assignment_options[key] = fato_assignment.options(self, flight)
+        # The review configures a deck's taxi graph the first time it meets it,
+        # which is part of the stamp: what is kept is the stamp the review ended
+        # under, so the next look sees the same one.
+        stamps[key] = self._ground_review_stamp(flight['origin']) if stamp is not None else None
+        return self._assignment_options[key]
 
     def _maybe_depart(self, aircraft, now):
         """Start the next flight once its off-block time has come round."""
@@ -956,60 +1277,82 @@ class ScenarioEngine:
             aircraft.next_flight += 1
             aircraft.cancelled += 1
             return
-        departure_resource = (self.psu.resource_monitor.resource(
-            flight['origin'], 'fato', flight['departure_fato'], now)
-            if self.psu.resource_monitor is not None else None)
-        if self.psu.resource_monitor is not None and (
-                departure_resource is None or not departure_resource.usable):
-            aircraft.instruction = {'action': 'departure_wait',
-                                    'reason': '버티포트 보고상 출발 FATO 사용 불가'}
-            self._decision(now, flight, 'departure_slot', 'hold', aircraft.instruction['reason'],
-                           vertiport=flight['origin'], fato=flight['departure_fato'])
+        resource_review = self.psu.assess_departure(
+            flight_id=flight['flight_id'],
+            blockers=self._resource_departure_blockers(flight, route))
+        if not resource_review.granted:
+            aircraft.instruction = {'action': 'departure_wait', 'reason': resource_review.reason}
+            self._decision(now, flight, 'departure_slot', 'hold', resource_review.reason,
+                           vertiport=flight['origin'], fato=flight['departure_fato'],
+                           blockers=list(resource_review.blockers))
             return
         if self.pilots:
             if not self._meter_arrival_entry(aircraft,flight,route,now):return
             pad = (flight["origin"], route.departure.get("fato") or flight["departure_fato"])
             blockers = self._departure_blockers(flight, route)
-            if blockers:
-                priority = any(b['reason']=='waiting_arrival_priority' for b in blockers)
-                if priority:
-                    self.psu.pad(*pad).release(flight['flight_id'])
-                self._decision(now, flight, 'terminal_departure', 'hold',
-                               '대기 도착편 우선 · 지상 출발 순서 조정' if priority else '이륙 경로 또는 패드 점유',
-                               vertiport=pad[0], fato=pad[1], blockers=blockers)
-                aircraft.instruction = {'action':'departure_wait', 'reason':
-                    '대기 도착편 우선 · 지상 출발 순서 조정' if priority else '이륙 경로 또는 패드 점유',
-                    'blocked_by':sorted({self.flights.get(b['flight_id'],{}).get('aircraft_id',b['flight_id']) for b in blockers})}
-                return
             taxi_s = route.phases[0].duration_s if route.phases[0].stage == "gate_out" else 0.0
+            committed_arrival_conflict = False
             if self.policy['psu']['predictive_arrivals']:
-                # Do not occupy the shared pad during taxi-out if a committed
-                # arrival will need it before this departure can clear it.
+                # A factual timing observation supplied to PSU: whether a
+                # committed arrival will need an adjacent pad before this
+                # departure could clear it.
                 clear_s = now + taxi_s + sum(p.duration_s for p in route.phases if p.stage == 'takeoff')
                 clear_s += self.psu.tuning.mixed_separation_s
-                if any(c.kind == psu_sequencing.ARRIVAL and c.vertiport == pad[0] and self._nearby_pads(pad[0],pad[1],c.fato)
-                       and c.released_s is None and c.approach_started_s is not None
-                       and (c.eta_s if c.eta_s is not None else c.cleared_s) <= clear_s
-                       for c in self.psu._clearances.values()):
-                    aircraft.instruction = {'action':'departure_wait','reason':'진입한 도착편의 공용 패드 이탈 대기'}
-                    self._decision(now,flight,'departure_slot','hold',aircraft.instruction['reason'],vertiport=pad[0],fato=pad[1])
+                adjacent = [item['id'] for item in self._layout(pad[0]).get('fatos', ())
+                            if self._same_fato(pad[0], pad[1], item['id'])]
+                committed_arrival_conflict = self.psu.committed_arrival_conflict(
+                    vertiport=pad[0], adjacent_fatos=adjacent, needed_by_s=clear_s)
+            waiting_plan = None
+            waiting_reservation = None
+            waiting_reservation_created = False
+            # An automatic flight may not leave its stand until the PSU has
+            # somewhere safe to hold it at the destination.  Reserving this
+            # after taxi used to strand the aircraft on the departure FATO
+            # when every destination bay was full, blocking both departures
+            # and an adjacent arrival pad.  Do the reversible reservation
+            # before issuing movement authority; commit it only with a granted
+            # departure slot.
+            if not blockers and not committed_arrival_conflict:
+                waiting = self._build_waiting_route(aircraft, flight, route, now)
+                if waiting is None:
+                    aircraft.instruction = {
+                        'action': 'departure_wait',
+                        'reason': 'PSU 접근 대기점 여유 확보 대기 (GATE 유지)',
+                    }
+                    self._decision(now, flight, 'departure_slot', 'hold',
+                                   aircraft.instruction['reason'],
+                                   vertiport=pad[0], fato=pad[1])
                     return
-            permit = self.psu.request_departure(flight_id=flight["flight_id"], vertiport=pad[0],
-                fato=pad[1], earliest_s=now+taxi_s, now_s=now)
-            self._assigned_plans[flight['flight_id']] = (flight, route)
-            earliest = self.psu.pad(*pad).earliest(now+taxi_s, psu_sequencing.DEPARTURE,
-                self.psu.tuning.departure_separation_s, exclude=flight['flight_id'])
-            if now+taxi_s < max(permit.cleared_s, earliest):
-                aircraft.instruction = {'action':'departure_wait','reason':'공용 패드 운항 간격'}
-                self._decision(now, flight, 'departure_slot', 'hold', '공용 패드 운항 간격',
-                               vertiport=pad[0], fato=pad[1])
+                waiting_plan, waiting_reservation, waiting_reservation_created = waiting
+                route = waiting_plan
+            authority = self.psu.authorize_departure(
+                flight_id=flight['flight_id'], vertiport=pad[0], fato=pad[1],
+                earliest_s=now+taxi_s, now_s=now, blockers=blockers,
+                committed_arrival_conflict=committed_arrival_conflict)
+            if authority.clearance is not None:
+                self._assigned_plans[flight['flight_id']] = (flight, route)
+            if not authority.granted:
+                if waiting_reservation_created:
+                    self.psu.waiting.release(flight['flight_id'])
+                aircraft.instruction = {'action':'departure_wait', 'reason':authority.reason}
+                if authority.blockers:
+                    aircraft.instruction['blocked_by'] = sorted({
+                        self.flights.get(item['flight_id'], {}).get('aircraft_id', item['flight_id'])
+                        for item in authority.blockers})
+                node = 'terminal_departure' if authority.blockers else 'departure_slot'
+                self._decision(now, flight, node, 'hold', authority.reason,
+                               vertiport=pad[0], fato=pad[1],
+                               **({'blockers': list(authority.blockers)} if authority.blockers else {}))
                 return
+            if waiting_reservation is not None:
+                self._commit_waiting_route(waiting_reservation, flight, route, now)
             self._terminal.acquire(flight, route, 'departure')
-            self._decision(now, flight, 'terminal_departure', 'granted', '이륙 경로 예약',
+            self._decision(now, flight, 'terminal_departure', 'granted', authority.reason,
                            vertiport=pad[0], fato=pad[1])
             self._observe_pad_occupied(pad, flight["flight_id"], now)
         self._assigned_plans.pop(flight['flight_id'], None)
         self._assignment_options.pop((flight['flight_id'], flight['departure_stand']), None)
+        self._assignment_stamps.pop((flight['flight_id'], flight['departure_stand']), None)
         scenario_energy.depart(self, aircraft, flight, now)
         aircraft.flight, aircraft.route = flight, route
         if route.direct:
@@ -1038,6 +1381,26 @@ class ScenarioEngine:
                 (point[1]-frame['longitude'])*scale*math.cos(math.radians(frame['latitude'])))
 
     def _ground_observations(self):
+        """Where every aircraft is on the ground, kept while nothing has moved.
+
+        Asked for once per candidate departure pad of every aircraft waiting
+        on a stand, every tick -- dozens of walks over the same fleet standing
+        in the same places, and a validated dataclass per aircraft per walk.
+        The walk is a pure function of each aircraft's place and state, so
+        that is what the stamp holds, and the walk is made again only when it
+        differs: physics moved something, a manual pose landed, a flight
+        changed hands. Every caller gets a list of its own.
+        """
+        stamp = tuple((aircraft.aircraft_id, aircraft.airborne, aircraft.phase, aircraft.vertiport,
+                       (aircraft.flight['origin'], aircraft.flight['destination']) if aircraft.flight else None,
+                       aircraft.latitude, aircraft.longitude, aircraft.altitude)
+                      for aircraft in self.aircraft.values())
+        cached = self._ground_observation_cache
+        if cached is None or cached[0] != stamp:
+            cached = self._ground_observation_cache = (stamp, tuple(self._ground_observations_now()))
+        return list(cached[1])
+
+    def _ground_observations_now(self):
         result = []
         for aircraft in self.aircraft.values():
             if not aircraft.airborne:
@@ -1138,6 +1501,7 @@ class ScenarioEngine:
 
     def _ground_permissions(self, now, observations=None):
         observations = tuple(self._ground_observations()) if observations is None else observations
+        self._assign_landed_gates(now, observations)
         requests = []
         for aircraft in self.aircraft.values():
             # Human-controlled position is not progress along the automatic route.
@@ -1151,6 +1515,11 @@ class ScenarioEngine:
                 continue
             if aircraft.phase=='gate_in' and aircraft.speed_mps < .01 and aircraft.clearance:
                 self._ensure_arrival_gate(aircraft,now,observations)
+            if (aircraft.phase == 'gate_in' and aircraft.clearance
+                    and aircraft.clearance.stand is None):
+                aircraft.instruction = {'action':'ground_wait',
+                    'reason':'접지 순서 GATE 배정 대기', 'updated_s':now}
+                continue
             if aircraft.ground is None:
                 self._start_ground(aircraft,now)
             ground = aircraft.ground
@@ -1289,6 +1658,7 @@ class ScenarioEngine:
             if self.pilots and aircraft.phase not in GROUND_PHASES:
                 return self._fly_native(aircraft, now, 0.0,ground_observations)
             if finished.stage == "landing":
+                self.psu.mark_used(flight['flight_id'], psu_sequencing.ARRIVAL, now)
                 self._release_arrival_pad(aircraft, now)
                 self._record(now, "touchdown", flight, hold_s=round(aircraft.hold_seconds, 1))
         if aircraft.index < len(route.phases):
@@ -1340,18 +1710,22 @@ class ScenarioEngine:
                 if (aircraft.telemetry.get('guidance') or {}).get('reason')=='vertical_landing':
                     egress = True
                 pad = (aircraft.flight['destination'], route.arrival.get('fato') or aircraft.flight['arrival_fato'])
+                departure_capacity = self._arrival_departure_capacity(
+                    pad[0], pad[1], aircraft.flight['flight_id'], now)
                 occupied = (not self.psu.fato_usable(*pad, aircraft.flight['flight_id'], now_s=now)
                             if self.psu.resource_monitor is not None else
                             self._active_pad_owner(pad) not in (None, aircraft.flight['flight_id']))
                 occupied = occupied or any(place==pad[0] and owner!=aircraft.flight['flight_id']
-                    and self._nearby_pads(place,pad[1],other) and self.flights.get(owner,{}).get('origin')==place
+                    and self._same_fato(place,pad[1],other) and self.flights.get(owner,{}).get('origin')==place
                     for (place,other),owner in self._active_pad_items())
                 remaining = self._remaining_native(aircraft)
                 final = self._at_final_gate(aircraft)
                 terminal_route = self._arrival_authority_route(route)
                 terminal_blockers = self._terminal.blockers(aircraft.flight, terminal_route, 'arrival')
-                if (predictive and not final and terminal_blockers
-                        and all(b.get('operation')=='departure' for b in terminal_blockers)):
+                # Reserve the initial approach even when it arrived first.
+                # Previously a departure had to exist already to keep the
+                # distant arrival from locking the entire terminal volume.
+                if predictive and not final:
                     entry = self._arrival_entry_route(aircraft,remaining)
                     if entry is not None and not self._terminal.blockers(aircraft.flight,entry,'arrival'):
                         terminal_route, terminal_blockers = entry, []
@@ -1365,10 +1739,10 @@ class ScenarioEngine:
                         (c.approach_started_s,c.requested_s,c.flight_id) <
                         (clearance.approach_started_s if clearance.approach_started_s is not None else float('inf'),
                          clearance.requested_s,clearance.flight_id)
-                        for c in self.psu._clearances.values())
-                    permitted = not (final and (occupied or ahead)) and egress and not terminal_blockers and (aircraft.flight['flight_id'] in self.psu.waiting.reservations or aircraft.instruction.get('action') not in ('yield','wait_clear')) and self._queue_return_clear(aircraft) and self.psu.begin_approach(aircraft.flight['flight_id'], now,
+                        for c in self.psu.clearances(kind=psu_sequencing.ARRIVAL, active_only=True))
+                    permitted = not (final and (occupied or ahead or not departure_capacity.granted)) and egress and not terminal_blockers and (aircraft.flight['flight_id'] in self.psu.waiting.reservations or aircraft.instruction.get('action') not in ('yield','wait_clear')) and self._queue_return_clear(aircraft) and self.psu.begin_approach(aircraft.flight['flight_id'], now,
                         headway_s=rules['approach_headway_s'], capacity=rules['approach_capacity'])
-                    waiting = not permitted or (final and (occupied or ahead))
+                    waiting = not permitted or (final and (occupied or ahead or not departure_capacity.granted))
                 else:
                     landing_s = route.phases[route.landing_index].duration_s
                     waiting = (clearance.state == 'refused' or clearance.stand is None or occupied
@@ -1393,12 +1767,16 @@ class ScenarioEngine:
                     self._terminal.acquire(aircraft.flight, terminal_route, 'arrival')
                 wait_reason = (clearance.gate_reason if not egress else self._terminal_wait_reason(terminal_blockers) if terminal_blockers else
                     ('최종 패드 점유 대기' if final and occupied else
+                     departure_capacity.reason if final and not departure_capacity.granted else
                      '주변 교통 분리 대기' if traffic_wait else clearance.reason if waiting else '접근 경로 확보'))
                 self._decision(now, aircraft.flight, 'terminal_arrival', 'hold' if waiting else 'granted',
                     wait_reason,
                     vertiport=pad[0], fato=pad[1], blockers=terminal_blockers,
                     traffic_id=aircraft.instruction.get('traffic_id'),traffic_action=aircraft.instruction.get('action'),
-                    separation_active=separating)
+                    separation_active=separating,
+                    departure_capacity_required=departure_capacity.required,
+                    departure_capacity_after=departure_capacity.available_after,
+                    pending_departures=list(departure_capacity.pending_departures))
                 if not waiting and (final or not predictive):
                     self._observe_pad_occupied(pad, aircraft.flight['flight_id'], now)
                 # Crossing traffic can temporarily interrupt an already granted
@@ -1454,6 +1832,7 @@ class ScenarioEngine:
                         clearance_reason='분리 지점 이동 완료 확인' if separating else clearance.gate_reason if not egress else
                         self._terminal_wait_reason(terminal_blockers) if terminal_blockers else
                         '최종 패드 점유 확인' if final and occupied else
+                        departure_capacity.reason if final and not departure_capacity.granted else
                         aircraft.instruction.get('reason','주변 교통 분리 대기') if traffic_wait else
                         '선행 착륙 완료 대기' if predictive and final and ahead else clearance.reason)
                 else:
@@ -1468,7 +1847,7 @@ class ScenarioEngine:
             if hasattr(self.pilots, 'set_traffic'):
                 self.pilots.set_traffic(aircraft.aircraft_id, aircraft.instruction)
             if getattr(self, "_native_batch", None) is not None:
-                future = self.pilots.submit(aircraft.aircraft_id, step, target)
+                future = self._submit_native(aircraft.aircraft_id, step, target)
                 self._native_batch.append((aircraft, route, target, future))
                 return
             self._observe_native(aircraft, route, target,
@@ -1544,7 +1923,8 @@ class ScenarioEngine:
             finally:
                 if on_prepare:on_prepare('forecast', index, len(candidates))
 
-    def _preview_arrival_entry(self, aircraft, flight, route, now, *, cached_only=False):
+    def _preview_arrival_entry(self, aircraft, flight, route, now, *, cached_only=False,
+                               mature_booking=None):
         """Read the admission queue without booking or freezing a candidate route."""
         if route.descent_index is None:
             return {'key': (flight['destination'],), 'entry_s': now, 'departure_s': now}
@@ -1586,6 +1966,14 @@ class ScenarioEngine:
             if owner==flight['flight_id']:
                 passed_own=True
                 continue
+            # Once this flight's promised ground-release time has arrived, an
+            # older aircraft which is still parked no longer owns the next
+            # arrival instant.  Keeping that stale projection here moves the
+            # mature flight to the back every tick: it waits, the older parked
+            # flight is projected from the new ``now``, and both move again.
+            # Actual taxiing/airborne traffic is added below and still wins.
+            if mature_booking is not None:
+                continue
             # A later parked reservation cannot repeatedly move the mature
             # head to the tail. Actual traffic below always takes precedence.
             if passed_own or item['key']!=key or waiting_only:continue
@@ -1608,6 +1996,25 @@ class ScenarioEngine:
             pad=(r.arrival or {}).get('fato') or f.get('arrival_fato')
             other_key=(f['destination'],pad) if len(key)==2 else (f['destination'],)
             if other_key!=key:continue
+            if mature_booking is not None and not other.airborne:
+                other_booking=self._entry_forecasts.get(owner)
+                if other_booking is not None and other_booking.get('key')==key:
+                    own_order=next((i for i,name in enumerate(self._entry_forecasts)
+                                    if name==flight['flight_id']),-1)
+                    other_order=next((i for i,name in enumerate(self._entry_forecasts)
+                                      if name==owner),-1)
+                    own_entry=float(mature_booking.get('entry_s',float('inf')))
+                    other_entry=float(other_booking.get('entry_s',float('inf')))
+                    # A later metered flight may already be taxiing from another
+                    # vertiport, but its own entry booking is behind this one.
+                    # Treating that scheduled ground movement as unsequenced
+                    # traffic reverses the queue and makes the manual first
+                    # flight yield to every later starter.  Its forecast remains
+                    # the authority until it is actually airborne or observed
+                    # to have an earlier booking.
+                    if (other_entry>own_entry+1e-6 or
+                            abs(other_entry-own_entry)<=1e-6 and other_order>own_order):
+                        continue
             # A holding aircraft does not vanish when its initial entry time
             # expires. Read current remaining travel, including its bay return.
             eta=now+self._remaining_native(other)
@@ -1635,9 +2042,12 @@ class ScenarioEngine:
                 # Ground congestion may have delayed release far beyond the
                 # old slot. Recheck observed demand, without reordering it or
                 # rerunning a native forecast inside the simulation tick.
-                slot=self._preview_arrival_entry(aircraft,flight,route,now,cached_only=True)
+                slot=self._preview_arrival_entry(aircraft,flight,route,now,cached_only=True,
+                                                 mature_booking=booked)
                 if slot['departure_s']<=now+.5:
-                    booked.update(slot)
+                    # The promised slot has matured.  A sub-second simulation
+                    # tick is not a new reservation and must not rewrite every
+                    # recorded entry/departure time on the way through.
                     return True
                 booked.update(slot)
             aircraft.instruction={'action':'departure_wait','reason':f"도착 {flight['destination']} / {flight['arrival_fato']} 진입 순서 대기 (주기장 유지)",
@@ -1666,50 +2076,91 @@ class ScenarioEngine:
             return False
         return True
 
-    def _prepare_waiting_route(self, aircraft, now):
-        """Assign the arrival bay before creating the pilot's immutable route.
+    def _build_waiting_route(self, aircraft, flight, route, now):
+        """Return a route with a destination bay, without moving the aircraft.
 
-        The native pilot brakes at that off-corridor waypoint itself. PSU holds
-        its departure from the bay, rather than stopping it on the common leg.
-        Only future guidance changes; observed position and the source FPL stay.
+        ``None`` means that every safe bay is currently occupied.  The caller
+        can therefore keep the aircraft at its GATE rather than discovering
+        the shortage only after it has taxied onto the departure FATO.
+
+        The published cruise and approach entry remain intact.  The native
+        pilot reaches that entry before moving to its off-corridor bay; otherwise
+        replacing the last cruise waypoint with a low bay creates a long,
+        unplanned diagonal descent over buildings while still reporting cruise.
+        PSU holds departure from the bay rather than stopping it on the common
+        leg. Only future guidance changes; observed position and the source FPL
+        stay unchanged.
         """
-        owner=aircraft.flight['flight_id']
-        if owner in self.psu.waiting.reservations:return True
-        route=aircraft.route;index=route.descent_index
-        if index is None or index<1 or aircraft.index>=index or route.phases[index-1].stage!='cruise':return True
+        owner=flight['flight_id']
+        index=route.descent_index
+        if index is None or index<1 or aircraft.index>=index or route.phases[index-1].stage!='cruise':
+            return route, None, False
+        existing=self.psu.waiting.reservations.get(owner)
+        if existing is not None and route.phases[index].detail.get('psu_rejoin') is not None:
+            return route, existing, False
         entry=route.phases[index].points[0];policy=self.policy['pilot']
-        # The bays are laid out around the corridor's end (the approach entry),
-        # but the approach itself is flown from the bay straight to the next
-        # point of the descent: an aircraft released from its bay does not fly
-        # back to the entry it left the corridor at. The entry stays in the
-        # phase's detail as the anchor bays are placed around.
         descent=route.phases[index]
-        direct=bool(self.policy['psu'].get('direct_approach',True)) and len(descent.points)>1
-        approach=descent.points[1:] if direct else list(descent.points)
-        rejoin=approach[0]
-        candidates=self._queue_candidates(aircraft)
-        r=self.psu.waiting.reserve(owner,aircraft.flight['destination'],candidates,
+        if self.policy['psu'].get('assign_gate_after_touchdown',False):
+            # The live queue is layered around the landing start. Release goes
+            # directly there instead of replaying the old approach entry.
+            direct=True
+            rejoin=route.phases[route.landing_index].points[0]
+            approach=[rejoin]
+        else:
+            direct=bool(self.policy['psu'].get('direct_approach',True)) and len(descent.points)>1
+            approach=descent.points[1:] if direct else list(descent.points)
+            rejoin=approach[0]
+        candidates=self._queue_candidates(aircraft,flight=flight,route=route)
+        r=existing or self.psu.waiting.reserve(owner,flight['destination'],candidates,
             rejoin,now,policy['traffic_horizontal_m'],policy['traffic_vertical_m'],lambda point:True)
         if r is None:
-            aircraft.instruction={'action':'departure_wait','reason':'PSU 접근 대기점 여유 확보 대기'}
-            return False
+            return None
         bay=r['target'];phases=list(route.phases);cruise=phases[index-1]
         # The line from the bay to the descent is not checked against the
         # other bays here: it is checked when the aircraft is released, against
         # the traffic actually there (`_queue_return_clear`), and the aircraft
         # keeps its bay until that line is clear.
-        points=[*cruise.points[:-1],bay]
-        phases[index-1]=Phase(cruise.stage,cruise.label,points,cruise.duration_s,cruise.speed_mps,dict(cruise.detail))
-        extra=flight_plan.haversine_m(bay[:2],rejoin[:2])/max(1.,policy['approach_horizontal_speed_mps'])
-        extra+=abs(bay[2]-rejoin[2])/max(.1,policy['descent_rate_mps'])
-        phases[index]=Phase(descent.stage,descent.label,[bay,*approach],descent.duration_s+extra,
-                            descent.speed_mps,dict(descent.detail,psu_rejoin=entry,psu_direct=direct,
+        def transfer_s(start, finish):
+            horizontal=(flight_plan.haversine_m(start[:2],finish[:2]) /
+                        max(1.,policy['approach_horizontal_speed_mps']))
+            vertical=abs(start[2]-finish[2])/max(.1,policy['descent_rate_mps'])
+            return max(horizontal,vertical)
+        # The authored descent already budgets entry -> rejoin. Add only the
+        # detour beyond that travel, while retaining the authored cruise ending
+        # at `entry` and giving the detour the correct descent phase identity.
+        extra=max(0.,transfer_s(entry,bay)+transfer_s(bay,rejoin)-transfer_s(entry,rejoin))
+        psu_rejoin=(rejoin if self.policy['psu'].get('assign_gate_after_touchdown',False) else entry)
+        phases[index]=Phase(descent.stage,descent.label,[entry,bay,*approach],descent.duration_s+extra,
+                            descent.speed_mps,dict(descent.detail,psu_rejoin=psu_rejoin,
+                                psu_original_entry=entry,psu_direct=direct,
                                 psu_inbound=next((p for p in reversed(cruise.points) if flight_plan.haversine_m(p[:2],entry[:2])>5),entry)))
-        aircraft.route=Route((route.key,'psu-bay',r['slot']),phases,dict(route.arrival),dict(route.departure))
-        aircraft.route.boarding,aircraft.route.alighting=route.boarding,route.alighting
-        aircraft.route.direct=route.direct
-        r['state']='enroute';r['planned_route']=True;r['direct']=direct
-        self._record(now,'holding_route_assigned',aircraft.flight,slot=r['slot'],target=bay,rejoin=rejoin,entry=entry)
+        prepared=Route((route.key,'psu-bay',r['slot']),phases,dict(route.arrival),dict(route.departure))
+        prepared.boarding,prepared.alighting=route.boarding,route.alighting
+        prepared.direct=route.direct
+        return prepared, r, existing is None
+
+    def _commit_waiting_route(self, reservation, flight, route, now):
+        """Publish a bay reservation only with the departure it protects."""
+        if reservation.get('planned_route'):
+            return
+        reservation['state']='enroute'
+        reservation['planned_route']=True
+        reservation['direct']=bool(route.phases[route.descent_index].detail.get('psu_direct'))
+        self._record(now,'holding_route_assigned',flight,slot=reservation['slot'],
+                     target=reservation['target'],rejoin=reservation['rejoin'],
+                     entry=route.phases[route.descent_index].detail.get(
+                         'psu_original_entry',route.phases[route.descent_index].points[0]))
+
+    def _prepare_waiting_route(self, aircraft, now):
+        """Compatibility wrapper for an already-active automatic flight."""
+        waiting=self._build_waiting_route(aircraft,aircraft.flight,aircraft.route,now)
+        if waiting is None:
+            aircraft.instruction={'action':'departure_wait',
+                                  'reason':'PSU 접근 대기점 여유 확보 대기 (GATE 유지 필요)'}
+            return False
+        aircraft.route,reservation,_=waiting
+        if reservation is not None:
+            self._commit_waiting_route(reservation,aircraft.flight,aircraft.route,now)
         return True
 
     def reserve_manual_bay(self, aircraft, now):
@@ -1731,14 +2182,25 @@ class ScenarioEngine:
         owner = flight['flight_id']
         existing = self.psu.waiting.reservations.get(owner)
         if existing is not None:
-            return existing
+            policy=self.policy['pilot'];observations=self._queue_observations()
+            def available(point):
+                from digital_twin.simulation.holding_queue import nearby
+                return all(o['owner']==owner or not nearby(point,o['position'],
+                    policy['traffic_horizontal_m'],policy['traffic_vertical_m']) for o in observations)
+            updated=self.psu.waiting.retarget(owner,flight['destination'],self._queue_candidates(aircraft),
+                self._queue_anchor(aircraft),now,policy['traffic_horizontal_m'],
+                policy['traffic_vertical_m'],available)
+            if updated is not None and aircraft.clearance is not None:
+                aircraft.clearance.holding_assignment=dict(updated)
+                if aircraft.hold is not None:
+                    aircraft.hold.update(fix=updated['target'],slot=updated['slot'],rejoin=updated['rejoin'])
+            return updated
         route = aircraft.route
         index = route.descent_index
         if index is None or index < 1:
             return None
         descent = route.phases[index]
-        direct = bool(self.policy['psu'].get('direct_approach', True)) and len(descent.points) > 1
-        rejoin = (descent.points[1:] if direct else list(descent.points))[0]
+        rejoin = self._queue_anchor(aircraft)
         policy = self.policy['pilot']
         reservation = self.psu.waiting.reserve(owner, flight['destination'], self._queue_candidates(aircraft),
             rejoin, now, policy['traffic_horizontal_m'], policy['traffic_vertical_m'], lambda point: True)
@@ -1780,9 +2242,22 @@ class ScenarioEngine:
         position=origin or (aircraft.latitude,aircraft.longitude,aircraft.altitude)
         start_ground=self._ground_height(position[0],position[1],0. if self._elevation is None else float('inf'))
         clearance=min(policy['traffic_vertical_m'],max(5.,position[2]-start_ground))
+        end_clearance=clearance
+        reservation=self.psu.waiting.reservations.get(aircraft.flight['flight_id'])
+        route=aircraft.route
+        if (reservation and route.landing_index is not None
+                and tuple(target)==tuple(reservation['rejoin'])
+                and tuple(target)==tuple(route.phases[route.landing_index].points[0])):
+            # A checked, authored landing entry can be below the air-to-air
+            # separation height. Keeping 45 m AGL here deadlocks a 30 m AGL
+            # entry even with no traffic. Taper terrain margin to this entry;
+            # arbitrary detours, terrain coverage and traffic remain checked.
+            ground=self._ground_height(target[0],target[1],0. if self._elevation is None else float('inf'))
+            end_clearance=min(clearance,max(5.,target[2]-ground))
         for i in range(13):
             point=tuple(a+(b-a)*i/12 for a,b in zip(position,target))
-            if point[2] < self._ground_height(point[0],point[1],0. if self._elevation is None else float('inf'))+clearance-1e-6:
+            margin=clearance+(end_clearance-clearance)*i/12
+            if point[2] < self._ground_height(point[0],point[1],0. if self._elevation is None else float('inf'))+margin-1e-6:
                 return False
         return self.psu.waiting.transfer_clear(aircraft.flight['flight_id'],position,target,
             self._queue_observations(),policy['traffic_horizontal_m'],policy['traffic_vertical_m'],
@@ -1802,33 +2277,84 @@ class ScenarioEngine:
         index=route.descent_index
         if index is None or 'psu_rejoin' not in route.phases[index].detail:return route
         phase=route.phases[index];phases=list(route.phases)
-        phases[index]=Phase(phase.stage,phase.label,phase.points[1:],phase.duration_s,
+        rejoin=phase.detail['psu_rejoin']
+        first=next((at for at,point in enumerate(phase.points)
+                    if all(abs(a-b)<1e-9 for a,b in zip(point,rejoin))),None)
+        if first is None:return route
+        phases[index]=Phase(phase.stage,phase.label,phase.points[first:],phase.duration_s,
                             phase.speed_mps,phase.detail)
         return Route((route.key,'terminal-authority'),phases,route.arrival,route.departure)
 
-    def _queue_anchor(self, aircraft):
-        route=aircraft.route
-        if (aircraft.clearance and aircraft.clearance.approach_started_s is not None
-                and self._compute_remaining_native(aircraft,include_queue=False)<=self.policy['psu']['final_guard_s']+60):
-            point=route.phases[route.landing_index].points[0]
-            floor=self._ground_height(point[0],point[1],0. if self._elevation is None else float('inf'))
-            return (*point[:2],max(point[2],floor+self.policy['pilot']['traffic_vertical_m']))
-        return route.phases[route.descent_index].detail.get('psu_rejoin',route.phases[route.descent_index].points[0])
+    def _queue_anchor(self, aircraft, route=None):
+        route=route or aircraft.route
+        if not self.policy['psu'].get('assign_gate_after_touchdown',False):
+            if (aircraft.clearance and aircraft.clearance.approach_started_s is not None
+                    and self._compute_remaining_native(aircraft,include_queue=False)<=self.policy['psu']['final_guard_s']+60):
+                point=route.phases[route.landing_index].points[0]
+                floor=self._ground_height(point[0],point[1],0. if self._elevation is None else float('inf'))
+                return (*point[:2],max(point[2],floor+self.policy['pilot']['traffic_vertical_m']))
+            return route.phases[route.descent_index].detail.get(
+                'psu_rejoin',route.phases[route.descent_index].points[0])
+        point=route.phases[route.landing_index].points[0]
+        return tuple(point)
 
-    def _queue_candidates(self, aircraft):
-        route=aircraft.route
-        anchor=self._queue_anchor(aircraft)
-        prior=[p for phase in route.phases[:route.descent_index] for p in phase.points
-               if flight_plan.haversine_m(p[:2],anchor[:2])>5]
-        inbound=route.phases[route.descent_index].detail.get('psu_inbound') or (prior[-1] if prior else route.phases[route.landing_index].points[-1])
+    def _arrival_queue_rank(self, aircraft):
+        """Live ETA rank within this destination FATO's not-yet-landed queue."""
+        if not aircraft.flight or not aircraft.clearance:
+            return 1
+        c=aircraft.clearance
+        vertiport=getattr(c,'vertiport',aircraft.flight.get('destination'))
+        fato=getattr(c,'fato',(aircraft.route.arrival or {}).get('fato') if aircraft.route else
+                     aircraft.flight.get('arrival_fato'))
+        rows=[]
+        for other in self.aircraft.values():
+            o=other.clearance
+            other_port=getattr(o,'vertiport',other.flight.get('destination')) if o and other.flight else None
+            other_fato=getattr(o,'fato',(other.route.arrival or {}).get('fato') if other.route else
+                               other.flight.get('arrival_fato')) if o and other.flight else None
+            if (not other.airborne or not other.flight or not o or getattr(o,'released_s',None) is not None
+                    or getattr(o,'state',None)==psu_sequencing.REFUSED
+                    or other_port!=vertiport or other_fato!=fato):
+                continue
+            remaining=self._compute_remaining_native(other,include_queue=False)
+            rows.append((remaining,getattr(o,'requested_s',0.) or 0.,
+                         getattr(o,'flight_id',other.flight['flight_id']),other.aircraft_id))
+        rows.sort()
+        return next((index for index,row in enumerate(rows,1) if row[-1]==aircraft.aircraft_id),1)
+
+    def _queue_candidates(self, aircraft, *, flight=None, route=None):
+        flight=flight or aircraft.flight
+        route=route or aircraft.route
+        anchor=self._queue_anchor(aircraft,route)
         policy=self.policy['pilot']
-        # Check the published network as well as the particular inbound leg.
+        if not self.policy['psu'].get('assign_gate_after_touchdown',False):
+            prior=[p for phase in route.phases[:route.descent_index] for p in phase.points
+                   if flight_plan.haversine_m(p[:2],anchor[:2])>5]
+            inbound=route.phases[route.descent_index].detail.get('psu_inbound') or (
+                prior[-1] if prior else route.phases[route.landing_index].points[-1])
+            candidates=holding_positions(anchor,inbound,policy['traffic_horizontal_m'],
+                                          policy['traffic_vertical_m'])
+        else:
+            rank=self._arrival_queue_rank(aircraft)
+            candidates=fato_holding_positions(anchor,rank,policy['traffic_horizontal_m'])
+        port=flight['destination']
+        fato=(getattr(aircraft.clearance,'fato',None) if aircraft.clearance else None) or \
+             route.arrival.get('fato') or flight['arrival_fato']
+        # Protect the published first departure legs.  Arrival bays may sit near
+        # their landing FATO, but never on the side used by a takeoff corridor.
         nodes={n['id']:n for n in [*self._network.get('nodes',()),*self._network.get('fatos',())]}
-        for name,point in holding_positions(anchor,inbound,policy['traffic_horizontal_m'],policy['traffic_vertical_m']):
-            if point[2] < self._ground_height(point[0],point[1],0. if self._elevation is None else float('inf'))+policy['traffic_vertical_m']:
+        departure_nodes={f'fato:{port}:{pad["id"]}' for pad in self._layout(port).get('fatos',())
+                         if pad.get('role') in ('takeoff','both')}
+        protected=(list(self._network.get('links',()))
+                   if not self.policy['psu'].get('assign_gate_after_touchdown',False) else
+                   [link for link in self._network.get('links',())
+                    if link.get('from') in departure_nodes or link.get('to') in departure_nodes])
+        for name,point in candidates:
+            clearance=5. if self.policy['psu'].get('assign_gate_after_touchdown',False) else policy['traffic_vertical_m']
+            if point[2] < self._ground_height(point[0],point[1],0. if self._elevation is None else float('inf'))+clearance:
                 continue
             blocked=False
-            for link in self._network.get('links',()):
+            for link in protected:
                 a,b=nodes.get(link.get('from')),nodes.get(link.get('to'))
                 if not a or not b:continue
                 ends=[]
@@ -1843,7 +2369,7 @@ class ScenarioEngine:
                     if terminal_paths.segment_distance((0.,0.),(0.,0.),ends[0][:2],ends[1][:2])<width:
                         blocked=True;break
             if not blocked:
-                yield f"{aircraft.flight['destination']}/{round(anchor[0],5)},{round(anchor[1],5)}/{name}",point
+                yield f"{port}/{fato}/{name}",point
 
     def _terminal_wait_reason(self, blockers):
         """Describe existing reservations; this never changes separation decisions."""
@@ -1860,6 +2386,20 @@ class ScenarioEngine:
         owner=aircraft.flight['flight_id']
         queue=self.psu.waiting
         r=queue.reservations.get(owner)
+        if r is not None and waiting:
+            policy=self.policy['pilot'];observations=self._queue_observations()
+            def available(point):
+                from digital_twin.simulation.holding_queue import nearby
+                return all(o['owner']==owner or not nearby(point,o['position'],
+                    policy['traffic_horizontal_m'],policy['traffic_vertical_m']) for o in observations)
+            previous=(r['slot'],r['target'])
+            r=queue.retarget(owner,aircraft.flight['destination'],self._queue_candidates(aircraft),
+                self._queue_anchor(aircraft),now,policy['traffic_horizontal_m'],
+                policy['traffic_vertical_m'],available)
+            if r and previous!=(r['slot'],r['target']):
+                rank=self._arrival_queue_rank(aircraft)
+                self._record(now,'holding_rank_changed',aircraft.flight,sequence=aircraft.clearance.sequence,
+                    rank=rank,slot=r['slot'],target=r['target'],previous_slot=previous[0])
         if r and r['state']=='enroute':
             if aircraft.index<aircraft.route.descent_index:
                 aircraft.clearance.holding_assignment=dict(r)
@@ -2029,6 +2569,31 @@ class ScenarioEngine:
                 return target
         return None
 
+    # The step's physics goes to the pool a handful of aircraft per task
+    # (`ScenarioPilots.submit_many`), so the pool is asked a few times a step
+    # rather than once per aircraft. Each aircraft still gets its own answer
+    # and its own failure, and the answers are read back at the barrier in
+    # fleet order as before. Submissions are still handed over as the loop
+    # goes, so the pool flies the first aircraft while the loop reviews the
+    # rest. A pilot without `submit_many` is asked one aircraft at a time.
+    def _submit_native(self, aircraft_id, seconds, target):
+        if not self._native_chunk:
+            return self.pilots.submit(aircraft_id, seconds, target)
+        slot = _NativeSlot()
+        self._native_pending.append((slot, (aircraft_id, seconds, target)))
+        if len(self._native_pending) >= self._native_chunk:
+            self._flush_native()
+        return slot
+
+    def _flush_native(self):
+        pending = getattr(self, '_native_pending', None)
+        if not pending:
+            return
+        self._native_pending = []
+        answers = self.pilots.submit_many([request for _slot, request in pending])
+        for (slot, _request), answer in zip(pending, answers):
+            slot.bind(answer)
+
     def _observe_native(self, aircraft, route, target, sample, now):
         previous_guidance = aircraft.telemetry.get('guidance',{}).get('reason')
         aircraft.telemetry = sample
@@ -2091,14 +2656,91 @@ class ScenarioEngine:
         if cache is None:
             return self._compute_remaining_native(aircraft)
         policy = self.policy['pilot']
+        reservation = ()
+        psu = getattr(self, 'psu', None)
+        flight = getattr(aircraft, 'flight', None)
+        if psu is not None and flight:
+            reservation = tuple((psu.waiting.reservations.get(flight['flight_id']) or {}).get('rejoin',()))
         key = (aircraft.route, aircraft.index, aircraft.latitude, aircraft.longitude,
                aircraft.altitude, int(aircraft.telemetry.get('segment_index', 0)),
                policy['approach_horizontal_speed_mps'], policy['landing_rate_mps'],
                policy['descent_rate_mps'], policy['climb_rate_mps'],
-               tuple((self.psu.waiting.reservations.get(aircraft.flight['flight_id']) or {}).get('rejoin',())))
+               reservation)
         if key not in cache:
             cache[key] = self._compute_remaining_native(aircraft)
         return cache[key]
+
+    def _route_leg_eta(self, a, b, phase):
+        """ETA for one planned leg, shared by automatic and manual pilots."""
+        horizontal = math.hypot((b[0]-a[0])*111320,
+            (b[1]-a[1])*111320*math.cos(math.radians(a[0])))
+        speed = max(1.0, phase.speed_mps)
+        if phase.stage == 'descent':
+            speed = min(speed, self.policy['pilot']['approach_horizontal_speed_mps'])
+        vertical_speed = self.policy['pilot']['landing_rate_mps'] if phase.stage == 'landing' else (
+            self.policy['pilot']['descent_rate_mps'] if b[2] < a[2] else
+            self.policy['pilot']['climb_rate_mps'])
+        return max(horizontal/speed, abs(b[2]-a[2])/max(.1, vertical_speed))
+
+    def _manual_route_projection(self, aircraft):
+        """Project a hand-flown pose onto its remaining planned 3-D route."""
+        route = aircraft.route
+        candidates = []
+        for phase_index, phase in enumerate(route.phases[:route.landing_index+1]):
+            if phase.stage in GROUND_PHASES:
+                continue
+            for segment_index, (a, b) in enumerate(zip(phase.points, phase.points[1:])):
+                cos_lat = math.cos(math.radians((a[0]+b[0]+aircraft.latitude)/3))
+                scale_lon = 111320*cos_lat
+                segment = ((b[0]-a[0])*111320, (b[1]-a[1])*scale_lon, b[2]-a[2])
+                offset = ((aircraft.latitude-a[0])*111320,
+                          (aircraft.longitude-a[1])*scale_lon, aircraft.altitude-a[2])
+                length2 = sum(value*value for value in segment)
+                fraction = (max(0., min(1., sum(x*y for x,y in zip(offset,segment))/length2))
+                            if length2 > 1e-9 else 0.)
+                projection = (a[0]+(b[0]-a[0])*fraction,
+                              a[1]+(b[1]-a[1])*fraction,
+                              a[2]+(b[2]-a[2])*fraction)
+                error2 = sum((x-y*fraction)**2 for x,y in zip(offset,segment))
+                candidates.append((error2,phase_index,segment_index,fraction,projection,phase))
+        if not candidates:
+            return None
+
+        progress = aircraft.external.get('pilot_route_progress') if aircraft.external else None
+        route_key = getattr(route, 'key', None)
+        if progress and progress.get('route_key') == route_key:
+            previous = (progress['phase_index'],progress['segment_index'])
+            forward = [item for item in candidates if (item[1],item[2]) >= previous]
+            if forward:
+                candidates = forward
+        # At a shared waypoint the later segment wins, avoiding one-tick
+        # regressions. Actual route progress never moves backwards.
+        chosen = min(candidates,key=lambda item:(item[0],-item[1],-item[2]))
+        if progress and progress.get('route_key') == route_key and (
+                chosen[1],chosen[2]) == (progress['phase_index'],progress['segment_index']):
+            fraction=max(chosen[3],float(progress.get('fraction',0.)))
+            a=chosen[5].points[chosen[2]];b=chosen[5].points[chosen[2]+1]
+            projection=(a[0]+(b[0]-a[0])*fraction,a[1]+(b[1]-a[1])*fraction,
+                        a[2]+(b[2]-a[2])*fraction)
+            chosen=(*chosen[:3],fraction,projection,chosen[5])
+        if aircraft.external is not None:
+            aircraft.external['pilot_route_progress']={'route_key':route_key,
+                'phase_index':chosen[1],'segment_index':chosen[2],'fraction':chosen[3]}
+        return chosen[1],chosen[2],chosen[4],chosen[5]
+
+    def _manual_remaining_route_eta(self, aircraft):
+        """ETA from actual hand-flown pose along the unflown route polyline."""
+        projected = self._manual_route_projection(aircraft)
+        if projected is None:
+            return aircraft.route.remaining_to_touchdown(aircraft.index,aircraft.elapsed)
+        phase_index,segment_index,point,phase = projected
+        current=(aircraft.latitude,aircraft.longitude,aircraft.altitude)
+        total=self._route_leg_eta(current,point,phase)
+        points=[point,*phase.points[segment_index+1:]]
+        total+=sum(self._route_leg_eta(a,b,phase) for a,b in zip(points,points[1:]))
+        for later in aircraft.route.phases[phase_index+1:aircraft.route.landing_index+1]:
+            total+=sum(self._route_leg_eta(a,b,later) for a,b in zip(later.points,later.points[1:]))
+        return total
 
     def _compute_remaining_native(self, aircraft, include_queue=True):
         route = aircraft.route
@@ -2116,58 +2758,24 @@ class ScenarioEngine:
             current = reservation['rejoin']
             first_index=max(first_index,route.descent_index)
         elif aircraft.external and aircraft.airborne:
-            # A hand-flown aircraft does not walk the plan. Its phase follows the
-            # wheels, so `index` stays where it was handed over, and the walk
-            # below would start at the departure gate however far it has
-            # actually flown -- measuring the taxi back to the origin, at taxi
-            # speed, as time still to come. The number then grows the closer the
-            # aircraft gets to its destination, which is exactly when a pilot
-            # reads it: one arriving over the deck was told 74 minutes, and the
-            # landing slot was booked that far out.
-            #
-            # What is left for a pilot is the distance to the touchdown point.
-            # They are not flying the plan and the plan cannot say. The last of
-            # that distance is flown at approach speed and the rest at the
-            # fastest speed the plan asks for, so a flight that has just taken
-            # off is not charged approach speed for the whole way home.
-            target = route.phases[route.landing_index].points[-1]
-            delta = holding_relative(current, target)
-            approach = max(1., self.policy['pilot']['approach_horizontal_speed_mps'])
-            cruise = max(approach, *(phase.speed_mps for phase in route.phases[:route.landing_index + 1]))
-            final = 0.0
-            for a, b in zip(route.phases[route.descent_index or 0].points,
-                            route.phases[route.descent_index or 0].points[1:]):
-                final += math.hypot((b[0]-a[0])*111320, (b[1]-a[1])*111320*math.cos(math.radians(a[0])))
-            straight = math.hypot(*delta[:2])
-            # Coming down is the en-route descent rate, not the touchdown rate:
-            # the slow last metres over the pad are nothing at this distance,
-            # and charging the whole height at them made the answer the descent
-            # time no matter how far out the aircraft was.
-            rate = self.policy['pilot']['descent_rate_mps'] if delta[2] < 0 else self.policy['pilot']['climb_rate_mps']
-            return max(min(straight, final)/approach + max(0., straight - final)/cruise,
-                       abs(delta[2])/max(.1, rate))
+            return self._manual_remaining_route_eta(aircraft)
         for index in range(first_index, route.landing_index + 1):
             phase = route.phases[index]
             segment = int(aircraft.telemetry.get('segment_index', 0)) if index == aircraft.index else 0
             points = [current, *phase.points[min(segment+1, len(phase.points)-1):]] if index == aircraft.index else phase.points
             for a, b in zip(points, points[1:]):
-                horizontal = math.hypot((b[0]-a[0])*111320,
-                    (b[1]-a[1])*111320*math.cos(math.radians(a[0])))
-                speed = max(1.0, phase.speed_mps)
-                if phase.stage == 'descent':
-                    speed = min(speed, self.policy['pilot']['approach_horizontal_speed_mps'])
-                vertical_speed = self.policy['pilot']['landing_rate_mps'] if phase.stage == 'landing' else (
-                    self.policy['pilot']['descent_rate_mps'] if b[2] < a[2] else self.policy['pilot']['climb_rate_mps'])
-                total += max(horizontal/speed, abs(b[2]-a[2])/max(.1, vertical_speed))
+                total += self._route_leg_eta(a,b,phase)
         return total
 
     def _refresh_predictions(self, now):
         observations, traffic = {}, []
         ground_observations = tuple(self._ground_observations()) if self.ground_control else ()
+        self._assign_landed_gates(now, ground_observations)
         for aircraft in self.aircraft.values():
             if aircraft.flight is None or aircraft.route is None:
                 continue
-            if aircraft.phase == 'gate_in':
+            if (aircraft.phase == 'gate_in' or
+                    aircraft.clearance and aircraft.clearance.used_s is not None and not aircraft.airborne):
                 landing = aircraft.route.phases[aircraft.route.landing_index].points[-1]
                 distance = math.hypot((aircraft.latitude-landing[0])*111320,
                     (aircraft.longitude-landing[1])*111320*math.cos(math.radians(landing[0])))
@@ -2189,6 +2797,12 @@ class ScenarioEngine:
                         ready = True
                     if not ready:
                         self.psu.release_uncommitted_stand(aircraft.flight['flight_id'])
+                capacity = self._arrival_departure_capacity(
+                    aircraft.clearance.vertiport, aircraft.clearance.fato,
+                    aircraft.flight['flight_id'], now)
+                if not capacity.granted and aircraft.clearance.approach_started_s is None:
+                    ready = False
+                    wait_reason = capacity.reason
                 assignment = self.psu.waiting.reservations.get(aircraft.flight['flight_id'])
                 if (ready and self.policy['psu']['predictive_arrivals']
                         and aircraft.clearance.approach_started_s is None
@@ -2240,14 +2854,35 @@ class ScenarioEngine:
                 self._record(now, 'traffic_advisory', aircraft.flight, action=action or 'clear',
                              traffic_id=aircraft.instruction.get('traffic_id'))
 
+    def _pilot_arrival_request_decision(self, aircraft):
+        """Give observations to the pilot and return its request decision."""
+        route = aircraft.route
+        remaining = (self._remaining_native(aircraft) if self.pilots or aircraft.external
+                     else route.remaining_to_touchdown(aircraft.index, aircraft.elapsed))
+        descent_index = route.descent_index if route.descent_index is not None else route.landing_index
+        near_entry = self._near_queue_entry(aircraft)
+        if self.pilots and hasattr(self.pilots, 'arrival_request_decision'):
+            return self.pilots.arrival_request_decision(
+                remaining_s=remaining, phase_index=aircraft.index,
+                descent_index=descent_index, near_entry=near_entry)
+        # Kinematic rehearsal has no native-pilot adapter, but it still models
+        # an automatic pilot. Keep that compatibility path explicitly labelled
+        # rather than silently making it a PSU or engine policy.
+        lead_s = float(self.policy['pilot']['arrival_request_lead_s'])
+        due = bool(remaining <= lead_s or aircraft.index >= descent_index or near_entry)
+        return {'due':due, 'lead_s':lead_s, 'remaining_s':float(remaining),
+                'reason':('kinematic pilot request criterion reached' if due else
+                          f'kinematic pilot waits {max(1, math.ceil(remaining-lead_s))} s'),
+                'owner':'pilot', 'source':'kinematic-pilot'}
+
     def _ask_psu(self, aircraft, now):
-        """Ask for a landing slot once the aircraft is within the request lead."""
+        """Have the automatic pilot ask PSU after its own trigger fires."""
         if aircraft.clearance is not None or aircraft.route.landing_index is None:
             return
-        remaining = self._remaining_native(aircraft) if self.pilots else aircraft.route.remaining_to_touchdown(aircraft.index, aircraft.elapsed)
-        if (remaining > self.psu.tuning.request_lead_s and
-                aircraft.index < (aircraft.route.descent_index or 0) and not self._near_queue_entry(aircraft)):
+        decision = self._pilot_arrival_request_decision(aircraft)
+        if not decision['due']:
             return
+        remaining = decision['remaining_s']
         flight = aircraft.flight
         choices = self._stands_of(flight['destination'])
         if self.ground_control:
@@ -2256,11 +2891,14 @@ class ScenarioEngine:
             flight_id=flight["flight_id"], vertiport=flight["destination"],
             fato=aircraft.route.arrival.get("fato") or flight["arrival_fato"],
             stand=flight["arrival_stand"], earliest_s=now + remaining, now_s=now,
-            stands=choices)
+            stands=choices,
+            defer_stand=self.policy['psu'].get('assign_gate_after_touchdown', False))
         aircraft.clearance = clearance
         if clearance.stand and clearance.stand != flight["arrival_stand"]:
             self._retarget_arrival_gate(aircraft, clearance.stand)
-        self._record(now, "arrival_request", flight, sequence=clearance.sequence,
+        self._record(now, "arrival_request", flight, role='pilot',
+                     direction='pilot_to_psu', request_mode='automatic',
+                     trigger_reason=decision['reason'], sequence=clearance.sequence,
                      hold_s=round(clearance.hold_s or 0.0, 1), state=clearance.state,
                      stand=clearance.stand, reason=clearance.reason)
 
@@ -2323,9 +2961,9 @@ class ScenarioEngine:
         return max(horizontal/speed, abs(b[2]-a[2])/max(.1, vertical_speed))
 
     def _arrival_entry_route(self, aircraft, remaining):
-        """Reserve only a disjoint initial approach while departure owns final.
+        """Reserve initial approach without pre-locking the future final volume.
 
-        The untouched suffix remains protected by the departing aircraft. The
+        An admitted departure may protect the untouched suffix. The
         actual arrival must be outside it by both the terminal envelope and a
         braking margin. Every native step rechecks before moving, so a delayed
         departure produces a stop before the shared volume, not a new deadline.
@@ -2380,7 +3018,7 @@ class ScenarioEngine:
             return False
         c, port = aircraft.clearance, aircraft.flight['destination']
         departure_pad = departure.route.departure.get('fato') or departure.flight['departure_fato']
-        if self._nearby_pads(port,c.fato,departure_pad):
+        if self._same_fato(port,c.fato,departure_pad):
             return False
         if (not self.psu.fato_usable(port, c.fato, aircraft.flight['flight_id'], now_s=self.time_s)
                 if self.psu.resource_monitor is not None else
@@ -2478,6 +3116,95 @@ class ScenarioEngine:
             and not (clear_by_s is not None and now is not None and
                 self._taxi_clears_before(o.aircraft_id,geometry,self._ground_radius(aircraft)+o.radius_m,now,clear_by_s)))
 
+    def _assign_landed_gates(self, now, observations=None):
+        """Assign GATEs in observed touchdown order, then choose a taxi path.
+
+        A landing clearance owns only the FATO.  Once contact is observed the
+        earliest landed unassigned aircraft gets the first usable GATE.  The
+        destination vertiport supplies up to two path alternatives; PSU commits
+        the selected GATE/path bundle while the ground controller later limits
+        actual movement along it.
+        """
+        if not self.policy['psu'].get('assign_gate_after_touchdown', False):
+            return
+        observations = tuple(self._ground_observations()) if observations is None else tuple(observations)
+        waiting = []
+        for aircraft in self.aircraft.values():
+            c = aircraft.clearance
+            if (not aircraft.flight or not c or not c.deferred_stand or c.stand is not None
+                    or c.used_s is None or c.released_s is not None or aircraft.failed):
+                continue
+            waiting.append((float(c.used_s), c.sequence or 0, c.flight_id, aircraft))
+        for _, _, _, aircraft in sorted(waiting, key=lambda item:item[:3]):
+            c, flight = aircraft.clearance, aircraft.flight
+            planned = c.planned_stand or flight.get('arrival_stand')
+            stands = self._stands_of(c.vertiport)
+            if not self.psu.tuning.reassign_stand:
+                stands = [stand for stand in stands if stand == planned]
+            else:
+                stands = sorted(stands, key=lambda stand:(stand != planned, stand))
+            candidates, report = [], []
+            for stand in stands:
+                if not self.psu._stands.free(c.vertiport, stand, c.flight_id):
+                    report.append({'stand':stand, 'reason':'점유 또는 예약 중', 'routes':[]})
+                    continue
+                proposals = self._arrival_ground_proposals(aircraft, stand, observations)
+                if not proposals:
+                    # Hosts without the proposal API retain one authored route.
+                    candidate = self._arrival_candidate(aircraft, stand)
+                    if candidate is not None:
+                        blocked = self._gate_path_blockers(aircraft,candidate,observations)
+                        proposals = ({'route_id':None,'rank':1,'nodes':[],
+                            'points':[p[:2] for p in candidate.points],
+                            'distance_m':candidate.distance_m,
+                            'clear_distance_m':0.0 if blocked else candidate.distance_m,
+                            'blocked_by':blocked},)
+                rows=[]
+                for proposal in proposals:
+                    blocked = tuple(proposal.get('blocked_by') or ())
+                    distance = float(proposal.get('distance_m') or 0.0)
+                    clear_distance = float(proposal.get('clear_distance_m') or 0.0)
+                    clear = not blocked and clear_distance >= distance-1e-7
+                    rows.append({'route_id':proposal.get('route_id'),'rank':proposal.get('rank'),
+                                 'distance_m':round(distance,2),'clear_distance_m':round(clear_distance,2),
+                                 'blocked_by':list(blocked)})
+                    candidates.append(((0 if clear else 1, -clear_distance, distance,
+                                        stand != planned, int(proposal.get('rank') or 1), stand),
+                                       stand, proposal))
+                report.append({'stand':stand,'reason':'경로 후보 있음' if rows else '연결 경로 없음',
+                               'routes':rows})
+            if not candidates:
+                c.gate_reason='접지 순서 GATE 대기 · 사용 가능한 GATE 또는 연결 경로 없음'
+                aircraft.instruction={'action':'ground_wait','reason':c.gate_reason,'updated_s':now}
+                self._decision(now,flight,'arrival_gate_after_touchdown','hold',c.gate_reason,
+                               touchdown_s=c.used_s,candidates=report)
+                continue
+            _, stand, proposal = min(candidates, key=lambda item:item[0])
+            reason=(f'접지 순서 GATE 배정 {stand} · '
+                    f"지상경로 {proposal.get('rank') or 1}안")
+            try:
+                accepted=self._retarget_arrival_gate(
+                    aircraft,stand,ground_route=proposal,post_touchdown=True,reason=reason)
+            except (ValueError,RuntimeError) as error:
+                c.gate_reason='접지 후 GATE 배정 재검토 · '+str(error)
+                aircraft.instruction={'action':'ground_wait','reason':c.gate_reason,'updated_s':now}
+                self._decision(now,flight,'arrival_gate_after_touchdown','hold',c.gate_reason,
+                               touchdown_s=c.used_s,candidates=report)
+                continue
+            if accepted:
+                if aircraft.instruction.get('action')=='ground_wait':
+                    aircraft.instruction={}
+                self._record(now,'arrival_gate_assigned',flight,role='psu',direction='psu_to_pilot',
+                    stand=stand,touchdown_s=c.used_s,route_id=proposal.get('route_id'),
+                    route_rank=proposal.get('rank'),blocked_by=proposal.get('blocked_by') or [])
+                self._diagnostic(now,'vertiport_ground_control','arrival_route_proposals',
+                    flight_id=c.flight_id,aircraft_id=aircraft.aircraft_id,vertiport=c.vertiport,
+                    touchdown_s=c.used_s,selected_stand=stand,
+                    selected_route_id=proposal.get('route_id'),candidates=report)
+                self._decision(now,flight,'arrival_gate_after_touchdown','assigned',reason,
+                    touchdown_s=c.used_s,stand=stand,route_id=proposal.get('route_id'),
+                    route_rank=proposal.get('rank'))
+
     def _ensure_arrival_gate(self, aircraft, now, observations=None, *, clear_by_s=None):
         """Validate a reachable gate/egress bundle before final entry.
 
@@ -2487,6 +3214,13 @@ class ScenarioEngine:
         c,flight = aircraft.clearance,aircraft.flight
         if c is None or flight is None or c.state==psu_sequencing.REFUSED:
             return False
+        if c.deferred_stand and c.used_s is None:
+            # Before touchdown the FATO, approach volume and separation are the
+            # landing decision.  GATE/path assignment begins only after contact.
+            return True
+        if c.deferred_stand and c.stand is None:
+            self._assign_landed_gates(now,observations)
+            return c.stand is not None
         current = c.stand
         c.gate_release_aircraft_id = c.gate_available_s = c.landing_staging = None
         phase = next((p for p in aircraft.route.phases if p.stage=='gate_in'),None)
@@ -2530,7 +3264,8 @@ class ScenarioEngine:
         c.gate_reason = ('착륙 출구 확보 대기: '+', '.join(blocked)) if blocked else '사용 가능한 주기장 확보 대기'
         return False
 
-    def _retarget_arrival_gate(self, aircraft, stand, *, expected_departure=None):
+    def _retarget_arrival_gate(self, aircraft, stand, *, expected_departure=None,
+                               ground_route=None, post_touchdown=False, reason=None):
         if aircraft.phase == 'gate_in' and aircraft.speed_mps > .01:
             return False
         # A person has read the gate number and is walking the aircraft to it.
@@ -2543,7 +3278,8 @@ class ScenarioEngine:
         # they leave and while they are in the air it is still free to change:
         # that is where the service is meant to settle it, and where they are
         # told in time to fly to it.
-        if aircraft.external and aircraft.external.get('departed') and not aircraft.airborne:
+        if (aircraft.external and aircraft.external.get('departed') and not aircraft.airborne
+                and not post_touchdown):
             return False
         flight = aircraft.flight
         reassigned = dict(flight, arrival_stand=stand)
@@ -2551,6 +3287,18 @@ class ScenarioEngine:
         if replacement.arrival.get("fato") != aircraft.route.arrival.get("fato"):
             raise ValueError("배정 변경이 다른 FATO 접근을 요구합니다")
         ground = next(p for p in replacement.phases if p.stage == 'gate_in')
+        if ground_route is not None:
+            points = list(ground_route.get('points') or ())
+            if len(points) < 2:
+                raise ValueError('도착 지상경로가 FATO와 GATE를 연결하지 않습니다')
+            path,profile,_,duration=ground_motion.prepare(points,ground.speed_mps,8)
+            detail=dict(ground.detail,ground_motion=profile,
+                        taxi_nodes=list(ground_route.get('nodes') or ()),
+                        vertiport_route_id=ground_route.get('route_id'),
+                        vertiport_route_rank=ground_route.get('rank'))
+            altitude=ground.points[0][2]
+            ground=Phase('gate_in',ground.label,[(a,b,altitude) for a,b in path],
+                         duration,ground.speed_mps,detail)
         if aircraft.phase == 'gate_in':
             taxi = flight_plan.taxi_path_from_position(self._layout(flight['destination']),
                                                       (aircraft.latitude,aircraft.longitude),stand)
@@ -2563,7 +3311,7 @@ class ScenarioEngine:
         rebuilt = Route(previous.key,phases,replacement.arrival,previous.departure)
         rebuilt.direct = previous.direct
         rebuilt.boarding,rebuilt.alighting = previous.boarding,replacement.alighting
-        reason = f"도착 경로 재배정 {previous.arrival.get('gate') or flight['arrival_stand']} → {stand}"
+        reason = reason or f"도착 경로 재배정 {previous.arrival.get('gate') or flight['arrival_stand']} → {stand}"
         # Check before touching the pilot. The serialized engine is the only
         # reservation writer; publish the reservation/route together only after
         # the fallible native boundary call has returned.
@@ -2571,7 +3319,8 @@ class ScenarioEngine:
                 expected_departure is not None and self.psu._stands.occupant(flight['destination'],stand)==expected_departure
                 and self.psu._stands.reservation(flight['destination'],stand) in (None,flight['flight_id'])):
             raise ValueError('도착 주기장이 이미 점유 또는 예약되어 있습니다')
-        if aircraft.pilot_active and self.pilots and hasattr(self.pilots,'set_landing_yaw'):
+        if (not post_touchdown and aircraft.pilot_active and self.pilots
+                and hasattr(self.pilots,'set_landing_yaw')):
             heading = ground.at_fraction(0)[3]
             if heading is not None:
                 capable = getattr(getattr(self.pilots,'library',None),'terminal_guidance_capable',True)
@@ -2601,6 +3350,12 @@ class ScenarioEngine:
         """
         if not self.policy["psu"]["release_pad_at_touchdown"] or aircraft.flight is None:
             return
+        if aircraft.route is not None:
+            landing = aircraft.route.phases[aircraft.route.landing_index].points[-1]
+            distance = math.hypot((aircraft.latitude-landing[0])*111320,
+                (aircraft.longitude-landing[1])*111320*math.cos(math.radians(landing[0])))
+            if distance < self.policy['psu']['pad_clear_radius_m']:
+                return
         flight_id = aircraft.flight["flight_id"]
         pad = (aircraft.flight["destination"],
                (aircraft.route.arrival or {}).get("fato") or aircraft.flight["arrival_fato"])
@@ -2625,6 +3380,9 @@ class ScenarioEngine:
         if aircraft.index - 1 != route.descent_index and not (self.ground_control and returning):
             return None
         gate_ready = not self.ground_control or self._ensure_arrival_gate(aircraft,now,ground_observations)
+        capacity = self._arrival_departure_capacity(
+            clearance.vertiport, clearance.fato, aircraft.flight['flight_id'], now)
+        gate_ready = gate_ready and capacity.granted
         route = aircraft.route
         if returning and gate_ready:
             aircraft.hold = None
@@ -2638,7 +3396,8 @@ class ScenarioEngine:
                    - route.remaining_to_touchdown(aircraft.index, 0.0))
         if not gate_ready:
             wait = max(wait,self.psu.tuning.stand_wait_s,self.psu.tuning.minimum_hold_s)
-            aircraft.instruction = {'clearance':'hold','clearance_reason':clearance.gate_reason}
+            aircraft.instruction = {'clearance':'hold','clearance_reason':(
+                capacity.reason if not capacity.granted else clearance.gate_reason)}
         if wait < self.psu.tuning.minimum_hold_s:
             return None
         entry = finished.points[-1]

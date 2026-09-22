@@ -257,7 +257,8 @@ def test_stopping_writes_what_the_day_produced(tmp_path):
     session.stop()
     assert session.status()["state"] == "finished"
     written = {item["name"] for item in session.recording()["files"]}
-    assert written == {"tracks.jsonl", "events.jsonl", "flights.csv", "holds.json", "summary.json"}
+    assert written == {"tracks.jsonl", "events.jsonl", "diagnostics.jsonl",
+                       "flights.csv", "holds.json", "summary.json"}
     folder = tmp_path / session.scenario_id
     # A track row per flying aircraft per second, and nothing for the ones parked.
     rows = [json.loads(line) for line in (folder / "tracks.jsonl").read_text(encoding="utf-8").splitlines()]
@@ -277,6 +278,14 @@ def test_stopping_writes_what_the_day_produced(tmp_path):
     assert summary["schedule"]["flights"] == 3 and summary["result"]["flights_started"] >= 1
     holds = json.loads((folder / "holds.json").read_text(encoding="utf-8"))
     assert "statistics" in holds and isinstance(holds["holds"], list)
+    operations = [json.loads(line) for line in
+                  (folder / 'events.jsonl').read_text(encoding='utf-8').splitlines()]
+    diagnostics = [json.loads(line) for line in
+                   (folder / 'diagnostics.jsonl').read_text(encoding='utf-8').splitlines()]
+    assert any(item['kind'] == 'ground_route_proposals' for item in operations)
+    assert any(item['kind'] == 'route_proposals' and
+               item['component'] == 'vertiport_ground_control' for item in diagnostics)
+    assert all('component' not in item for item in operations)
 
 
 def test_a_deck_says_who_is_on_it_who_is_coming_and_who_is_waiting():
@@ -295,6 +304,31 @@ def test_a_deck_says_who_is_on_it_who_is_coming_and_who_is_waiting():
     arriving = deck["inbound"] + deck["holding"]
     assert all(item["destination"] == "VP2" for item in arriving)
     assert session.vertiport("VP9") is not None, "an unknown deck answers an empty one, not an error"
+
+
+def test_a_deck_carries_its_own_board_so_the_terminal_needs_no_second_request():
+    # The board rides on the deck answer the page already asks for. A route
+    # of its own would answer the same thing a moment later, which is how
+    # two screens come to disagree about when a flight is leaving.
+    session, clock = make()
+    session.load(CSV)
+    session.open_control()
+    session.play()
+    session.set_speed(10)
+    for _ in range(12):
+        clock.tick(10)
+        session.tick()
+    board = session.vertiport("VP2")["board"]
+    assert board["vertiport_id"] == "VP2"
+    assert board["clock"] == session.vertiport("VP2")["clock"]
+    assert all(row["counterpart"] != "VP2" for row in board["departures"] + board["arrivals"])
+    # Every row is one this deck actually has, and the waiting counts are
+    # taken from those same rows rather than from a second reading.
+    for row in board["departures"]:
+        assert row["status_text"] and row["time"]
+    from digital_twin.model_library import terminal_board
+    assert board["waiting"] == terminal_board.waiting_by_gate(board["departures"])
+    assert session.vertiport("VP9")["board"]["departures"] == []
 
 
 def test_an_aircraft_answers_what_it_is_doing_and_what_it_has_left():
@@ -332,6 +366,10 @@ def test_an_aircraft_carries_its_own_track_and_the_deck_carries_its_passengers()
     # The track is the flight's, and it is asked for by the id on the map.
     track = session.track("scenario:A1")
     assert track["aircraft_id"] == "A1" and track["points"]
+    assert set(track["surface_references"]) == {"origin", "destination"}
+    assert {item["vertiport_id"] for item in track["surface_references"].values()} == {"VP1", "VP2"}
+    assert all(isinstance(item["altitude_m"], float)
+               for item in track["surface_references"].values())
     for longitude, latitude, altitude, moment in track["points"]:
         assert 126.0 < longitude < 128.0 and 37.0 < latitude < 38.0 and altitude >= 0
         assert moment <= track["time_s"]

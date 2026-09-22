@@ -29,14 +29,14 @@ function heartbeatWorker(){
  }catch{return null;}
 }
 export class ManualFlightSession {
- constructor({onSample,onClear=()=>{},onTelemetry=()=>{},onReady,onExit,contactDecks=()=>[],notify=()=>{},onLook=()=>{},onAction=()=>{},onSound=()=>{}}){Object.assign(this,{onSample,onClear,onTelemetry,onReady,onExit,contactDecks,notify,onAction,onSound});this.display=new ManualFlightDisplay();this.panel=new ManualFlightPanel({onPause:reason=>this.pause(reason),onResume:()=>this.resume(),onExit:()=>this.stop(),onLook,onAction,onHold:mode=>this.setHold(mode)});this.frame=null;this.generation=0;}
+ constructor({onSample,onClear=()=>{},onTelemetry=()=>{},onReady,onExit,contactDecks=()=>[],notify=()=>{},onLook=()=>{},onAction=()=>{},onSound=()=>{},onFrame=null}){Object.assign(this,{onSample,onClear,onTelemetry,onReady,onExit,contactDecks,notify,onAction,onSound,onFrame});this.display=new ManualFlightDisplay();this.panel=new ManualFlightPanel({onPause:reason=>this.pause(reason),onResume:()=>this.resume(),onExit:()=>this.stop(),onLook,onAction,onHold:mode=>this.setHold(mode)});this.frame=null;this.generation=0;}
   readControls(){
    if(!this.socket||this.socket.readyState!==WebSocket.OPEN||!this.plan)return null;
    const input=this.panel.input,locked=this.display?.latest?.ground_handling?.locked;
    return {...this.lastCommand,entity_id:this.twin?`scenario:${this.twin}`:'preview:selected-flight',active:input.active,throttle:this.display?.latest?.autopilot?.enabled?(this.display.latest.throttle??input.throttle):input.throttle,mode:input.mode,source:input.source,enabled:input.active&&!locked,
     autopilot:this.display?.latest?.autopilot,autopilotPending:Boolean(this.autopilotPending),autopilotSupported:this.capabilities?.includes('autopilot_v1'),
     hold:this.display?.latest?.hold,holdPending:Boolean(this.holdPending),
-    pending:Boolean(this.groundPending),error:this.groundError,groundChargeSupported:this.capabilities?.includes('ground_handling_v2'),groundSupported:this.capabilities?.includes('ground_handling_v1'),nextFlightSupported:this.capabilities?.includes('next_flight_v1')};
+    pending:Boolean(this.groundPending),error:this.groundError,groundChargeSupported:this.capabilities?.includes('ground_handling_v2'),groundProcedureSeparated:this.capabilities?.includes('ground_handling_v3'),groundSupported:this.capabilities?.includes('ground_handling_v1'),nextFlightSupported:this.capabilities?.includes('next_flight_v1')};
   }
   control(action,value){
    if(action==='find_aircraft'){if(this.readControls())this.onAction?.('find_aircraft');return;}
@@ -86,9 +86,10 @@ export class ManualFlightSession {
    this.socket.send(JSON.stringify({type:'hold',mode:wanted,request_id:id}));
    this.holdTimer=setTimeout(()=>{if(this.holdPending===id){this.holdPending=null;this.notify('유지 응답 지연 · 상태를 확인하세요');}},5000);
   }
-  ground(action){
+ ground(action){
    if(this.groundPending)return;
    if(!this.readControls()?.groundSupported){this.groundError='서버 재시작 후 지상 조작을 사용할 수 있습니다';return;}
+   if(['open_door','close_door','reopen'].includes(action)&&!this.readControls()?.groundProcedureSeparated){this.groundError='서버 재시작 후 분리된 문·하차 조작을 사용할 수 있습니다';return;}
    if(action==='charge'&&!this.readControls()?.groundChargeSupported){this.groundError='서버 재시작 후 개별 충전 요청을 사용할 수 있습니다';return;}
    if(action==='next_flight'&&!this.readControls()?.nextFlightSupported){this.groundError='서버 재시작 후 다음 비행 이어가기를 사용할 수 있습니다';return;}
    const id=`ground-${++this.groundSequence}`;this.groundPending=id;this.groundError=null;
@@ -131,7 +132,8 @@ export class ManualFlightSession {
    const p=body.procedure;
    const key=body.stale||body.error||(body.clock&&body.clock.state!=='playing')?null:`${p.stage}:${p.next?.kind}:${Boolean(p.next?.enabled)}`;
    if(key&&key!==this.approachSaid?.key){
-    if(p.next?.kind==='approach'&&p.next.enabled){this.onSound?.('received');this.notify('접근 허가를 요청할 수 있습니다 · 허가 전 접근 금지');}
+    if(p.next?.kind==='arrival'&&p.next.enabled){this.onSound?.('received');this.notify('접근 순번 요청 기준에 도달했습니다 · 지금 PSU에 요청하세요');}
+    else if(p.next?.kind==='approach'&&p.next.enabled){this.onSound?.('received');this.notify('접근 허가를 요청할 수 있습니다 · 허가 전 접근 금지');}
     else if(p.stage==='접근 허가'||p.stage==='착륙 허가'||p.stage==='접근 보류'||p.stage==='착륙 허가 보류'){
      this.onSound?.('received');this.notify(`${p.stage} · ${p.text}`);
     }
@@ -238,6 +240,10 @@ export class ManualFlightSession {
   const now=performance.now();
   const sample=this.display.sample(now,this.panel.input.active,this.lastCommand);
   if(sample){this.displayed=sample;this.onSample(sample);}
+  // Unconditional, unlike the sample above: a person standing on the deck
+  // is still walking on the frames where the aircraft's interpolation had
+  // nothing new to say, and their camera must never stall.
+  this.onFrame?.(now);
   this.frame=requestAnimationFrame(()=>this.loop());
  }
  // Nothing is sent from here that moves the aircraft: a keepalive steps no

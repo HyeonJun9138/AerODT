@@ -18,7 +18,14 @@ export function manualFlightTiming({entityId,detail,psu,plan,sample}){
  const linked=psu?.flight_id&&(!matched?.flight?.flight_id||matched.flight.flight_id===psu.flight_id)?psu:null;
  const now=linked?.procedure?.timeline?.now_s;
  const timing=flightTiming(matched,finite(now)?now:null);
- if(linked){timing.off_block_s??=linked.procedure?.timeline?.off_block_s;timing.stale=Boolean(linked.stale||linked.error);}
+ if(linked){
+  const timeline=linked.procedure?.timeline??{};
+  timing.off_block_s??=timeline.off_block_s;
+  timing.remaining_route_eta_s=finite(timeline.remaining_route_eta_s)?timeline.remaining_route_eta_s:null;
+  timing.arrival_request_lead_s=finite(timeline.arrival_request_lead_s)?timeline.arrival_request_lead_s:null;
+  timing.arrival_request_due=typeof timeline.arrival_request_due==='boolean'?timeline.arrival_request_due:null;
+  timing.stale=Boolean(linked.stale||linked.error);
+ }
  // Standalone replay/manual clocks are elapsed seconds, not time of day.
  if(entityId==='preview:selected-flight'){
   timing.now_s=sample.time_s;timing.elapsed_clock=true;
@@ -60,9 +67,11 @@ export function flightProgress(entity,mission,{stale=false,cue=routeGuidance(ent
  let remaining=null;
  if(cue){remaining=distance(entity,points[cue.index]);for(let i=cue.index+1;i<points.length;i++)remaining+=distance(points[i-1],points[i]);}
  const speed=groundSpeed(entity),unreliable=stale||timing.stale;
+ const operational=finite(timing.remaining_route_eta_s)&&timing.remaining_route_eta_s>=0&&entity.airborne===true&&!unreliable;
  const blocked=unreliable?'DATA STALE':!cue?'NO ROUTE':mission.holding?'HOLD':entity.airborne!==true?'GROUND / NO AIR DATA':!finite(speed)?'NO GROUND SPEED':!(speed>.5)?'LOW GROUND SPEED':null;
- const ete=!blocked?remaining/speed:null;
+ const ete=operational?timing.remaining_route_eta_s:!blocked?remaining/speed:null;
  const now=timing.now_s,takeoff=timing.actual_takeoff_s,landed=timing.actual_landing_s;
  const elapsed=finite(now)&&finite(takeoff)&&now>=takeoff?Math.max(0,(finite(landed)&&landed<=now?landed:now)-takeoff):null;
- return {remaining,ete,eta:finite(ete)&&finite(now)?now+ete:null,elapsed,speed,note:blocked??'LIVE GS / ROUTE END · NO HOLD / LANDING ALLOWANCE'};
+ return {remaining,ete,eta:finite(ete)&&finite(now)?now+ete:null,elapsed,speed,
+  note:operational?'PSU ROUTE ETA':blocked??'LIVE GS / ROUTE END · NO HOLD / LANDING ALLOWANCE'};
 }

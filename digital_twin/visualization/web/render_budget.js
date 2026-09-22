@@ -30,7 +30,7 @@ export class CameraRenderBudget {
     this.slowFrameMs=Math.max(26,1000/(Number(targetFps)||60)*1.4);
     this.scale=Math.max(this.minimumScale,this.scale);this.slowSince=null;
   }
-  update(camera,{now,frameMs,enabled=true,relative=false,approaching=false,viewPose=null}={}){
+  update(camera,{now,frameMs,enabled=true,relative=false,approaching=false,viewPose=null,holdResolution=false}={}){
     // An anchored camera follows a moving vehicle even when nobody is orbiting.
     // Its local pose is what determines interaction load, not world translation.
     const p=relative?(camera.position??camera.positionWC):camera.positionWC;
@@ -52,6 +52,20 @@ export class CameraRenderBudget {
     if(!enabled)this.lastMove=-Infinity;
     else if(moved||approaching)this.lastMove=now;
     this.moving=enabled&&now-this.lastMove<300;
+    // A view that holds its resolution -- the cockpit -- still reports its
+    // motion, for the streaming budgets that do help while the view changes,
+    // but the buffer is never stepped. That display is main-thread bound
+    // (measured 2026-09-19 on a 3080: nearly every frame a long task), so the
+    // cut returned nothing, and every step of the ladder reallocated every
+    // framebuffer: a hitch on the way down and six on the way back up, after
+    // each turn, with a blurred city in between. A buffer already cut on the
+    // map is given back whole at once here; the ladder is the map's again the
+    // moment the hold ends.
+    if(holdResolution){
+      this.slowSince=null;
+      if(this.scale!==1){this.scale=1;this.lastChange=now;}
+      return this.scale;
+    }
     // A scripted entry or morph owns the frame and is given the whole buffer at
     // once; nobody is interacting and the shot is short.
     if(!enabled){

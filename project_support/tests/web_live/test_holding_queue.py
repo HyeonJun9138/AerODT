@@ -1,4 +1,4 @@
-from digital_twin.simulation.holding_queue import HoldingQueue,positions,relative,nearby
+from digital_twin.simulation.holding_queue import HoldingQueue,positions,fato_positions,relative,nearby
 
 ANCHOR=(37.5,127.,330.)
 INBOUND=(37.51,127.,330.)
@@ -35,6 +35,40 @@ def test_other_entry_cannot_reserve_the_same_physical_bay():
 def test_unknown_or_rejected_airspace_is_not_allocated():
     q=HoldingQueue()
     assert q.reserve('a','VP',positions(ANCHOR,INBOUND),ANCHOR,0,120,45,lambda p:False) is None
+
+
+def test_fato_queue_levels_follow_live_rank_in_ten_metre_steps():
+    first=list(fato_positions(ANCHOR,1));third=list(fato_positions(ANCHOR,3))
+    assert len(first)==len(third)==8
+    assert {point[2] for _,point in first}=={ANCHOR[2]+10}
+    assert {point[2] for _,point in third}=={ANCHOR[2]+30}
+    q=HoldingQueue();r=q.reserve('A','VP',first,ANCHOR,0,120,45,lambda p:True)
+    moved=q.retarget('A','VP',third,ANCHOR,1,120,45,lambda p:True)
+    assert moved is r and moved['target'][2]==ANCHOR[2]+30
+    assert moved['previous_target'][2]==ANCHOR[2]+10 and moved['state']=='moving'
+
+
+def test_fato_queue_rank_reorders_from_live_remaining_eta():
+    from digital_twin.simulation.scenario_engine import ScenarioEngine
+    from project_support.tests.web_live.test_scenario_engine import schedule_of,row,VERTIPORTS,NETWORK
+    e=ScenarioEngine(schedule_of(row('F','A','VP1','VP2','06:30:00'),
+        row('G','B','VP1','VP2','06:31:00',stand='G3',arrival_stand='G4')),
+        vertiports=VERTIPORTS,network=NETWORK,elevation=lambda lon,lat:0)
+    try:
+        remaining={'A':40.,'B':80.}
+        for aircraft,flight in zip(e.aircraft.values(),e.flights.values()):
+            aircraft.flight=flight;aircraft.route=e.route(flight);aircraft.phase='cruise'
+            aircraft.clearance=e.psu.request_arrival(flight_id=flight['flight_id'],vertiport='VP2',
+                fato='F2',stand=flight['arrival_stand'],earliest_s=e.time_s+remaining[aircraft.aircraft_id],
+                now_s=e.time_s,stands=e._stands_of('VP2'),defer_stand=True)
+        e._compute_remaining_native=lambda aircraft,include_queue=False:remaining[aircraft.aircraft_id]
+        a,b=e.aircraft.values();anchor=e._queue_anchor(a)
+        assert e._arrival_queue_rank(a)==1 and e._arrival_queue_rank(b)==2
+        assert next(e._queue_candidates(a))[1][2]==anchor[2]+10
+        assert next(e._queue_candidates(b))[1][2]==anchor[2]+20
+        remaining.update(A=90.,B=30.)
+        assert e._arrival_queue_rank(a)==2 and e._arrival_queue_rank(b)==1
+    finally:e.close()
 
 
 def test_transfer_cannot_cross_parked_or_moving_airborne_traffic():
@@ -105,8 +139,8 @@ def test_arrival_bay_is_in_native_route_before_takeoff_without_mutating_source_o
         assert e._prepare_waiting_route(a,e.time_s)
         r=e.psu.waiting.reservations['F'];d=a.route.descent_index
         assert r['state']=='enroute'
-        assert a.route.phases[d-1].points[-1]==r['target']
-        assert a.route.phases[d].points[:2]==[r['target'],r['rejoin']]
+        assert a.route.phases[d-1].points==source.phases[d-1].points
+        assert a.route.phases[d].points[:3]==[source.phases[d].points[0],r['target'],r['rejoin']]
         assert [p.points for p in source.phases]==points and a.flight==plan
         assert (a.latitude,a.longitude,a.altitude)==pose
     finally:e.close()
@@ -151,29 +185,31 @@ def test_queue_bay_is_not_part_of_committed_terminal_authority():
         r=e.psu.waiting.reservations['F'];actual=a.route
         authority=e._arrival_authority_route(actual)
         assert authority.phases[authority.descent_index].points[0]==r['rejoin']
-        assert actual.phases[actual.descent_index].points[0]==r['target']
+        assert actual.phases[actual.descent_index].points[1]==r['target']
         assert terminal_paths.clear_of(authority,'arrival',r['target'],120,45)
     finally:e.close()
 
 
-# The operator watched an aircraft released from its bay fly back to the
-# corridor's end before starting its approach. The bay is laid out around that
-# entry, but the approach is flown from the bay straight to the descent.
-def test_the_approach_from_a_bay_goes_straight_to_the_descent_not_back_to_the_entry():
+# The live queue sits around the FATO landing-start point. The flight first
+# reaches the authored approach entry, then visits the bay; release flies from
+# there to the landing start instead of replaying the old entry.
+def test_the_approach_reaches_its_authored_entry_before_the_bay_and_then_landing_start():
     from digital_twin.simulation.scenario_engine import ScenarioEngine
     from project_support.tests.web_live.test_scenario_engine import schedule_of,row,VERTIPORTS,NETWORK
     e=ScenarioEngine(schedule_of(row('F','A','VP1','VP2','06:30:00')),
         vertiports=VERTIPORTS,network=NETWORK,elevation=lambda lon,lat:0)
     try:
         a=e.aircraft['A'];a.flight=e.flights['F'];a.route=e.route(a.flight)
-        d=a.route.descent_index;entry=a.route.phases[d].points[0];following=a.route.phases[d].points[1]
+        d=a.route.descent_index;entry=a.route.phases[d].points[0]
+        landing_start=a.route.phases[a.route.landing_index].points[0]
         assert e._prepare_waiting_route(a,e.time_s)
         r=e.psu.waiting.reservations['F'];phase=a.route.phases[d]
-        assert phase.points[0]==r['target'] and phase.points[1]==following, 'bay, then the descent itself'
-        assert entry not in phase.points, 'the entry is not flown again'
-        assert r['rejoin']==following and r['direct']
-        assert phase.detail['psu_rejoin']==entry, 'the entry stays the anchor the bays are placed around'
-        assert e._queue_anchor(a)==entry
+        assert phase.points[:3]==[entry,r['target'],landing_start]
+        assert a.route.phases[d-1].points[-1]==entry, 'the published cruise endpoint is retained'
+        assert r['rejoin']==landing_start and r['direct']
+        assert phase.detail['psu_rejoin']==landing_start
+        assert phase.detail['psu_original_entry']==entry
+        assert e._queue_anchor(a)==landing_start
         authority=e._arrival_authority_route(a.route)
-        assert authority.phases[d].points[0]==following and r['target'] not in authority.phases[d].points
+        assert authority.phases[d].points[0]==landing_start and r['target'] not in authority.phases[d].points
     finally:e.close()

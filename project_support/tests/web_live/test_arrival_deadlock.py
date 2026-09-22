@@ -16,10 +16,9 @@ def test_lane_return_does_not_cut_through_traffic_when_the_threat_bearing_change
     awareness.previous={'A':{'action':'avoid_right','right_m':35,'observed_s':0}}
     assert awareness.commands(rows,{},1)['A']['right_m']==35
 
-def test_neighbouring_arrival_pad_protects_the_departure_column():
+def test_same_arrival_pad_protects_the_departure_column():
     engine=engine_of(row('D','A','VP1','VP2','06:30:00'));engine.pilots=object()
-    engine._nearby_pads=lambda port,a,b:True
-    c=engine.psu.request_arrival(flight_id='IN',vertiport='VP1',fato='F2',stand='G3',earliest_s=engine.time_s+30,now_s=engine.time_s)
+    c=engine.psu.request_arrival(flight_id='IN',vertiport='VP1',fato='F1',stand='G3',earliest_s=engine.time_s+30,now_s=engine.time_s)
     c.approach_started_s=engine.time_s-60;c.eta_s=engine.time_s+30
     engine._maybe_depart(engine.aircraft['A'],engine.time_s)
     assert engine.aircraft['A'].phase=='parked'

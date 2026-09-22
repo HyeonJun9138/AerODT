@@ -32,6 +32,36 @@ def observations(requests):
     return [GroundObservation(r.aircraft_id, r.vertiport_id, point_at(r), r.radius_m) for r in requests]
 
 
+def test_vertiport_proposes_shortest_and_next_route_with_live_blockers():
+    layout = {
+        'nodes': [
+            {'id': 'G1', 'position_m': [0., 0.]},
+            {'id': 'A', 'position_m': [10., 0.]},
+            {'id': 'B', 'position_m': [0., 10.]},
+            {'id': 'C', 'position_m': [20., 10.]},
+            {'id': 'F1', 'position_m': [20., 0.]},
+        ],
+        'edges': [
+            {'from': 'G1', 'to': 'A', 'length_m': 10.},
+            {'from': 'A', 'to': 'F1', 'length_m': 10.},
+            {'from': 'G1', 'to': 'B', 'length_m': 10.},
+            {'from': 'B', 'to': 'C', 'length_m': 20.},
+            {'from': 'C', 'to': 'F1', 'length_m': 10.},
+        ],
+        'gates': [{'id': 'G1'}], 'fatos': [{'id': 'F1'}],
+    }
+    control = VertiportGroundControl()
+    control.configure_vertiport('V', layout, radius_m=1.)
+    blocker = GroundObservation('PARKED', 'V', (0., 10.), 1.)
+    proposed = control.propose_routes(
+        'V', 'G1', 'F1', aircraft_id='A', observations=[blocker], radius_m=1.)
+    assert len(proposed) == 2
+    assert proposed[0].node_ids == ('G1', 'A', 'F1') and proposed[0].rank == 1
+    assert proposed[0].blocked_by == ('PARKED',) and not proposed[0].clear
+    assert proposed[1].node_ids == ('G1', 'B', 'C', 'F1') and proposed[1].rank == 2
+    assert proposed[1].clear and proposed[1].distance_m > proposed[0].distance_m
+
+
 def test_parked_aircraft_keeps_the_crossing_closed_without_expiration():
     control = VertiportGroundControl()
     a = request('A')
@@ -644,3 +674,46 @@ def test_intersection_egress_retreat_never_revokes_moving_braking_corridor():
     assert speed < .001
     assert distance <= authority.stop_distance_m
     assert 40.-distance > 14.
+
+def test_candidate_paths_are_enumerated_once_per_configured_graph(monkeypatch):
+    layout = {
+        'nodes': [
+            {'id': 'G1', 'position_m': [0., 0.]},
+            {'id': 'A', 'position_m': [10., 0.]},
+            {'id': 'B', 'position_m': [0., 10.]},
+            {'id': 'C', 'position_m': [20., 10.]},
+            {'id': 'F1', 'position_m': [20., 0.]},
+        ],
+        'edges': [
+            {'from': 'G1', 'to': 'A', 'length_m': 10.},
+            {'from': 'A', 'to': 'F1', 'length_m': 10.},
+            {'from': 'G1', 'to': 'B', 'length_m': 10.},
+            {'from': 'B', 'to': 'C', 'length_m': 20.},
+            {'from': 'C', 'to': 'F1', 'length_m': 10.},
+        ],
+        'gates': [{'id': 'G1'}], 'fatos': [{'id': 'F1'}],
+    }
+    control = VertiportGroundControl()
+    control.configure_vertiport('V', layout, radius_m=1.)
+    enumerated = []
+    original = VertiportGroundControl._candidate_paths
+    monkeypatch.setattr(VertiportGroundControl, '_candidate_paths',
+                        staticmethod(lambda nodes, edges, start, goal, limit:
+                                     (enumerated.append((start, goal)), original(nodes, edges, start, goal, limit))[1]))
+    blocker = GroundObservation('PARKED', 'V', (0., 10.), 1.)
+    first = control.propose_routes('V', 'G1', 'F1', aircraft_id='A', observations=[], radius_m=1.)
+    second = control.propose_routes('V', 'G1', 'F1', aircraft_id='B', observations=[blocker], radius_m=1.)
+    # The pair a configuration already walked is never walked again, and the
+    # live blockers are still attached fresh to every proposal.
+    assert enumerated == []
+    assert [p.node_ids for p in first] == [p.node_ids for p in second] == [('G1', 'A', 'F1'), ('G1', 'B', 'C', 'F1')]
+    assert first[0].blocked_by == () and second[0].blocked_by == ('PARKED',) and second[1].blocked_by == ()
+    control.propose_routes('V', 'F1', 'G1', aircraft_id='A', observations=[], radius_m=1.)
+    control.propose_routes('V', 'F1', 'G1', aircraft_id='A', observations=[blocker], radius_m=1.)
+    assert enumerated == [('F1', 'G1')]
+    # A new graph for the same vertiport forgets what was found for the old one.
+    control.configure_vertiport('V', layout, radius_m=1.)
+    control.propose_routes('V', 'F1', 'G1', aircraft_id='A', observations=[], radius_m=1.)
+    assert enumerated.count(('F1', 'G1')) == 2
+    control.reset()
+    assert control._candidate_cache == {}

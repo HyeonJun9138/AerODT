@@ -50,8 +50,8 @@
    {
     "id": "ask",
     "kind": "start",
-    "text": "실제 위치에서 도착 ETA를 갱신한다",
-    "detail": "접근 길이·수평속도·강하율로 남은 시간을 계산한다",
+    "text": "조종사의 접근 순번 요청과 현재 ETA를 수신한다",
+    "detail": "요청 시점 판단은 조종사가 맡고, PSU는 요청을 받은 뒤 순번·FATO·GATE를 검토한다",
     "next": "known"
    },
    {
@@ -72,7 +72,7 @@
     "id": "pad",
     "kind": "action",
     "text": "출발 예약과 선행 착륙 ETA 사이에 배치한다",
-    "detail": "진행 중 접근이 우선이며 같은 패드의 시간 슬롯은 겹치지 않는다. 이륙은 가까운 패드의 접근까지 보호하고 실제 출발 위치 이탈을 확인한다",
+    "detail": "진행 중 접근이 우선이며 같은 패드의 시간 슬롯은 겹치지 않는다. 서로 다른 FATO의 실제 점유는 공유하지 않으며, 교차 경로는 별도 경로 검사로 보호한다",
     "next": "stand"
    },
    {
@@ -149,8 +149,8 @@
    {
     "id": "final",
     "kind": "decision",
-    "text": "최종 진입 전 실제 패드·출구·선행편이 비었나?",
-    "detail": "실제 점유와 공용 구간을 재확인한다. 게이트만 점유 중이면 독립 FATO 선착륙 조건을 별도로 검사한다",
+    "text": "최종 패드와 임박한 이륙편의 FATO 용량이 확보됐나?",
+    "detail": "실제 점유·공용 구간·선행편과 이륙 보호 용량을 재확인한다. 50% 설정이면 겸용 FATO 4개 중 실제 사용 가능한 2개를 출발용으로 남긴다",
     "yes": "land",
     "no": "staging"
    },
@@ -164,7 +164,7 @@
     "id": "staging",
     "kind": "decision",
     "text": "빈 독립 FATO에서 게이트 해제를 잠시 기다릴 수 있나?",
-    "detail": "공용 패드·상승 경로·출발 유도로를 막지 않고, 이동 중 출발편의 게이트 해제가 임박한 경우만 선착륙한다. 접지 후 지상 이동권으로 대기·감속하며 실제 이탈 전까지 FATO 점유를 유지한다",
+    "detail": "공용 패드·상승 경로·출발 유도로와 설정된 이륙 FATO 보호 수를 모두 유지하고, 이동 중 출발편의 게이트 해제가 임박한 경우만 선착륙한다. 접지 후 실제 이탈 전까지 FATO 점유를 유지한다",
     "yes": "land",
     "no": "protect"
    },
@@ -226,7 +226,7 @@
     "kind": "toggle",
     "default": true,
     "scope": "live",
-    "note": "다음 계획 로드부터 적용. 같은 버티포트의 서로 다른 FATO는 공통 WP가 있어도 공중 경로 전체를 선점해 막지 않습니다. 실제 근접 대응과 패드 점유, 인접 패드 및 지상 검사는 유지합니다. 분리 항로를 생성하거나 안전을 보장하는 설정은 아닙니다."
+    "note": "다음 계획 로드부터 적용. 같은 버티포트의 서로 다른 FATO는 공통 WP가 있어도 공중 경로 전체를 선점해 막지 않습니다. 실제 근접 대응과 각 FATO의 자체 점유 및 지상 검사는 유지합니다. 분리 항로를 생성하거나 안전을 보장하는 설정은 아닙니다."
    },
    {
     "id": "assume_mixed_separated",
@@ -289,7 +289,7 @@
     "kind": "toggle",
     "default": true,
     "scope": "live",
-    "note": "켜면 진입 간격을 배정된 도착 FATO별로 따로 센다: 착륙 FATO가 둘이면 두 편이 나란히 들어온다. 끄면 버티포트 전체를 한 줄로 세워 FATO가 여럿이어도 한 번에 한 편만 들어온다. 패드 점유·인접 패드 확인은 그대로 유지한다."
+    "note": "켜면 진입 간격을 배정된 도착 FATO별로 따로 센다: 착륙 FATO가 둘이면 두 편이 나란히 들어온다. 끄면 버티포트 전체를 한 줄로 세워 FATO가 여럿이어도 한 번에 한 편만 들어온다. 각 FATO의 자체 점유 확인은 그대로 유지한다."
    },
    {
     "id": "predictive_ground",
@@ -361,6 +361,48 @@
     "note": "실제 위치 ETA로 슬롯을 갱신하고 접근과 최종 착륙을 따로 허가합니다."
    },
    {
+    "id": "assign_gate_after_touchdown",
+    "label": "접지 후 GATE 배정",
+    "node": "grant",
+    "kind": "toggle",
+    "default": true,
+    "scope": "live",
+    "note": "켜면 접근·착륙은 FATO 기준으로 처리하고, 실제 접지 순서대로 빈 GATE와 복수 지상경로를 배정합니다."
+   },
+   {
+    "id": "protect_departure_capacity",
+    "label": "임박한 이륙 FATO 보호",
+    "node": "final",
+    "kind": "toggle",
+    "default": true,
+    "scope": "live",
+    "note": "켜면 임박한 출발편이 있을 때 착륙으로 사용할 수 없는 이륙 가능 FATO 수를 계산하여 설정된 비율만큼 실제 출발 용량을 남깁니다."
+   },
+   {
+    "id": "departure_fato_reserve_ratio",
+    "label": "이륙 FATO 보호 비율",
+    "node": "final",
+    "default": 0.5,
+    "min": 0,
+    "max": 1,
+    "step": 0.25,
+    "unit": "비율",
+    "scope": "live",
+    "note": "이륙 가능한 FATO 중 남겨둘 최소 비율입니다. 0.5이면 4개 중 2개를 보호하며 전용 이륙 FATO 수보다 작게 잡지 않습니다."
+   },
+   {
+    "id": "departure_reserve_lookahead_s",
+    "label": "이륙 용량 보호 예고시간",
+    "node": "final",
+    "default": 300.0,
+    "min": 30,
+    "max": 1800,
+    "step": 30,
+    "unit": "초",
+    "scope": "live",
+    "note": "이 시간 안에 출발 예정·요청·진행 중인 편이 있을 때만 이륙 FATO 보호 규칙을 적용합니다."
+   },
+   {
     "id": "prediction_buffer_s",
     "label": "ETA 여유",
     "node": "pad",
@@ -370,7 +412,7 @@
     "step": 1,
     "unit": "초",
     "scope": "live",
-    "note": "도착 예측에 더하는 여유. 실제 패드 점유 확인은 별도로 유지합니다."
+    "note": "도착 예측에 더하는 여유. 실제 패드 점유 검사는 별도로 유지합니다."
    },
    {
     "id": "approach_headway_s",
@@ -409,18 +451,6 @@
     "note": "실제 접근 위치로 계산한 시간이 이 값 안에 들면 패드와 선행편을 확인합니다. 대기·복귀 ETA 때문에 이 판정이 반복해서 바뀌지 않습니다."
    },
    {
-    "id": "pad_adjacency_m",
-    "label": "인접 패드 간격",
-    "node": "land",
-    "default": 50.0,
-    "min": 10,
-    "max": 200,
-    "step": 5,
-    "unit": "m",
-    "scope": "live",
-    "note": "같은 데크에서 이 거리 안의 패드는 하나로 본다: 한 패드가 쓰이는 동안 그 안의 다른 패드에서 이륙·최종 착륙을 시키지 않는다. 36 m 간격 4-FATO 데크에서 50 m면 F1·F3, F2·F4가 동시에 움직인다. 다운워시 안전 기준이 아닌 연구 설정이다."
-   },
-   {
     "id": "pad_clear_radius_m",
     "label": "패드 이탈 확인 반경",
     "node": "land",
@@ -434,7 +464,7 @@
    },
    {
     "id": "arrival_request_lead_s",
-    "label": "접근 요청 시점",
+    "label": "조종사 접근 순번 요청 시점",
     "unit": "초",
     "node": "ask",
     "min": 60,
@@ -442,7 +472,8 @@
     "step": 10,
     "default": 180.0,
     "scope": "live",
-    "note": "착륙 예정 이 시간 전에 묻는다. 짧으면 순서를 바꿀 여지가 없고, 길면 아직 모르는 앞순위까지 미리 밀어낸다."
+    "source": "pilot",
+    "note": "조종사 차트가 소유하는 동일한 값입니다. PSU는 이 시점을 정하지 않고 요청을 받은 뒤 처리합니다."
    },
    {
     "id": "fato_landing_separation_s",
@@ -596,6 +627,21 @@
     "kind": "start",
     "text": "조종사가 자기 상태를 읽는다",
     "detail": "위치·속도·자세는 물리에서 관측한다. 보간하지 않는다",
+    "next": "arrival_request"
+   },
+   {
+    "id": "arrival_request",
+    "kind": "decision",
+    "text": "접근 순번 요청 기준에 들어왔나?",
+    "detail": "실제 위치에서 계산한 남은 시간과 도착 진입점 도달 여부를 확인한다. 자동 조종은 즉시 요청하고 수동 조종은 요청 버튼과 알림을 활성화한다",
+    "yes": "arrival_send",
+    "no": "traffic"
+   },
+   {
+    "id": "arrival_send",
+    "kind": "action",
+    "text": "PSU에 접근 순번 요청",
+    "detail": "조종사가 현재 ETA와 비행편을 보낸다. PSU의 순번 배정·접근 허가·착륙 허가는 이 요청과 별도다",
     "next": "traffic"
    },
    {
@@ -699,6 +745,18 @@
    }
   ],
   "parameters": [
+   {
+    "id": "arrival_request_lead_s",
+    "label": "접근 순번 요청 시점",
+    "unit": "초",
+    "node": "arrival_request",
+    "min": 60,
+    "max": 1800,
+    "step": 10,
+    "default": 180.0,
+    "scope": "live",
+    "note": "예상 접지까지 남은 시간이 이 값 안에 들거나 도착 진입점에 도달하면 조종사가 요청합니다. 자동 모드는 즉시 전송하고 수동 모드는 알림과 요청 버튼을 활성화합니다."
+   },
    {
     "id": "pilot_self_hold",
     "label": "조종사 자율 대기",

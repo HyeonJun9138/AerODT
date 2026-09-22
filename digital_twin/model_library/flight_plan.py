@@ -257,7 +257,30 @@ def taxi_path_from_position(layout, position, goal_id, max_join_m=2.5):
 
 # ---------------------------------------------------------------- the air
 
+# The last few networks the graph was built for, by identity. A network is a
+# dict the store hands out whole and never edits in place (an edit is a new
+# dict), so the same object is the same graph. A day's load builds seven
+# hundred routes against one network and a schedule run over a thousand
+# plans; each rebuilt this from every node and link.
+_AIR_GRAPHS = []
+_AIR_GRAPH_KEEP = 4
+
+
 def air_graph(network):
+    """`_air_graph` for this network, built once. The places and ground
+    tables are handed out as copies: `scheduled_route.resolve` adds
+    provisional nodes to the tables it is given, and one caller's provisional
+    node must not be another caller's route."""
+    for entry in _AIR_GRAPHS:
+        if entry[0] is network:
+            return dict(entry[1]), entry[2], dict(entry[3])
+    places, out, ground = _air_graph(network)
+    _AIR_GRAPHS.append((network, places, out, ground))
+    del _AIR_GRAPHS[:-_AIR_GRAPH_KEEP]
+    return dict(places), out, dict(ground)
+
+
+def _air_graph(network):
     """Where the aircraft may fly: every endpoint's position and altitude, and
     the links out of it. A drawn F corridor joins waypoints both ways; C/G
     retain their departure/arrival direction. Source links are not mutated."""
@@ -446,8 +469,18 @@ def _ground_leg(stage_id, name, taxi, datum, aircraft, speed=None):
     # Out to the pad and back in are different speeds in the operating figures.
     speed = speed or aircraft["taxi_speed_mps"]
     path,profile,distance,duration=prepare(taxi['points'],speed,GATE_HOLD_SECONDS)
+    route_detail = {key: taxi[key] for key in (
+        'route_id', 'rank', 'distance_m', 'clear_distance_m', 'blocked_by') if key in taxi}
+    route_detail = {
+        'ground_route_id': route_detail.get('route_id'),
+        'ground_route_rank': route_detail.get('rank'),
+        'ground_route_distance_m': route_detail.get('distance_m'),
+        'ground_route_clear_distance_m': route_detail.get('clear_distance_m'),
+        'ground_route_blocked_by': route_detail.get('blocked_by'),
+    } if route_detail else {}
     return _leg(stage_id, name, path, [(0.0, datum)] * len(path), distance,
-                duration, speed, {"taxi_nodes": taxi["nodes"], **({'ground_motion':profile} if profile else {})})
+                duration, speed, {"taxi_nodes": taxi["nodes"], **route_detail,
+                                  **({'ground_motion':profile} if profile else {})})
 
 
 def _charge_leg(place, datum, aircraft, from_pct, target_pct, gate, charger):
@@ -597,7 +630,7 @@ def validate_request(raw, options):
 
 
 def build_plan(request, vertiports, network, *, allow_direct=False, supplied_air_path=None,
-               profile=None):
+               profile=None, departure_taxi=None):
     """The whole flight as timed legs, or ValueError naming what stopped it.
 
     `allow_direct` lets a pair the network does not join be flown down a
@@ -642,10 +675,13 @@ def build_plan(request, vertiports, network, *, allow_direct=False, supplied_air
     if not end_fato:
         raise ValueError("to_vertiport: no FATO that lands")
 
-    out_taxi = taxi_path(start_layout, start_gate, start_fato)
+    out_taxi = departure_taxi or taxi_path(start_layout, start_gate, start_fato)
     in_taxi = taxi_path(end_layout, end_fato, end_gate)
     if out_taxi is None:
         raise ValueError(f"from_gate: {start_gate} has no taxiway to {start_fato}")
+    if (not out_taxi.get('nodes') or out_taxi['nodes'][0] != start_gate
+            or out_taxi['nodes'][-1] != start_fato):
+        raise ValueError('departure taxi proposal does not join the selected stand and FATO')
     if in_taxi is None:
         raise ValueError(f"to_gate: {end_fato} has no taxiway to {end_gate}")
     start_node = f"fato:{request['from_vertiport']}:{start_fato}"

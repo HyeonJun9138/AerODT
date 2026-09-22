@@ -94,10 +94,12 @@ function fakeCesium() {
     PerInstanceColorAppearance: Object.assign(class {constructor(options) {this.options = options;}}, {VERTEX_FORMAT: 'vf'}),
     ColorGeometryInstanceAttribute: {fromColor: colour => colour},
     GeometryInstance: class {constructor(options) {Object.assign(this, options);}},
-    Primitive: class {constructor(options) {Object.assign(this, options); primitives.push(this);}},
+    Primitive: class {constructor(options) {Object.assign(this, options);this.ready=true; primitives.push(this);} update(){} destroy(){this.destroyed=true;}},
     ShadowMode: {DISABLED: 0},
   };
-  const scene = {primitives: {items: [], add(p) {this.items.push(p);}, remove(p) {this.items = this.items.filter(item => item !== p);}}, requestRender() {}};
+  let frameNumber=0;
+  const scene = {primitives: {items: [], add(p) {this.items.push(p);}, remove(p) {this.items = this.items.filter(item => item !== p);p.destroy?.();}}, requestRender() {},
+    render(){const state={frameNumber:frameNumber++,passes:{render:true}};for(const p of this.primitives.items)p.update?.(state);}};
   return {C, scene, primitives};
 }
 
@@ -121,7 +123,7 @@ test('unchanged ground focus reuses cell/frustum selection without stopping the 
  layer.destroy();
 });
 
-test('camera haze bounds footprint requests and abandons offscreen GPU work without losing a revisit',()=>{
+test('short yaw excursion retains pending geometry, expiry still abandons offscreen work',()=>{
  const {C,scene}=fakeCesium();
  const layer=new VWorldBuildingLayer({C,scene,load:async()=>({buildings:[]})});
  layer.pump=()=>{};layer.setEnabled(true);layer.setAppearance({distance:'metro'});
@@ -133,10 +135,107 @@ test('camera haze bounds footprint requests and abandons offscreen GPU work with
  const old={show:true},pending={ready:false};scene.primitives.add(old);scene.primitives.add(pending);
  Object.assign(cell,{primitive:old,pendingPrimitive:pending,pendingCount:10,pendingVertices:40,state:'ready'});
  layer.update(400,null,200,{...focus,longitude:128});
+ assert.equal(cell.pendingPrimitive,pending,'briefly hidden GPU work is not restarted');
+ assert.equal(old.show,false);
+ layer.update(400,null,400,focus);
+ assert.equal(cell.pendingPrimitive,pending,'return reuses the exact pending primitive');
+ layer.update(400,null,600,{...focus,longitude:128});
+ layer.update(400,null,400+REQUEST_RETENTION_MS,{...focus,longitude:128});
  assert.equal(cell.pendingPrimitive,null);assert.equal(cell.state,'waiting');assert.equal(cell.primitive,old);
  assert.ok(!scene.primitives.items.includes(pending));
- layer.update(400,null,400,focus);assert.equal(cell.state,'queued','a return prepares the cancelled detail again');
+ layer.update(400,null,1800,focus);assert.equal(cell.state,'queued','expired detail is prepared again');
  layer.destroy();
+});
+
+test('yaw during terrain preparation retains the work but disabling still cancels it',async()=>{
+ const {C,scene}=fakeCesium();let release;
+ const layer=new VWorldBuildingLayer({C,scene,load:async(c,r)=>cellData(c,r,1),
+  groundHeights:points=>new Promise(resolve=>{release=()=>resolve(points.map(()=>0));})});
+ const a={lomin:126.971,lomax:126.972,lamin:37.561,lamax:37.562};
+ layer.setEnabled(true);layer.update(500,a,0);await flush();
+ const cell=[...layer.cells.values()][0],controller=cell.controller;
+ layer.pump=()=>{};
+ layer.update(500,{...a,lomin:127.171,lomax:127.172},200,null,{moving:true});
+ assert.equal(controller.signal.aborted,false);
+ release();await flush();assert.equal(layer.geometryBuilds,1);
+ assert.equal(cell.primitive.show,false,'retained geometry remains invisible outside the view');
+ layer.update(500,a,400,null,{moving:true});assert.equal(cell.primitive.show,true);
+ assert.equal(layer.geometryBuilds,1);
+ cell.controller=new AbortController();layer.setEnabled(false);
+ assert.equal(cell.controller.signal.aborted,true);layer.destroy();
+});
+
+test('moving-camera geometry uses smaller CPU batches without dropping buildings',async()=>{
+ const {C,scene}=fakeCesium();let yields=0;
+ const layer=new VWorldBuildingLayer({C,scene,yieldWork:async()=>{yields++;}});
+ layer.moving=true;
+ const data=cellData(12697,3756,240).buildings;
+ const primitive=await layer.build(data,Array(240).fill(0));
+ assert.equal(primitive.parts.flatMap(p=>p.geometryInstances).length,240);
+ assert.ok(primitive.parts.every(p=>p.geometryInstances.length<=128));
+ assert.ok(yields>=2,'yield at least every 80 buildings during rotation');
+ layer.destroy();
+});
+
+test('default geometry yield waits past the animation callback before resuming work',async()=>{
+ const {C,scene}=fakeCesium();
+ const raf=Object.getOwnPropertyDescriptor(globalThis,'requestAnimationFrame');
+ const cancel=Object.getOwnPropertyDescriptor(globalThis,'cancelAnimationFrame');
+ let callback,finished=false;
+ Object.defineProperty(globalThis,'requestAnimationFrame',{configurable:true,value:fn=>{callback=fn;return 1;}});
+ Object.defineProperty(globalThis,'cancelAnimationFrame',{configurable:true,value:()=>{}});
+ try{
+  const layer=new VWorldBuildingLayer({C,scene});
+  const pending=layer.yieldWork().then(()=>{finished=true;});
+  assert.equal(finished,false);callback();
+  await Promise.resolve();assert.equal(finished,false,'do not consume the current paint with the next batch');
+  await pending;assert.equal(finished,true);layer.destroy();
+ }finally{
+  if(raf)Object.defineProperty(globalThis,'requestAnimationFrame',raf);else delete globalThis.requestAnimationFrame;
+  if(cancel)Object.defineProperty(globalThis,'cancelAnimationFrame',cancel);else delete globalThis.cancelAnimationFrame;
+ }
+});
+
+test('multipart footprints also respect upload vertex limits without losing holes',async()=>{
+ const {C,scene}=fakeCesium();
+ const layer=new VWorldBuildingLayer({C,scene,yieldWork:async()=>{}});
+ const outer=Array.from({length:1800},(_,i)=>[127+Math.cos(i/1800*Math.PI*2)*.001,37.5+Math.sin(i/1800*Math.PI*2)*.001]);
+ const hole=Array.from({length:300},(_,i)=>[127+Math.cos(i/300*Math.PI*2)*.0001,37.5+Math.sin(i/300*Math.PI*2)*.0001]);
+ const result=await layer.build([{height_m:20,rings:Array.from({length:3},()=>({outer,holes:[hole]}))}],[45]);
+ assert.equal(result.parts.length,3);
+ assert.ok(result.parts.every(p=>p.geometryInstances.length===1));
+ assert.ok(result.parts.every(p=>p.geometryInstances[0].geometry.polygonHierarchy.holes.length===1));
+ result.destroy();layer.destroy();
+});
+
+test('cancelled chunk construction destroys already prepared primitives',async()=>{
+ const {C,scene,primitives}=fakeCesium();let active=true;
+ const layer=new VWorldBuildingLayer({C,scene,yieldWork:async()=>{if(primitives.length)active=false;}});
+ const result=await layer.build(cellData(12697,3756,300).buildings,Array(300).fill(10),()=>active);
+ assert.equal(result,null);assert.ok(primitives.length>0);assert.ok(primitives.every(p=>p.destroyed));layer.destroy();
+});
+
+test('dense cell samples exact ground in bounded batches and retains previous visible mesh',async()=>{
+ const {C,scene}=fakeCesium(),batches=[];
+ const layer=new VWorldBuildingLayer({C,scene,yieldWork:async()=>{},groundHeights:async points=>{batches.push(points.length);return points.map(()=>17);}});
+ const cell={key:'12697,3756',column:12697,row:3756,limit:250,data:cellData(12697,3756,250).buildings,primitive:{show:true},count:2,vertices:10};
+ cell.centroids=cell.data.map(b=>centroidOf(b.rings[0].outer));cell.vertexCounts=cell.data.map(()=>5);
+ layer.enabled=layer.near=true;layer.wanted.add(cell.key);layer.cells.set(cell.key,cell);
+ await layer.fill(cell,layer.generation,new AbortController().signal);
+ assert.deepEqual(batches,[96,96,58]);assert.equal(cell.bases.length,250);assert.ok(cell.bases.every(x=>x===17));
+ layer.apply();assert.equal(cell.primitive.show,true);assert.equal(cell.pendingPrimitive.ready,false);
+ for(let n=0;n<3;n++){scene.render();layer.apply();}
+ assert.equal(cell.pendingPrimitive,null);assert.equal(cell.count,250);assert.equal(cell.primitive.show,true);layer.destroy();
+});
+
+test('a rebuilt cell entirely cleared by a deck removes its old buildings',async()=>{
+ const {C,scene}=fakeCesium();
+ const layer=new VWorldBuildingLayer({C,scene,load:async(c,r)=>cellData(c,r,1)});
+ const view={lomin:126.971,lomax:126.972,lamin:37.561,lamax:37.562};
+ layer.setEnabled(true);layer.update(1000,view,0);await flush();await flush();
+ const cell=[...layer.cells.values()][0],old=cell.primitive;assert.ok(old);
+ layer.isCleared=()=>true;layer.rebuild();layer.update(1000,view,200);await flush();await flush();
+ assert.equal(cell.primitive,null);assert.equal(cell.count,0);assert.equal(old.destroyed,true);layer.destroy();
 });
 test('a moving view narrows the fetch budget and postpones warm-cell quota rebuilds until idle',async()=>{
  const {C,scene}=fakeCesium(),releases=[];
@@ -342,14 +441,14 @@ test('zoomed-out footprint fallback shares its budget across a wider patch inste
  layer.setEnabled(true);
  const focus={longitude:127.02,latitude:37.61,cameraLongitude:126.98,cameraLatitude:37.56,offset:6000};
  layer.update(20000,{lomin:126,lomax:128,lamin:37,lamax:38},0,focus);
- for(let n=0;n<70;n++)await flush();
+ for(let n=0;n<240&&layer.stats.visibleCells<48;n++){await flush();scene.render();layer.apply();layer.pump();}
  assert.equal(requests,48);assert.equal(layer.stats.visibleCells,48);
  assert.ok([...layer.cells.values()].every(c=>c.count>0&&c.count<400));
  assert.ok(layer.stats.buildings<=MAX_BUILDINGS);assert.ok(layer.stats.vertices<=MAX_VERTICES);
- const appearance=scene.primitives.items[0].appearance;
+ const displayed=scene.primitives.items[0],appearance=(displayed.parts?.[0]??displayed).appearance;
  assert.equal(appearance.uniforms.u_buildingAltitudeFade,1);
  layer.update(21000,null,1000,focus);await flush();
- assert.equal(requests,48);assert.equal(scene.primitives.items[0].appearance,appearance,'camera motion does not recompile shaders');
+ assert.equal(requests,48);assert.equal((displayed.parts?.[0]??displayed).appearance,appearance,'camera motion does not recompile shaders');
  layer.destroy();
 });
 
@@ -466,9 +565,9 @@ test('dense overview to close-up finishes quota changes without stranding an und
  const {C,scene}=fakeCesium();
  const layer=new VWorldBuildingLayer({C,scene,load:async(c,r)=>cellData(c,r,2000),yieldWork:async()=>{}});
  const focus={longitude:126.978,latitude:37.565,offset:0};layer.setEnabled(true);
- layer.update(20000,null,0,focus);for(let n=0;n<70;n++)await flush();
+ layer.update(20000,null,0,focus);for(let n=0;n<240;n++){await flush();scene.render();layer.apply();layer.pump();}
  for(let tick=1;tick<=6;tick++){
-  layer.update(500,null,tick*200,focus);for(let n=0;n<70;n++)await flush();
+  layer.update(500,null,tick*200,focus);for(let n=0;n<240;n++){await flush();scene.render();layer.apply();layer.pump();}
   assert.ok(layer.stats.buildings<=MAX_BUILDINGS);assert.ok(layer.stats.vertices<=MAX_VERTICES);
  }
  const near=[...layer.cells.values()].sort((a,b)=>a.order-b.order).slice(0,8);

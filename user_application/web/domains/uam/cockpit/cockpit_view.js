@@ -1,11 +1,27 @@
-import {manualArrivalHolding} from '../operations/psu_pilot_guidance.js?v=20260921-arrival2';
-import {manualFlightTiming} from './cockpit_flight_progress.js';
+import {manualArrivalHolding} from '../operations/psu_pilot_guidance.js?v=20260921-pilot-arrival';
+import {manualFlightTiming} from './cockpit_flight_progress.js?v=20260921-psu-eta';
 import {observedCockpit} from './cockpit_observed.js?v=20260917-multi-mfd';
 import {CockpitConsole,consoleSurface,CONSOLE_WIDTH,CONSOLE_HEIGHT,CONSOLE_FOCUS_WIDTH,CONSOLE_FOCUS_HEIGHT} from './cockpit_console.js?v=20260921-repeat-flight';
 import {surfaceChart} from './cockpit_surface.js';
 import {SCREEN_WIDTH,SCREEN_HEIGHT} from './cockpit_instruments.js?v=20260914-cabin';
 import {cockpitInstrumentState} from './cockpit_state.js?v=20260914-cabin';
-import {CockpitPanel} from './cockpit_panel.js?v=20260921-lower';
+import {CockpitPanel} from './cockpit_panel.js?v=20260921-psu-eta';
+const assignChanged=(object,key,value)=>{if(object[key]!==value)object[key]=value;};
+// The eye and glass travel in the same rigid cabin frame. World translation or
+// aircraft yaw does not change their CSS projection. Unknown/non-rigid cameras
+// keep the ordinary projection path rather than guessing their geometry.
+function projectionKey(view,offset,shelf){
+ const c=view.camera,m=view.matrix,f=view.globe.viewer.camera.frustum;
+ if(!Number.isFinite(c.yaw)||!Number.isFinite(c.pitch)||!c.eye?.every(Number.isFinite))return null;
+ for(let a=0;a<3;a++)for(let b=a;b<3;b++){
+  const dot=m[a*4]*m[b*4]+m[a*4+1]*m[b*4+1]+m[a*4+2]*m[b*4+2];
+  if(!Number.isFinite(dot)||Math.abs(dot-(a===b?1:0))>1e-6)return null;
+ }
+ return JSON.stringify([c.yaw,c.pitch,c.eye,c.forward,c.right,c.up,c.viewpoint,view.scale,
+  f.near,f.far,f.fov,f.aspectRatio,f.xOffset,f.yOffset,
+  offset.left,offset.top,offset.width,offset.height,shelf?.top,shelf?.height,
+  view.panel.focusScreen,view.console?.focused,view.profile.screens]);
+}
 // Current observed contacts only; prediction paths belong to the radar panel.
 export function navTraffic(items, ownId){
  return [...(items?.values()??[])].map(item=>item.entity).filter(e=>e&&e.entity_id!==ownId&&
@@ -90,10 +106,13 @@ export class CockpitView {
   if(!value.enabled){this.externalCamera?.stop();return;}
   try{
    if(!this.externalCamera){
-    this.externalModule??=import('/visualization/airframe_camera.js?v=20260914-cabin');
-    const {AirframeCamera}=await this.externalModule;
+    // Drawn from the map's own scene rather than a second context: every tile,
+    // building and aircraft the map holds is in the image, nothing is loaded
+    // twice, and no program is linked twice (shared_view_camera.js).
+    this.externalModule??=import('/visualization/shared_view_camera.js?v=20260922-shared-view');
+    const {SharedViewCamera}=await this.externalModule;
     if(!this.active||!this.panel.cameraEnabled)return;
-    this.externalCamera??=new AirframeCamera(this.globe,this.panel.cameraCanvas,state=>this.panel.setCameraStatus(state),{cockpit:true,cleanFrame:true});
+    this.externalCamera??=new SharedViewCamera(this.globe,this.panel.cameraCanvas,state=>this.panel.setCameraStatus(state),{cockpit:true,cleanFrame:true});
    }
    this.externalCamera.set({enabled:this.panel.cameraEnabled,mode:this.panel.cameraMode});
   }catch{this.panel.setCameraStatus({text:'카메라 모듈을 불러오지 못했습니다',age:'NO VIDEO'});}
@@ -181,7 +200,7 @@ export class CockpitView {
   if(!this.camera.update({matrix:this.matrix,scale:this.scale,epoch:this.singlePlan})){this.exit();return;}
   this.updateHardware();
   const s=l.sample,p=s.position;
-  this.console?.update({controls:s.manual?this.manualControls():null,dockControls:this.dockControls(),ground:s.ground_handling,telemetry:s,chart:this.lastChart,psu:this.manualControls()?this.readPsu?.():null});
+  this.paintConsole(now,{controls:s.manual?this.manualControls():null,dockControls:this.dockControls(),ground:s.ground_handling,telemetry:s,chart:this.lastChart,psu:this.manualControls()?this.readPsu?.():null});
   if(now>=this.lastState&&now-this.lastState<100&&s.time_s>=this.lastReplayTime)return;
   this.lastState=now;this.lastReplayTime=s.time_s;
   this.paintManual(s,l.plan,now,'preview:selected-flight');
@@ -225,12 +244,12 @@ export class CockpitView {
   const manual=this.manualFrame();
   if(manual){
    this.updateHardware(controls);
-   this.console?.update({controls,dockControls:this.dockControls(),ground:manual.sample.ground_handling,telemetry:manual.sample,chart:this.lastChart,psu:this.manualControls()?this.readPsu?.():null});
+   this.paintConsole(now,{controls,dockControls:this.dockControls(),ground:manual.sample.ground_handling,telemetry:manual.sample,chart:this.lastChart,psu:this.manualControls()?this.readPsu?.():null});
    this.paintManual(manual.sample,manual.plan,now,this.entityId);return;
   }
   const observed=observedCockpit(item.entity,g.entityScene.samples.telemetryAt(this.entityId,g.entityScene.samples.renderTime(this.entityId),{}),this.readMission(this.entityId));
   this.updateHardware(observed.controls);
-  this.console?.update({controls:null,dockControls:this.dockControls(),ground:observed.ground,telemetry:observed.telemetry,chart:this.lastChart,stale:item.entity.stale===true||item.entity.quality==='stale',psu:this.manualControls()?this.readPsu?.():null});
+  this.paintConsole(now,{controls:null,dockControls:this.dockControls(),ground:observed.ground,telemetry:observed.telemetry,chart:this.lastChart,stale:item.entity.stale===true||item.entity.quality==='stale',psu:this.manualControls()?this.readPsu?.():null});
   if(now-(this.lastState??-Infinity)<100)return;this.lastState=now;
   const samples=g.entityScene.samples,time=samples.renderTime(this.entityId),t=samples.telemetryAt(this.entityId,time,{}),entity={...item.entity};
   const heading=samples.headingAt(this.entityId,time),display={...t,heading_deg:heading};
@@ -254,7 +273,19 @@ export class CockpitView {
  // corner of the map for the frame before the postRender that places them —
  // which is why only the very first entry shows it: after that they still
  // carry the matrix the last one left on them. `project` shows them again.
- hideScreens(){this.revealStart=null;this.reduceMotion=this.document.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;this.stick3d?.hide();this.throttle3d?.hide();if(this.console)this.console.root.hidden=true;this.lastChart=null;this.lastStale=false;for(const node of Object.values(this.panel.screens??{}))if(node)node.hidden=true;}
+ hideScreens(){this.projectionCache=null;this.lastConsolePaint=-Infinity;this.revealStart=null;this.reduceMotion=this.document.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;this.stick3d?.hide();this.throttle3d?.hide();if(this.console)this.console.root.hidden=true;this.lastChart=null;this.lastStale=false;for(const node of Object.values(this.panel.screens??{}))if(node)node.hidden=true;}
+ // Text/history follows the existing MFD cadence, not the GPU frame rate.
+ // Permission/pending/phase changes bypass it; camera, hardware and input do not.
+ paintConsole(now,state){
+  const c=state.controls,p=state.psu,t=state.telemetry;
+  const key=JSON.stringify([this.entityId,Boolean(c),c?.active,c?.enabled,c?.pending,c?.source,c?.mode,
+   c?.autopilotPending,c?.holdPending,c?.groundSupported,c?.groundChargeSupported,c?.nextFlightSupported,
+   c?.autopilotSupported,t?.airborne,t?.autopilot?.enabled,t?.hold?.mode,
+   state.stale,state.ground?.phase,state.ground?.available,state.ground?.readOnly,
+   p?.pending,p?.stale,p?.error,p?.procedure]);
+  if(key===this.consolePaintKey&&now>=this.lastConsolePaint&&now-this.lastConsolePaint<100)return;
+  this.consolePaintKey=key;this.lastConsolePaint=now;this.console?.update(state);
+ }
  updateHardware(observed=null){
   // Scene primitives must be moved before draw, alongside the cabin camera.
   // Updating them in postRender leaves them a frame behind a climbing aircraft.
@@ -272,36 +303,44 @@ export class CockpitView {
   this.revealStart??=now;
   const t=this.reduceMotion?1:Math.max(0,Math.min(1,(now-this.revealStart)/600));
   const opacity=t*t*(3-2*t);
-  node.style.opacity=String(opacity);node.inert=t<1;node.style.pointerEvents=t<1||node===this.console?.root?'none':'auto';
+  assignChanged(node.style,'opacity',String(opacity));assignChanged(node,'inert',t<1);assignChanged(node.style,'pointerEvents',t<1||node===this.console?.root?'none':'auto');
   if(t<1)this.globe.viewer.scene.requestRender?.();
  }
  project(now=performance.now()){
   if(!this.active||!this.matrix){this.stick3d?.hide();this.throttle3d?.hide();return;}
-  if(this.externalCamera?.enabled)this.externalCamera.update({matrix:this.matrix,scale:this.scale,profile:this.profile,assetId:this.assetId,entityId:this.entityId,radius:this.model?.boundingSphere?.radius,stale:this.globe.items.get(this.entityId)?.entity?.quality==='stale'},performance.now());
+  if(this.externalCamera?.enabled)this.externalCamera.update({matrix:this.matrix,scale:this.scale,profile:this.profile,assetId:this.assetId,entityId:this.entityId,model:this.model,radius:this.model?.boundingSphere?.radius,stale:this.globe.items.get(this.entityId)?.entity?.quality==='stale'},performance.now());
   const g=this.globe,C=g.C,v=g.viewer,cam=v.camera,offset=v.canvas.getBoundingClientRect();
+  const dashboard=(this.panel.focusScreen||this.console?.focused)?this.document.getElementById?.('aircraft-dashboard'):null;
+  const shelf=dashboard&&!dashboard.hidden?dashboard.getBoundingClientRect?.():null;
+  const key=projectionKey(this,offset,shelf),cached=this.projectionCache;
+  if(key!==null&&cached?.key===key&&cached.profile===this.profile){
+   for(const node of cached.nodes)if(!node.hidden)this.revealScreen(node,now);
+   return;
+  }
+  const nodes=[];
   const world=p=>C.Matrix4.multiplyByPoint(this.matrix,new C.Cartesian3(p[0]*this.scale,-p[2]*this.scale,p[1]*this.scale),new C.Cartesian3());
   for(const screen of [...this.profile.screens,...(consoleSurface(this.profile)?[consoleSurface(this.profile)]:[])]){
    const isConsole=screen.id==='console',node=isConsole?this.console?.root:this.panel.screens[screen.id];if(!node)continue;
+   nodes.push(node);
    const focused=isConsole?this.console.focused:this.panel.focusScreen===screen.id;
    const width=isConsole?(focused?CONSOLE_FOCUS_WIDTH:CONSOLE_WIDTH):SCREEN_WIDTH,height=isConsole?(focused?CONSOLE_FOCUS_HEIGHT:CONSOLE_HEIGHT):SCREEN_HEIGHT;
-   node.style.zIndex=focused?'3':'0';
+   assignChanged(node.style,'zIndex',focused?'3':'0');
    if(focused){
-    const dashboard=this.document.getElementById?.('aircraft-dashboard');
-    const shelf=!dashboard?.hidden?dashboard?.getBoundingClientRect?.():null;
     const top=offset.top+16,bottom=Math.min(offset.top+offset.height-16,shelf?.height>0?shelf.top-16:Infinity);
     const room=Math.max(100,bottom-top),scale=Math.max(.2,Math.min(1.4,(offset.width-32)/width,room/height));
-    this.revealScreen(node,now);node.hidden=false;node.style.transform=`translate(${offset.left+(offset.width-width*scale)/2}px,${top+(room-height*scale)/2}px) scale(${scale})`;
+    this.revealScreen(node,now);assignChanged(node,'hidden',false);assignChanged(node.style,'transform',`translate(${offset.left+(offset.width-width*scale)/2}px,${top+(room-height*scale)/2}px) scale(${scale})`);
     continue;
    }
    // CSS instrument surfaces have no scene depth: never draw them through seats.
-   if(this.camera.viewpoint?.startsWith('seat_')){node.hidden=true;continue;}
+   if(this.camera.viewpoint?.startsWith('seat_')){assignChanged(node,'hidden',true);continue;}
    const corners=(this.screenCorners(screen)??[]).map(world);let valid=corners.length===4;
    for(const p of corners)if(C.Cartesian3.dot(C.Cartesian3.subtract(p,cam.positionWC,new C.Cartesian3()),cam.directionWC)<=cam.frustum.near+.005)valid=false;
    if(valid){const normal=C.Cartesian3.cross(C.Cartesian3.subtract(corners[1],corners[0],new C.Cartesian3()),C.Cartesian3.subtract(corners[0],corners[3],new C.Cartesian3()),new C.Cartesian3());if(C.Cartesian3.dot(normal,C.Cartesian3.subtract(cam.positionWC,corners[0],new C.Cartesian3()))<=0)valid=false;}
    const points=valid?corners.map(p=>C.SceneTransforms.worldToWindowCoordinates(v.scene,p)):[];
    const matrix=points.length===4&&points.every(Boolean)?this.screenTransform(points.map(p=>[p.x+offset.left,p.y+offset.top]),width,height):null;
-   node.hidden=!matrix;if(matrix){this.revealScreen(node,now);node.style.transform=`matrix3d(${matrix.join(',')})`;}
+   assignChanged(node,'hidden',!matrix);if(matrix){this.revealScreen(node,now);assignChanged(node.style,'transform',`matrix3d(${matrix.join(',')})`);}
   }
+  this.projectionCache=key===null?null:{key,profile:this.profile,nodes};
  }
  // Leaving to look at this same aircraft keeps the camera where the cockpit had
  // it, so the view leaves from the aircraft. An exit nobody asked for -- the

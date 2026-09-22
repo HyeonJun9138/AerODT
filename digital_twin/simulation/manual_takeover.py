@@ -190,21 +190,24 @@ def hand_over(engine, aircraft_id, *, now=None):
     when = engine.time_s if now is None else float(now)
     aircraft.external = {"since_s": when, "flight_id": flight["flight_id"],
                          "departed": False, "violations": []}
-    # Before the day starts, reserve the person's first arrival opportunity
-    # before any automatic flight can consume it. This is not taxi permission.
-    if not any(a.flight or a.next_flight or a.completed for a in engine.aircraft.values()):
-        start=max(when,flight.get('off_block_s',when),aircraft.ready_s)
-        aircraft.external['initial_priority_from_s']=start
-        aircraft.external['initial_priority_until_s']=start+INITIAL_DEPARTURE_PRIORITY_S
-        prepare_initial_departure(engine,aircraft,when)
+    # Give a newly accepted manual assignment a real opening opportunity even
+    # when the scenario is already running.  Aircraft already taxiing or
+    # airborne are never pre-empted: the owner check is read only when another
+    # parked aircraft tries to start.  Once the pilot submits inside the lease,
+    # that request keeps its place until granted or explicitly cancelled.
+    start=max(when,flight.get('off_block_s',when),aircraft.ready_s)
+    aircraft.external['initial_priority_from_s']=start
+    aircraft.external['initial_priority_until_s']=start+INITIAL_DEPARTURE_PRIORITY_S
+    prepare_initial_departure(engine,aircraft,when)
     return assignment(engine, aircraft_id)
 
 
 def prepare_initial_departure(engine, aircraft, now):
     ext=aircraft.external
-    if ext and 'initial_priority_until_s' in ext and now>=ext['initial_priority_until_s']:
+    if (ext and 'initial_priority_until_s' in ext and now>=ext['initial_priority_until_s']
+            and not ext.get('departure_pending')):
         ext.pop('initial_priority_until_s')
-        if not ext.get('departure_pending') and not ext.get('departed'):
+        if not ext.get('departed'):
             engine._entry_forecasts.pop(ext['flight_id'],None)
             engine._assigned_plans.pop(ext['flight_id'],None)
     if (not ext or ext.get('departed') or now>=ext.get('initial_priority_until_s',-1)
@@ -224,12 +227,19 @@ def prepare_initial_departure(engine, aircraft, now):
 
 
 def initial_departure_owner(engine, origin, now, *, destination=None, arrival_fato=None):
-    """A bounded opening opportunity, never an override of occupied resources."""
+    """The opening owner, including a request submitted before lease expiry.
+
+    The unsubmitted opportunity is bounded.  A submitted request is a queue
+    claim and therefore survives that display/decision window until the pilot
+    receives the assignment or cancels it.  Neither form overrides an aircraft
+    that has already started or any physical resource blocker.
+    """
     for a in engine.aircraft.values():
         ext=a.external
         if (ext and not ext.get('departed') and not a.failed
                 and ext.get('initial_priority_from_s',float('inf'))<=now
-                and now<ext.get('initial_priority_until_s',-1)):
+                and (now<ext.get('initial_priority_until_s',-1)
+                     or ext.get('departure_pending'))):
             flight=_flight_of(engine,a)
             if flight and (flight['origin']==origin or
                     (flight['destination']==destination and flight.get('arrival_fato')==arrival_fato
@@ -272,7 +282,7 @@ def assignment(engine, aircraft_id):
 
 
 def place(engine, aircraft_id, *, latitude, longitude, altitude, heading=None,
-          step=None, airborne=None, speed_mps=None, telemetry=None):
+          step=None, airborne=None, speed_mps=None, telemetry=None, contact_heights=None):
     """Where the pilot has actually put it, which is now where everyone sees it.
 
     The phase moves with the wheels, because that is what the rest of the day
@@ -295,6 +305,23 @@ def place(engine, aircraft_id, *, latitude, longitude, altitude, heading=None,
             size = 3 if key == 'velocity_ned_mps' else 4
             if isinstance(value, (list, tuple)) and len(value) == size and all(isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) for v in value):
                 aircraft.telemetry[key] = tuple(value)
+    # Socket/native coordinates are in the validated contact world. The fleet,
+    # its trail and distance records use the simulation deck datum instead.
+    if contact_heights is not None:
+        from .manual_altitude import registered_altitude
+        flight = _flight_of(engine, aircraft) or {}
+        observed_altitude = altitude
+        altitude = registered_altitude(engine, flight, latitude, longitude, altitude, contact_heights)
+        ned = aircraft.telemetry.get('velocity_ned_mps')
+        if telemetry and 'velocity_ned_mps' in telemetry and ned:
+            # Position and prediction velocity must use the same coordinate map.
+            # Keep lateral velocity, transform the vertical derivative locally.
+            dt = .01
+            future = registered_altitude(engine, flight,
+                latitude+ned[0]*dt/111320,
+                longitude+ned[1]*dt/(111320*max(1e-9, math.cos(math.radians(latitude)))),
+                observed_altitude-ned[2]*dt, contact_heights)
+            aircraft.telemetry['velocity_ned_mps'] = (ned[0], ned[1], -(future-altitude)/dt)
     was_airborne = aircraft.airborne
     aircraft.place(float(latitude), float(longitude), float(altitude), heading, step)
     if speed_mps is not None and speed_mps == speed_mps:
@@ -435,7 +462,8 @@ def request_arrival(engine, aircraft_id, *, eta_s=None, now=None):
     clearance = engine.psu.request_arrival(
         flight_id=flight["flight_id"], vertiport=flight["destination"],
         fato=flight.get("arrival_fato"), stand=flight.get("arrival_stand"),
-        earliest_s=earliest, now_s=when)
+        earliest_s=earliest, now_s=when, stands=engine._stands_of(flight['destination']),
+        defer_stand=engine.policy['psu'].get('assign_gate_after_touchdown', False))
     aircraft.clearance = clearance
     return {"state": "holding" if clearance.holding else "granted", **clearance.as_dict()}
 
@@ -462,7 +490,6 @@ def request_hold(engine, aircraft_id, *, now=None):
         flight = _flight_of(engine, aircraft)
         aircraft.external.pop('departure_pending', None)
         aircraft.external.pop('departure_requested_s', None)
-        aircraft.external.pop('initial_priority_until_s', None)
         if flight:
             engine._entry_forecasts.pop(flight['flight_id'], None)
             engine._assigned_plans.pop(flight['flight_id'], None)
@@ -479,7 +506,8 @@ def request_hold(engine, aircraft_id, *, now=None):
     clearance = engine.psu.request_arrival(
         flight_id=flight["flight_id"], vertiport=flight["destination"],
         fato=flight.get("arrival_fato"), stand=flight.get("arrival_stand"),
-        earliest_s=when, now_s=when)
+        earliest_s=when, now_s=when, stands=engine._stands_of(flight['destination']),
+        defer_stand=engine.policy['psu'].get('assign_gate_after_touchdown', False))
     aircraft.clearance = clearance
     assigned = _ensure_bay(engine, aircraft, clearance, when)
     if clearance.holding:
@@ -505,8 +533,7 @@ def _ensure_bay(engine, aircraft, clearance, when):
     """
     if clearance is None or not clearance.holding or not aircraft.airborne:
         return clearance.holding_assignment if clearance is not None else None
-    if clearance.holding_assignment is None:
-        engine.reserve_manual_bay(aircraft, when)
+    engine.reserve_manual_bay(aircraft, when)
     return clearance.holding_assignment
 
 
@@ -524,8 +551,12 @@ def advisory(engine, aircraft_id, *, now=None):
     identifier = None if flight is None else flight["flight_id"]
     departure = engine.psu.clearance(identifier, psu_sequencing.DEPARTURE) if identifier else None
     arrival = engine.psu.clearance(identifier, psu_sequencing.ARRIVAL) if identifier else None
-    if arrival is not None and arrival.stand is None and not aircraft.external.get("completed"):
-        engine.psu.reconsider_arrival(identifier,when)
+    if (arrival is not None and arrival.stand is None and not aircraft.external.get("completed")
+            and (not arrival.deferred_stand or arrival.used_s is not None)):
+        if arrival.deferred_stand:
+            engine._assign_landed_gates(when)
+        else:
+            engine.psu.reconsider_arrival(identifier,when)
     if arrival is not None and not aircraft.external.get("completed"):
         _ensure_bay(engine, aircraft, arrival, when)
     upcoming = next_flight(engine, aircraft, now=when)
@@ -644,7 +675,13 @@ def request(engine, aircraft_id, kind, **detail):
     if aircraft.external.get('completed'):
         answer={'state':'accepted','reason':'운항 보고가 완료되었습니다'}
     elif kind=='departure':answer=request_departure(engine,aircraft_id)
-    elif kind=='arrival':answer=request_arrival(engine,aircraft_id,eta_s=detail.get('eta_s'))
+    elif kind=='arrival':
+        if 'report_airborne' not in aircraft.external.get('reports',{}):
+            answer={'state':'hold','reason':'이륙 완료 보고를 먼저 보내세요'}
+        else:
+            decision=manual_procedure.arrival_request_readiness(engine,aircraft,flight,when)
+            answer=(request_arrival(engine,aircraft_id,eta_s=detail.get('eta_s'))
+                    if decision['due'] else {'state':'hold','reason':decision['reason']})
     elif kind=='hold':
         aircraft.external.pop('landing_cleared_s',None)
         aircraft.external.pop('approach_cleared_s',None)

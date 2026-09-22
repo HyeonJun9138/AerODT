@@ -24,8 +24,10 @@ rehearsal needs so that a schedule which cannot be flown as written shows that
 it cannot, instead of aircraft landing through each other.
 """
 import itertools
+import math
 from collections.abc import MutableMapping
 from copy import deepcopy
+from dataclasses import dataclass
 
 from digital_twin.contracts.vertiport_resources import VertiportResourceReport
 from .holding_queue import HoldingQueue
@@ -43,9 +45,6 @@ EAT_REVISION_S = 20.0
 FATO_DEPARTURE_SEPARATION_S = 60.0
 # A pad that takes both leaves this much between a landing and a departure.
 FATO_MIXED_SEPARATION_S = 75.0
-# How long before the planned touchdown a pilot asks. Far enough out that a hold
-# can be entered from cruise instead of thrown in on short final.
-ARRIVAL_REQUEST_LEAD_S = 180.0
 # A hold shorter than this is not worth leaving the corridor for: the aircraft
 # simply flies the approach slower. Below it, no hold is recorded.
 MINIMUM_HOLD_S = 20.0
@@ -73,14 +72,13 @@ class Tuning:
     """
 
     __slots__ = ("landing_separation_s", "departure_separation_s", "mixed_separation_s",
-                 "request_lead_s", "minimum_hold_s", "maximum_hold_s", "stand_wait_s",
+                 "minimum_hold_s", "maximum_hold_s", "stand_wait_s",
                  "reassign_stand", "manual_arrival_priority", "eat_revision_s")
 
     def __init__(self, **given):
         self.landing_separation_s = float(given.get("fato_landing_separation_s", FATO_LANDING_SEPARATION_S))
         self.departure_separation_s = float(given.get("fato_departure_separation_s", FATO_DEPARTURE_SEPARATION_S))
         self.mixed_separation_s = float(given.get("fato_mixed_separation_s", FATO_MIXED_SEPARATION_S))
-        self.request_lead_s = float(given.get("arrival_request_lead_s", ARRIVAL_REQUEST_LEAD_S))
         self.minimum_hold_s = float(given.get("minimum_hold_s", MINIMUM_HOLD_S))
         self.maximum_hold_s = float(given.get("maximum_hold_s", MAXIMUM_HOLD_S))
         self.stand_wait_s = float(given.get("stand_wait_s", STAND_WAIT_S))
@@ -90,7 +88,7 @@ class Tuning:
         # and separation is unchanged -- the most it can cost anyone else is one
         # slot. There is only ever one of them, and a person practising an
         # approach is the one arrival with nothing to gain from waiting.
-        self.manual_arrival_priority = bool(given.get("manual_arrival_priority", True))
+        self.manual_arrival_priority = bool(given.get("manual_arrival_priority", False))
         # How far the sequencer's own answer must move before the pilot is told
         # their approach time has changed. Below this the number they were given
         # simply stands: a time that slides a few seconds at a time is worse than
@@ -217,9 +215,17 @@ class VertiportResourceMonitor:
     def __init__(self):
         self._reports = {}
         self.now_s = 0.0
+        # `occupants`/`reservations` answers for one (kind, moment), kept only
+        # while the reports they were read from stand. Every write to
+        # `_reports` and every move of `now_s` empties them; the answers
+        # handed out are copies, so a caller editing one edits nothing here.
+        self._by_kind = {}
 
     def advance(self, now_s):
-        self.now_s = max(self.now_s, float(now_s))
+        moved = max(self.now_s, float(now_s))
+        if moved != self.now_s:
+            self.now_s = moved
+            self._by_kind.clear()
 
     def ingest(self, report):
         if isinstance(report, dict):
@@ -230,6 +236,7 @@ class VertiportResourceMonitor:
         if existing is not None and report.sequence <= existing.sequence:
             return False
         self._reports[report.vertiport_id] = report
+        self._by_kind.clear()
         self.advance(report.observed_s)
         return True
 
@@ -258,29 +265,32 @@ class VertiportResourceMonitor:
                     and resource.reservation_id in (None, owner))
 
     def occupants(self, kind, now_s=None):
-        result = {}
-        effective_now = self.now_s if now_s is None else float(now_s)
-        for vertiport, report in self._reports.items():
-            if effective_now > report.valid_until_s:
-                continue
-            for resource in report.resources:
-                if resource.resource_type == kind and resource.occupant_id is not None:
-                    result[(vertiport, resource.resource_id)] = resource.occupant_id
-        return result
+        return dict(self._holders('occupant_id', kind, now_s))
 
     def reservations(self, kind, now_s=None):
-        result = {}
+        return dict(self._holders('reservation_id', kind, now_s))
+
+    def _holders(self, field, kind, now_s):
         effective_now = self.now_s if now_s is None else float(now_s)
+        key = (field, kind, effective_now)
+        known = self._by_kind.get(key)
+        if known is not None:
+            return known
+        result = {}
         for vertiport, report in self._reports.items():
             if effective_now > report.valid_until_s:
                 continue
             for resource in report.resources:
-                if resource.resource_type == kind and resource.reservation_id is not None:
-                    result[(vertiport, resource.resource_id)] = resource.reservation_id
+                if resource.resource_type == kind and getattr(resource, field) is not None:
+                    result[(vertiport, resource.resource_id)] = getattr(resource, field)
+        if len(self._by_kind) >= 64:
+            self._by_kind.clear()
+        self._by_kind[key] = result
         return result
 
     def clear(self):
         self._reports.clear()
+        self._by_kind.clear()
         self.now_s = 0.0
 
 
@@ -409,7 +419,8 @@ class Clearance:
                  "eta_s", "approach_s", "approach_started_s", "prediction_s", "revision", "used_s",
                  "eat_s", "eat_revision", "eat_revised_s", "eat_moved_s",
                  "planned_stand", "gate_revision", "gate_reason",
-                 "gate_release_aircraft_id", "gate_available_s", "landing_staging", "approach_mode", "holding_assignment")
+                 "gate_release_aircraft_id", "gate_available_s", "landing_staging", "approach_mode", "holding_assignment",
+                 "deferred_stand")
 
     def __init__(self, **fields):
         for name in self.__slots__:
@@ -421,6 +432,49 @@ class Clearance:
 
     def as_dict(self):
         return {name: getattr(self, name) for name in self.__slots__}
+
+
+@dataclass(frozen=True)
+class DepartureDecision:
+    """PSU's answer for one departure decision point.
+
+    Geometry and live pose remain Simulation observations.  The PSU owns the
+    interpretation of those observations: whether they block the operation,
+    which FATO plan wins, and whether a departure slot is granted.
+    """
+
+    state: str
+    reason: str
+    blockers: tuple = ()
+    clearance: object = None
+
+    @property
+    def granted(self):
+        return self.state == GRANTED
+
+
+@dataclass(frozen=True)
+class ArrivalCapacityDecision:
+    """PSU judgment that one more landing preserves departure capacity.
+
+    Simulation supplies the facility geometry, reported availability and
+    imminent-departure identifiers.  The PSU owns the operational rule that
+    interprets those facts.  ``available_before`` deliberately caps the target:
+    an unrelated maintenance closure does not make a non-interfering arrival
+    responsible for restoring capacity that did not exist before it arrived.
+    """
+
+    state: str
+    reason: str
+    required: int = 0
+    available_before: int = 0
+    available_after: int = 0
+    pending_departures: tuple = ()
+    blocked_fatos: tuple = ()
+
+    @property
+    def granted(self):
+        return self.state == GRANTED
 
 
 class PsuSequencer:
@@ -470,6 +524,214 @@ class PsuSequencer:
             return True
         return self.resource_monitor.usable(vertiport, "fato", fato, flight_id, now_s)
 
+    def protect_departure_capacity(self, *, takeoff_fatos, dedicated_takeoff_fatos=(),
+                                   unavailable_fatos=(), currently_blocked_fatos=(),
+                                   candidate_blocked_fatos=(), pending_departures=(),
+                                   reserve_ratio=.5, enabled=True,
+                                   simultaneous_departure_capacity=None):
+        """Keep a configured share of takeoff-capable FATOs usable.
+
+        The rule is active only while a departure is due inside the caller's
+        look-ahead.  Existing arrival/closure effects form the baseline; the
+        candidate landing is rejected only when it would reduce that baseline
+        below the configured reserve.  Thus four shared FATOs at 0.5 preserve
+        two takeoff positions, while a pre-existing closure cannot deadlock a
+        landing that does not consume any additional departure capacity.
+        """
+        dedicated = set(map(str, dedicated_takeoff_fatos))
+        takeoff = tuple(dict.fromkeys(str(item) for item in takeoff_fatos if str(item) not in dedicated))
+        pending = tuple(dict.fromkeys(str(item) for item in pending_departures))
+        if not enabled or not pending or not takeoff:
+            return ArrivalCapacityDecision(
+                GRANTED, '겸용 FATO 보호 대상 없음' if not takeoff else '임박한 출발편 없음 · 착륙 FATO 사용 가능',
+                pending_departures=pending)
+        unavailable = set(map(str, unavailable_fatos))
+        existing = set(map(str, currently_blocked_fatos))
+        candidate = set(map(str, candidate_blocked_fatos))
+        # Only the shared pool above is subject to a departure capacity quota.
+        configured = int(math.ceil(len(takeoff) * max(0., min(1., float(reserve_ratio)))))
+        # Some compact layouts cannot operate a landing and a departure at
+        # the same time at all. A quota greater than their geometric capacity
+        # would forbid every landing, even with an empty deck.
+        if simultaneous_departure_capacity is not None:
+            configured = min(configured, max(0, int(simultaneous_departure_capacity)))
+        before = tuple(fato for fato in takeoff if fato not in unavailable and fato not in existing)
+        after = tuple(fato for fato in before if fato not in candidate)
+        required = min(configured, len(before))
+        blocked = tuple(fato for fato in before if fato in candidate)
+        if simultaneous_departure_capacity == 0 and existing & candidate & set(takeoff):
+            return ArrivalCapacityDecision(HOLDING,
+                '해당 FATO 선행 운항 종료 대기 · 순차 이착륙',
+                required, len(before), len(after), pending, blocked)
+        if len(after) < required:
+            return ArrivalCapacityDecision(
+                HOLDING,
+                f'이륙 FATO 보호 대기 · {len(after)}/{required}개만 유지',
+                required, len(before), len(after), pending, blocked)
+        return ArrivalCapacityDecision(
+            GRANTED,
+            f'이륙 FATO {len(after)}/{required}개 보호',
+            required, len(before), len(after), pending, blocked)
+
+    # ---- departure authority ---------------------------------------------
+    def departure_blockers(self, *, flight_id, origin, fato, now_s,
+                           terminal_conflicts=(), pad_occupants=(), adjacent_fatos=(),
+                           arrival_conflicts=(), predictive_arrivals=True,
+                           terminal_enabled=True, distinct_fatos_separated=False):
+        """Interpret factual resource, occupancy and traffic observations.
+
+        Simulation may calculate that two terminal volumes overlap, but it does
+        not decide what that means operationally.  This method is the single
+        owner of the rules that turn those observations into PSU blockers.
+        """
+        blocked = [dict(item) for item in terminal_conflicts]
+        if self.resource_monitor is not None:
+            resource = self.resource_monitor.resource(origin, "fato", fato, now_s)
+            if resource is None or not resource.usable:
+                blocked.append({'flight_id': f"resource:{origin}:{fato}",
+                                'reason': 'fato_unavailable',
+                                'vertiport': origin, 'fato': fato})
+        adjacent = set(adjacent_fatos)
+        for (place, pad), owner in pad_occupants:
+            if place == origin and owner != flight_id and pad in adjacent:
+                blocked.append({'flight_id': owner, 'reason': 'pad_occupied',
+                                'vertiport': place, 'fato': pad})
+        if predictive_arrivals and terminal_enabled:
+            minimum_hold = max(self.tuning.landing_separation_s,
+                               self.tuning.mixed_separation_s)
+            for observed in arrival_conflicts:
+                window = observed.get('departure_window')
+                if window is not None:
+                    # An initial approach is a future conflict, not current
+                    # ground occupancy. Only a proven complete gap can bypass
+                    # arrival priority; actual pad/terminal blockers above stay.
+                    if not window.get('fits'):
+                        blocked.append(dict(observed.get('overlap') or {},
+                            flight_id=observed['flight_id'], reason=window['reason'],
+                            departure_clear_s=window.get('departure_clear_s'),
+                            arrival_guard_s=window.get('arrival_guard_s')))
+                    continue
+                if (not observed.get('airborne') or observed.get('failed')
+                        or observed.get('clearance_state') == REFUSED
+                        or observed.get('clearance_released_s') is not None
+                        or observed.get('stand') is None
+                        or observed.get('approach_s') is None
+                        or float(observed.get('hold_seconds') or 0) < minimum_hold):
+                    continue
+                assignment = observed.get('assignment')
+                if observed.get('approach_started_s') is None and (
+                        float(observed['approach_s']) > float(now_s) + .5
+                        or assignment and (assignment.get('state') != 'holding'
+                                           or not observed.get('queue_return_clear'))
+                        or not assignment and observed.get('instruction_action') in ('yield', 'wait_clear')):
+                    continue
+                if (distinct_fatos_separated and origin == observed.get('vertiport')
+                        and fato != observed.get('fato')):
+                    continue
+                overlap = dict(observed.get('overlap') or {})
+                overlap.update(flight_id=observed['flight_id'], reason='waiting_arrival_priority',
+                               vertiport=observed.get('vertiport'), fato=observed.get('fato'))
+                blocked.append(overlap)
+        return blocked
+
+    def select_departure_plan(self, available, now_s, arrival_forecasts,
+                              observe_blockers, *, entry_wait=None):
+        """Choose the PSU-preferred executable FATO pair from feasible plans.
+
+        Ground alternatives belong to the vertiport and airborne route
+        geometry to the model side. Once those feasible alternatives and
+        factual conflict observations are supplied, their ordering and
+        operational selection belong here.
+        """
+        scored = []
+        for flight, route in available:
+            taxi = route.phases[0].duration_s if route.phases[0].stage == 'gate_out' else 0
+            departure = self.pad(flight['origin'], flight['departure_fato'])
+            departure_wait = max(0, departure.earliest(
+                now_s + taxi, DEPARTURE, self.tuning.departure_separation_s) - (now_s + taxi))
+            admission_wait = max(0, entry_wait(flight, route, now_s + departure_wait)) if entry_wait else 0
+            eta = now_s + departure_wait + admission_wait + route.remaining_to_touchdown(0, 0)
+            actual = self.pad(flight['destination'], flight['arrival_fato'])
+            forecast = PadTimeline('candidate', self.tuning)
+            forecast.slots, forecast.observed = list(actual.slots), list(actual.observed)
+            booked = {row[2] for row in forecast.slots}
+            for other in arrival_forecasts:
+                if (other['flight_id'] not in booked and other['vertiport'] == flight['destination']
+                        and other['fato'] == flight['arrival_fato']):
+                    forecast.hold(max(now_s, other['eta_s']), self.tuning.landing_separation_s,
+                                  other['flight_id'], ARRIVAL)
+            landing = forecast.earliest(eta, ARRIVAL, self.tuning.landing_separation_s)
+            blockers = observe_blockers(flight, route)
+            ground = flight.get('_departure_ground_route') or {}
+            ground_blockers = tuple(ground.get('blocked_by') or ())
+            clear_distance = float(ground.get('clear_distance_m') or 0.0)
+            # The vertiport proposes static alternatives and attaches its live
+            # local occupancy facts. PSU compares them with the wider arrival,
+            # FATO and terminal picture; it does not search the taxi graph.
+            score = (bool(blockers), bool(ground_blockers), landing,
+                     len(forecast.slots), departure_wait, -clear_distance,
+                     int(ground.get('rank') or 1), flight['departure_fato'],
+                     flight['arrival_fato'], ground.get('route_id') or '')
+            scored.append((score, flight, route, {
+                'departure_wait_s': round(departure_wait, 1),
+                'entry_wait_s': round(admission_wait, 1),
+                'arrival_wait_s': round(max(0, landing - eta), 1),
+                'forecast_touchdown_s': round(landing, 1),
+                'blockers': blockers,
+                'ground_route_id': ground.get('route_id'),
+                'ground_route_rank': ground.get('rank'),
+                'ground_route_distance_m': ground.get('distance_m'),
+                'ground_route_clear_distance_m': ground.get('clear_distance_m'),
+                'ground_route_blocked_by': list(ground_blockers),
+            }))
+        _, flight, route, assessment = min(scored, key=lambda item: item[0])
+        return flight, route, assessment
+
+    def assess_departure(self, *, flight_id, blockers=()):
+        """Give the PSU's pre-slot answer from the current observations."""
+        blockers = tuple(dict(item) for item in blockers)
+        if not blockers:
+            return DepartureDecision(GRANTED, '출발 검토 통과')
+        reasons = {item.get('reason') for item in blockers}
+        if 'fato_unavailable' in reasons:
+            reason = '버티포트 보고상 출발 FATO 사용 불가'
+        elif 'arrival_window_too_short' in reasons:
+            reason = '도착 전 지상이동·이륙 완료 시간 부족'
+        elif 'departure_window_unproven' in reasons:
+            reason = '도착 전 출발 완료 예측 확인 대기'
+        elif 'waiting_arrival_priority' in reasons:
+            reason = '대기 도착편 우선 · 지상 출발 순서 조정'
+        else:
+            reason = '이륙 경로 또는 패드 점유'
+        return DepartureDecision(HOLDING, reason, blockers)
+
+    def committed_arrival_conflict(self, *, vertiport, adjacent_fatos, needed_by_s):
+        """Whether a committed arrival has priority over a proposed departure."""
+        adjacent = set(adjacent_fatos)
+        return any(clearance.vertiport == vertiport and clearance.fato in adjacent
+                   and clearance.approach_started_s is not None
+                   and (clearance.eta_s if clearance.eta_s is not None
+                        else clearance.cleared_s) <= needed_by_s
+                   for clearance in self.clearances(kind=ARRIVAL, active_only=True))
+
+    def authorize_departure(self, *, flight_id, vertiport, fato, earliest_s,
+                            now_s, blockers=(), committed_arrival_conflict=False):
+        """Issue the final PSU departure slot decision; never move an aircraft."""
+        review = self.assess_departure(flight_id=flight_id, blockers=blockers)
+        if not review.granted:
+            if any(item.get('reason') == 'waiting_arrival_priority' for item in review.blockers):
+                self.pad(vertiport, fato).release(flight_id)
+            return review
+        if committed_arrival_conflict:
+            return DepartureDecision(HOLDING, '진입한 도착편의 공용 패드 이탈 대기')
+        clearance = self.request_departure(flight_id=flight_id, vertiport=vertiport,
+                                           fato=fato, earliest_s=earliest_s, now_s=now_s)
+        earliest = self.pad(vertiport, fato).earliest(
+            earliest_s, DEPARTURE, self.tuning.departure_separation_s, exclude=flight_id)
+        if earliest_s < max(clearance.cleared_s, earliest):
+            return DepartureDecision(HOLDING, '공용 패드 운항 간격', clearance=clearance)
+        return DepartureDecision(GRANTED, '이륙 경로 예약', clearance=clearance)
+
     # ---- pads --------------------------------------------------------------
     def pad(self, vertiport, fato):
         key = (vertiport, fato)
@@ -484,7 +746,8 @@ class PsuSequencer:
         return self._numbers[vertiport]
 
     # ---- requests ----------------------------------------------------------
-    def request_arrival(self, *, flight_id, vertiport, fato, stand, earliest_s, now_s, stands=None):
+    def request_arrival(self, *, flight_id, vertiport, fato, stand, earliest_s, now_s,
+                        stands=None, defer_stand=False):
         """Answer an approaching pilot: a landing number, and when they may land.
 
         `earliest_s` is when the aircraft would touch down if it flew straight
@@ -497,20 +760,21 @@ class PsuSequencer:
         self.now = max(self.now, now_s)
         pad = self.pad(vertiport, fato)
         cleared = pad.earliest(max(float(earliest_s), now_s), ARRIVAL, self.tuning.landing_separation_s)
-        # The stand matters as much as the pad: landing onto a deck with nowhere
-        # to park only moves the queue onto the taxiway.
         choices = list(stands if stands is not None else self._stand_list(vertiport) or ())
         if stands is not None:
             self._arrival_stands[flight_id] = tuple(choices)
         unknown_stands = stands is None and not choices
         wanted = stand if stand in choices or unknown_stands else None
-        chosen = wanted if wanted and self._stands.free(vertiport, wanted, flight_id) else None
-        if chosen is None and self.tuning.reassign_stand:
+        chosen = None if defer_stand else (
+            wanted if wanted and self._stands.free(vertiport, wanted, flight_id) else None)
+        if not defer_stand and chosen is None and self.tuning.reassign_stand:
             chosen = self._stands.free_stand(vertiport, choices, flight_id) if choices else (stand if unknown_stands else None)
-        elif chosen is None and unknown_stands:
+        elif not defer_stand and chosen is None and unknown_stands:
             chosen = stand
         reason = ""
-        if chosen is None:
+        if defer_stand:
+            reason = "접지 후 GATE 배정"
+        elif chosen is None:
             # Every stand is taken. The time one frees is not knowable here, so
             # the aircraft is held for a look-again interval past its own
             # arrival rather than cleared onto a deck with nowhere to park.
@@ -527,7 +791,8 @@ class PsuSequencer:
                               kind=ARRIVAL, sequence=self.landing_number(vertiport), state=state,
                               requested_s=now_s, wanted_s=float(earliest_s), cleared_s=cleared,
                               hold_s=hold, reason=reason or ("대기 없음" if state == GRANTED else "선행 착륙 대기"),
-                              released_s=None, planned_stand=stand, gate_revision=0, gate_reason=reason or '계획 주기장 유지')
+                              released_s=None, planned_stand=stand, gate_revision=0,
+                              gate_reason=reason or '계획 주기장 유지', deferred_stand=bool(defer_stand))
         if state != REFUSED:
             pad.hold(cleared, self.tuning.landing_separation_s, flight_id, ARRIVAL)
             if choices and chosen is not None:
@@ -678,7 +943,7 @@ class PsuSequencer:
                        float(o.get('pad_available_s', now_s)))
         by_hand = min((soonest(c) for c in active if manual(c)), default=None)
         if by_hand is None:
-            active.sort(key=lambda c: (*committed(c), c.requested_s, c.sequence))
+            active.sort(key=lambda c: (*committed(c), soonest(c), c.requested_s, c.sequence))
         else:
             # A hand-flown aircraft books before the ones it is competing with,
             # and only those. Anything that could be down and clear before the
@@ -702,8 +967,9 @@ class PsuSequencer:
                 c.state = HOLDING
                 c.reason = observation.get('approach_wait_reason') or c.gate_reason or '도착 지상 경로 확보 대기'
                 continue
-            self.reconsider_arrival(c.flight_id, now_s)
-            if c.stand is None:
+            if not c.deferred_stand:
+                self.reconsider_arrival(c.flight_id, now_s)
+            if c.stand is None and not c.deferred_stand:
                 # No speculative pad booking when there is nowhere to taxi to.
                 c.approach_s = None
                 c.state, c.reason = HOLDING, '주기장 확보 대기'
@@ -756,7 +1022,8 @@ class PsuSequencer:
 
     def begin_approach(self, flight_id, now_s, *, headway_s=30.0, capacity=3):
         c = self.clearance(flight_id)
-        if c is None or c.state == REFUSED or c.stand is None or c.approach_s is None:
+        if (c is None or c.state == REFUSED or
+                c.stand is None and not c.deferred_stand or c.approach_s is None):
             return False
         if c.approach_started_s is not None:
             return True
@@ -771,7 +1038,8 @@ class PsuSequencer:
         # Never jump ahead of a ready, earlier slot just because fleet iteration
         # happens to visit this aircraft first.
         if any(p is not c and p.kind == ARRIVAL and p.vertiport == c.vertiport and p.fato == c.fato
-               and p.released_s is None and p.state != REFUSED and p.stand is not None
+               and p.released_s is None and p.state != REFUSED
+               and (p.stand is not None or p.deferred_stand)
                and p.approach_s is not None and p.approach_started_s is None and p.cleared_s < c.cleared_s
                for p in self._clearances.values()):
             c.reason = '선행편 접근 개시 대기'
@@ -810,6 +1078,15 @@ class PsuSequencer:
 
     def clearance(self, flight_id, kind=ARRIVAL):
         return self._clearances.get((flight_id, kind))
+
+    def clearances(self, *, kind=None, active_only=False):
+        """Read-only view for audit and factual timing observations."""
+        values = tuple(self._clearances.values())
+        if kind is not None:
+            values = tuple(item for item in values if item.kind == kind)
+        if active_only:
+            values = tuple(item for item in values if item.released_s is None and item.state != REFUSED)
+        return values
 
     def forget(self, flight_id):
         self._arrival_stands.pop(flight_id,None)

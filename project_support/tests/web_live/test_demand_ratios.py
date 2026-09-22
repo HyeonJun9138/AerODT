@@ -137,6 +137,9 @@ def test_the_wire_serves_the_defaults_for_the_decks_that_exist():
         assert body["min"] == 0 and body["max"] == 300
         assert body["directions"] == ["departure", "arrival"]
         assert "서울시" in body["source"]
+        assert body["profile"]["od_redistribution_rate"] == pytest.approx(.85)
+        assert body["schedule_planning"]["fato_headway_s"] == 60
+        assert "corridor_headway_s" not in body["schedule_planning"]
         rows = {row["vertiport"]: row for row in body["vertiports"]}
         assert len(rows) == len(VERTIPORTS)
         assert rows["VP013"]["departure"] == 210

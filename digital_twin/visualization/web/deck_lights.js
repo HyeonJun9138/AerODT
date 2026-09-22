@@ -149,6 +149,10 @@ export function brightness(kind, seconds, phase, beacon = {}) {
 export class DeckLights {
   constructor(C, scene) {
     this.C = C;
+    // A point's colour setter copies what it is given, so one scratch colour
+    // serves every lamp: thousands of lamps stepped every 45 ms allocated a
+    // colour each before.
+    this.scratchColour = typeof C?.Color === 'function' ? new C.Color() : undefined;
     this.scene = scene;
     this.points = scene.primitives.add(new C.PointPrimitiveCollection());
     this.byId = new Map();
@@ -216,7 +220,7 @@ export class DeckLights {
         const level = Math.round(brightness(lamp.kind, seconds, lamp.phase, lamp.beacon) * LIGHT_ALPHA_STEPS) / LIGHT_ALPHA_STEPS;
         if (level === lamp.level) continue;
         lamp.level = level;
-        lamp.point.color = lamp.colour.withAlpha(level);
+        lamp.point.color = lamp.colour.withAlpha(level, this.scratchColour);
         touched = true;
       }
     }

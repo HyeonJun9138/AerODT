@@ -639,3 +639,11 @@ body[data-focus] #attribution{opacity:.5}
 .uam-prediction-controls button:disabled{opacity:.4;cursor:default;}
 .uam-prediction-settings{width:100%;padding:7px;border:1px solid #91bcc333;border-radius:6px;background:transparent;color:#b5d8de;cursor:pointer;font-size:11px;}
 .uam-prediction-controls button:focus-visible{outline:2px solid #a8e9e5;outline-offset:2px;}
+
+/* Planning inputs keep the dashboard palette and usable touch/keyboard targets. */
+#dm-body-planning input{min-height:34px;font-variant-numeric:tabular-nums}
+#dm-body-planning input[aria-invalid=true]{border-color:#f2b8a0}
+.dm-planning-advanced{border-top:1px solid var(--glass-border);padding-top:6px}
+.dm-planning-advanced summary{cursor:pointer;min-height:34px;display:list-item;line-height:34px;font-size:11px}
+.dm-planning-advanced>div{margin-top:8px}
+#dm-planning-reset{min-height:34px}

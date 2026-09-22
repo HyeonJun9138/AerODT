@@ -118,3 +118,26 @@ test('cockpit body yaw engages streaming budget without head input or resolution
  for(let now=0;now<2000;now+=50){c.positionWC.x+=2;stable.update(c,{now,frameMs:60,relative:true,viewPose:cockpitBudgetPose(c)});}
  assert.equal(stable.moving,false);assert.equal(stable.scale,1);
 });
+// A cockpit is main-thread bound (measured 2026-09-19 on a 3080: nearly every
+// frame a long task), so cutting its pixels bought nothing, and each step of
+// the ladder reallocated every framebuffer: a hitch on the way down and six on
+// the way back up, after every turn. Motion is still reported, for the
+// streaming budgets that do help while the view changes.
+test('a cockpit holding its resolution still reports body yaw as motion and never steps the buffer',async()=>{
+ const {cockpitBudgetPose}=await import('../../../../digital_twin/visualization/web/render_budget.js');
+ const b=new CameraRenderBudget(),c=camera();c.frustum={fov:1.2};b.configure({minimumScale:.7,targetFps:60});
+ const scales=new Set();
+ for(let now=0;now<4000;now+=50){
+  const yaw=now*.00021;c.directionWC={x:Math.cos(yaw),y:Math.sin(yaw),z:0};c.upWC={x:0,y:0,z:1};c.positionWC.x+=2;
+  scales.add(b.update(c,{now,frameMs:60,relative:true,viewPose:cockpitBudgetPose(c),holdResolution:true}));
+ }
+ assert.equal(b.moving,true);assert.deepEqual([...scales],[1]);
+ // Entering the cockpit with a buffer the map had already cut gives it back
+ // whole at once, not in steps; leaving it, the ladder is the map's own again.
+ const cut=new CameraRenderBudget(),still=camera();cut.configure({minimumScale:.7,targetFps:60});
+ for(let now=0;now<=300;now+=33){still.positionWC.x+=100;cut.update(still,{now,frameMs:60});}
+ assert.equal(cut.scale,.85,'the map cut the buffer for a slow orbit');
+ assert.equal(cut.update(still,{now:400,frameMs:60,relative:true,viewPose:cockpitBudgetPose(still),holdResolution:true}),1);
+ for(let now=500;now<=1200;now+=33){still.positionWC.x+=100;cut.update(still,{now,frameMs:60});}
+ assert.equal(cut.scale,.85);
+});

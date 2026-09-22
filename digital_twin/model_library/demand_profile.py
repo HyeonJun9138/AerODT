@@ -12,14 +12,16 @@ day would put the fleet in the wrong place all morning.
 
 Two decisions are worth saying out loud because neither is visible afterwards:
 
-* **A window keeps the whole day's trips.** A day that runs 06:30–21:30 covers
-  about nine tenths of the reference curve. The operator asked for 67,500 trips,
-  so 67,500 trips are placed — shared out by the curve *normalised over the
-  window* rather than sliced out of it. Otherwise several thousand people would
-  vanish between the summary they read and the plan they get.
-* **The pairs carry what the summary said they would.** The share of a leg is
-  worked out here by the same formula the summary window draws, so the number
-  beside 여의도 → 잠실 on screen is the number that gets scheduled.
+* **The daily total is a 24-hour potential demand.** The baseline traffic times
+  the UAM conversion rate answers the whole day. An operating window takes only
+  the part of the reference curve it covers; it does not squeeze demand from
+  closed hours into the hours that remain. Half an hour takes half of that
+  hour's share.
+* **A missing pair does not move all of its demand elsewhere.** Demand is first
+  formed over every selected origin and destination. If a leg cannot be flown,
+  85% of that leg's demand is spread over plausible connected alternatives and
+  15% leaves the UAM day. This keeps a sparse network from manufacturing the
+  same total demand as a fully connected one.
 
 Nothing here schedules anything, opens a file or reads a clock. It answers what
 the demand is; `flight_scheduler` decides who flies it.
@@ -28,6 +30,7 @@ import math
 
 SCHEMA_VERSION = 1
 SOURCE = "서울시 시간대별 통행 비율 (외부 제공, 2026-09-10 수신)"
+OD_REDISTRIBUTION_RATE = 0.85
 
 # Per-hour share of a day's departures, 00 through 23, as percentages. The
 # arrival curve is kept beside it because the two are not the same shape — the
@@ -90,41 +93,41 @@ def _largest_remainder(total, shares):
 
 
 def hourly_trips(daily_trips, start_minutes, end_minutes):
-    """The day's trips, by the hour, inside the operating window.
+    """The 24-hour potential trips that fall inside the operating window.
 
-    Keyed by the hour of the clock. The window's own hours are what the curve is
-    normalised over, so the whole of `daily_trips` is placed rather than the
-    share the window happens to cover.
+    Keyed by the hour of the clock. First the window takes its proportional
+    share of the 24-hour curve; only that clipped whole-person total is shared
+    between the included hours. The second allocation keeps integer rounding
+    deterministic without changing the window total.
     """
     hours = window_hours(start_minutes, end_minutes)
     if not hours:
         return {}
     weights = [HOURLY_DEPARTURE_PCT[hour] * fraction for hour, fraction in hours]
-    counts = _largest_remainder(daily_trips, weights)
+    counts = _largest_remainder(window_demand(daily_trips, start_minutes, end_minutes), weights)
     return {hour: count for (hour, _), count in zip(hours, counts)}
 
 
-def od_shares(weights, pairs):
-    """What share of the day each leg carries.
+def window_share(start_minutes, end_minutes):
+    """Share of the 24-hour departure curve covered by an operating window."""
+    hours = window_hours(start_minutes, end_minutes)
+    whole = sum(HOURLY_DEPARTURE_PCT)
+    return (sum(HOURLY_DEPARTURE_PCT[hour] * fraction for hour, fraction in hours) / whole
+            if whole > 0 else 0.0)
 
-    The formula the summary window draws: the departing deck's share of all
-    departures against the arriving deck's share of all arrivals, with the
-    departing deck itself left out of the arrival denominator because nobody
-    flies to where they took off from. The pairs the operator cut carry nothing,
-    so what is left is re-shared among the ones that remain rather than being
-    quietly lost.
 
-    `weights` is one row per deck with `vertiport`, `departure_share` and
-    `arrival_share`; `pairs` is the unordered lines between them, each of which
-    carries both directions.
-    """
+def window_demand(daily_trips, start_minutes, end_minutes):
+    """Whole passengers available while the service is open."""
+    return max(0, int(round(max(0, int(daily_trips)) * window_share(start_minutes, end_minutes))))
+
+
+def _potential_legs(weights):
+    """The unconstrained OD market over every selected vertiport."""
     rows = {str(row["vertiport"]): row for row in weights}
     legs = []
-    for pair in pairs or ():
-        ends = (str(pair.get("from")), str(pair.get("to")))
-        for origin, destination in (ends, ends[::-1]):
-            start, end = rows.get(origin), rows.get(destination)
-            if start is None or end is None or origin == destination:
+    for origin, start in rows.items():
+        for destination, end in rows.items():
+            if origin == destination:
                 continue
             rest = sum(float(row.get("arrival_share") or 0.0)
                        for identifier, row in rows.items() if identifier != origin)
@@ -138,38 +141,125 @@ def od_shares(weights, pairs):
     return legs
 
 
-def demand_rows(*, daily_trips, weights, pairs, start_minutes, end_minutes):
+def _connected_legs(pairs, available_legs=None):
+    connected = set()
+    for pair in pairs or ():
+        ends = (str(pair.get("from")), str(pair.get("to")))
+        if ends[0] != ends[1]:
+            connected.update((ends, ends[::-1]))
+    if available_legs is not None:
+        connected &= {(str(origin), str(destination)) for origin, destination in available_legs}
+    return connected
+
+
+def od_allocation(weights, pairs, *, available_legs=None,
+                  redistribution_rate=OD_REDISTRIBUTION_RATE):
+    """Connected OD shares after partial diffusion of disconnected demand.
+
+    A disconnected leg first looks for connected alternatives from the same
+    origin, then alternatives arriving at the same destination, then legs that
+    touch either endpoint. Only if none exist does it use the remaining network.
+    The chosen alternatives divide the transferable share in proportion to
+    their unconstrained OD shares. No direct route is invented.
+    """
+    rate = min(1.0, max(0.0, float(redistribution_rate)))
+    potential = _potential_legs(weights)
+    connected = _connected_legs(pairs, available_legs)
+    active = [dict(leg, direct_share=leg["share"], redistributed_share=0.0)
+              for leg in potential if (leg["from"], leg["to"]) in connected]
+    inactive = [leg for leg in potential if (leg["from"], leg["to"]) not in connected]
+    by_key = {(leg["from"], leg["to"]): leg for leg in active}
+
+    for missing in inactive:
+        candidates = [leg for leg in active
+                      if leg["from"] == missing["from"] and leg["direct_share"] > 0]
+        if not candidates:
+            candidates = [leg for leg in active
+                          if leg["to"] == missing["to"] and leg["direct_share"] > 0]
+        if not candidates:
+            candidates = [leg for leg in active
+                          if leg["direct_share"] > 0 and (
+                              missing["from"] in (leg["from"], leg["to"])
+                              or missing["to"] in (leg["from"], leg["to"]))]
+        if not candidates:
+            candidates = [leg for leg in active if leg["direct_share"] > 0]
+        transferable = missing["share"] * rate
+        weight = sum(max(0.0, leg["direct_share"]) for leg in candidates)
+        for candidate in candidates:
+            portion = (max(0.0, candidate["direct_share"]) / weight
+                       if weight > 0 else 1.0 / len(candidates))
+            by_key[(candidate["from"], candidate["to"])]["redistributed_share"] += transferable * portion
+
+    for leg in active:
+        leg["share"] = leg["direct_share"] + leg["redistributed_share"]
+    active.sort(key=lambda leg: (-leg["share"], leg["from"], leg["to"]))
+    direct = sum(leg["direct_share"] for leg in active)
+    disconnected = sum(leg["share"] for leg in inactive)
+    redistributed = sum(leg["redistributed_share"] for leg in active)
+    lost = max(0.0, 1.0 - direct - redistributed)
+    return {"legs": active, "direct_share": direct, "disconnected_share": disconnected,
+            "redistributed_share": redistributed, "lost_share": lost,
+            "redistribution_rate": rate}
+
+
+def od_shares(weights, pairs, *, available_legs=None,
+              redistribution_rate=OD_REDISTRIBUTION_RATE):
+    """What absolute share of operating-window demand each connected leg carries."""
+    return od_allocation(weights, pairs, available_legs=available_legs,
+                         redistribution_rate=redistribution_rate)["legs"]
+
+
+def demand_plan(*, daily_trips, weights, pairs, start_minutes, end_minutes,
+                available_legs=None, redistribution_rate=OD_REDISTRIBUTION_RATE):
+    """Whole-person demand rows and an explicit account of demand diffusion."""
+    allocation = od_allocation(weights, pairs, available_legs=available_legs,
+                               redistribution_rate=redistribution_rate)
+    hourly = hourly_trips(daily_trips, start_minutes, end_minutes)
+    window_total = sum(hourly.values())
+    direct, redistributed, lost = _largest_remainder(
+        window_total, [allocation["direct_share"], allocation["redistributed_share"],
+                       allocation["lost_share"]])
+    scheduled = direct + redistributed
+    hourly_scheduled = _largest_remainder(scheduled, list(hourly.values()))
+    legs = allocation["legs"]
+    rows = []
+    if legs and scheduled > 0:
+        shares = [leg["share"] for leg in legs]
+        owed = [0.0] * len(legs)
+        decks = sorted({leg["from"] for leg in legs} | {leg["to"] for leg in legs})
+        place = {deck: index for index, deck in enumerate(decks)}
+        turn = [((place[leg["from"]] + place[leg["to"]]) % len(decks), place[leg["from"]])
+                for leg in legs]
+        for (hour, _), trips in zip(sorted(hourly.items()), hourly_scheduled):
+            counts = _carried_remainder(trips, shares, owed, turn)
+            for leg, count in zip(legs, counts):
+                if count > 0:
+                    rows.append({"hour": hour, "from": leg["from"], "to": leg["to"],
+                                 "passengers": count})
+    return {"rows": rows, "summary": {
+        "operating_window_demand_passengers": window_total,
+        "direct_connected_demand_passengers": direct,
+        "disconnected_od_demand_passengers": redistributed + lost,
+        "redistributed_demand_passengers": redistributed,
+        "network_lost_demand_passengers": lost,
+        "network_schedulable_demand_passengers": scheduled,
+        "od_redistribution_rate": allocation["redistribution_rate"],
+    }}
+
+
+def demand_rows(*, daily_trips, weights, pairs, start_minutes, end_minutes,
+                available_legs=None, redistribution_rate=OD_REDISTRIBUTION_RATE):
     """Whole people, by hour and by leg: `{hour, from, to, passengers}`.
 
-    Every hour is shared out on its own so the totals hold in both directions:
-    the hours add up to the day, and each hour adds up to its own trips. A leg
-    that comes to nobody in an hour is left out rather than carried as a zero.
+    The rows add up to the network-schedulable part of the operating-window
+    demand. The network-loss remainder is available from `demand_plan`; it is
+    intentionally not turned into a flight row. A leg that comes to nobody in
+    an hour is left out rather than carried as a zero.
     """
-    legs = od_shares(weights, pairs)
-    if not legs:
-        return []
-    shares = [leg["share"] for leg in legs]
-    rows = []
-    # What each leg is still owed from the hours before. An hour of ninety
-    # trips over three hundred legs gives every leg a third of a person; rounded
-    # on its own, every hour would hand its whole ninety to the same ninety legs
-    # at the head of the list and the rest of the network would never see a
-    # passenger. Carried forward, a leg owed a third an hour gets its person
-    # every third hour, and the day as a whole lands where the shares said.
-    owed = [0.0] * len(legs)
-    # Between legs owed the same, the order is a round of matchings: in each
-    # round every deck appears once as an origin and once as a destination, so
-    # a thin hour is spread over the whole network rather than handed to
-    # whichever decks sort first - as origins or as destinations.
-    decks = sorted({leg["from"] for leg in legs} | {leg["to"] for leg in legs})
-    place = {deck: index for index, deck in enumerate(decks)}
-    turn = [((place[leg["from"]] + place[leg["to"]]) % len(decks), place[leg["from"]]) for leg in legs]
-    for hour, trips in sorted(hourly_trips(daily_trips, start_minutes, end_minutes).items()):
-        counts = _carried_remainder(trips, shares, owed, turn)
-        for leg, count in zip(legs, counts):
-            if count > 0:
-                rows.append({"hour": hour, "from": leg["from"], "to": leg["to"], "passengers": count})
-    return rows
+    return demand_plan(daily_trips=daily_trips, weights=weights, pairs=pairs,
+                       start_minutes=start_minutes, end_minutes=end_minutes,
+                       available_legs=available_legs,
+                       redistribution_rate=redistribution_rate)["rows"]
 
 
 def _carried_remainder(total, shares, owed, turn=None):
@@ -212,4 +302,5 @@ def describe():
     """What the curve is and where it came from, for a screen that says so."""
     return {"schema_version": SCHEMA_VERSION, "source": SOURCE,
             "hourly_departure_pct": list(HOURLY_DEPARTURE_PCT),
-            "hourly_arrival_pct": list(HOURLY_ARRIVAL_PCT)}
+            "hourly_arrival_pct": list(HOURLY_ARRIVAL_PCT),
+            "od_redistribution_rate": OD_REDISTRIBUTION_RATE}

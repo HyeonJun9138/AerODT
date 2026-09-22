@@ -558,6 +558,8 @@ def create_app(config=None, *, sources=None):
                 scenario_session.close()
             if local_dem is not None:
                 local_dem.close()
+            if conditioned_dem is not None:
+                conditioned_dem.close()
             await asyncio.to_thread(operational_audit.close)
             await asyncio.to_thread(run_log.log, 'audit_closed', 'Operational I/O journal closed', data=operational_audit.health())
             await asyncio.to_thread(run_log.finish, 'stopped')
@@ -596,6 +598,16 @@ def create_app(config=None, *, sources=None):
         pass  # Optional package: never fail the global dashboard or expose a local path.
     local_tiles = LocalTerrainTiles(local_dem) if local_dem else None
     app.include_router(create_local_terrain_router(local_tiles))
+    # Separate optional visual data: never replace the manual-flight elevation source.
+    conditioned_dem = None
+    conditioned_path = settings.get('conditioned_dem_directory')
+    if conditioned_path:
+        try:
+            conditioned_dem = LocalDem(ROOT / conditioned_path)
+        except (OSError, ValueError, KeyError, TypeError):
+            LOGGER.warning('Conditioned DEM unavailable; World Terrain remains available')
+    conditioned_tiles = LocalTerrainTiles(conditioned_dem) if conditioned_dem else None
+    app.include_router(create_local_terrain_router(conditioned_tiles, source='conditioned'))
     cesium_endpoints = []
     token = os.environ.get('AERODT_CESIUM_ION_TOKEN')
     for enabled, adapter, router in (
@@ -711,6 +723,9 @@ def create_app(config=None, *, sources=None):
                     elif source["id"] == "terrain" and chosen == "local_dem":
                         configured = local_tiles is not None
                         message = "로컬 DEM 준비됨 · 범위 밖 Cesium (별도 인증 필요)" if configured else "로컬 DEM 없음 · Cesium으로 대체"
+                    elif source['id'] == 'terrain' and chosen == 'conditioned_dem':
+                        configured = conditioned_tiles is not None
+                        message = '보정 DEM 준비됨 · 범위 밖 Cesium' if configured else '보정 DEM 없음 · Cesium으로 대체'
                     elif source["id"] == "buildings" and chosen == "vworld_3d":
                         configured = True
                         message = "공개 정밀 3D 타일 사용 가능 (지역별 구축 범위 상이)"
@@ -925,7 +940,19 @@ def create_app(config=None, *, sources=None):
     # One short answer for every screen that has this open: a hash over the
     # stored simulation records. It changes on any create, edit or delete, so a
     # second browser can notice the file moved without fetching the whole lot.
+    # Every open page asks for this every 2 s and every 5 s, and serialising
+    # and hashing every vertiport, node and link each time was tens of
+    # milliseconds of the interpreter for a 71-byte answer, taken from the
+    # day's tick and the pilot's control step. The stores count their saves,
+    # so the digest is made once per version pair and handed out until
+    # either store saves again.
+    revision_cache = {}
+
     def simulation_revision():
+        key = (getattr(vertiport_records, 'version', None), getattr(route_records, 'version', None))
+        known = revision_cache.get(key) if None not in key else None
+        if known is not None:
+            return dict(known)
         records = vertiport_records.list()
         nodes, links = route_records.nodes(), route_records.links()
         stamp = hashlib.sha1()
@@ -933,8 +960,12 @@ def create_app(config=None, *, sources=None):
             for record in group:
                 stamp.update(json.dumps(record, sort_keys=True, ensure_ascii=False).encode("utf-8"))
             stamp.update(b"|")
-        return {"revision": stamp.hexdigest()[:16], "vertiports": len(records),
-                "nodes": len(nodes), "links": len(links)}
+        answer = {"revision": stamp.hexdigest()[:16], "vertiports": len(records),
+                  "nodes": len(nodes), "links": len(links)}
+        if None not in key:
+            revision_cache.clear()
+            revision_cache[key] = dict(answer)
+        return answer
 
     app.include_router(create_revision_router(simulation_revision))
 

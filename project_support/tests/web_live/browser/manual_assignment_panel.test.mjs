@@ -74,7 +74,8 @@ test('waiting is the ordinary state, and it is not asked about twice a second', 
   await settle();
   assert.equal(calls.length, 1, '열리면 바로 한 번');
   assert.equal(made.assignment, null);
-  assert.deepEqual(said, [], '기다림은 할 말이 아니다');
+  assert.equal(said.length, 1, '배정되지 않은 이유를 한 번 알린다');
+  assert.match(said[0][1], /수동 배정 대기/);
 
   made.tick(RUNNING, 4000);
   await settle();

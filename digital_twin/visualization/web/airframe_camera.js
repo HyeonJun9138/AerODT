@@ -3,6 +3,7 @@ import {loadVWorldBuildings} from './building_streaming.js';
 import {VWorldBuildingLayer,fetchCell,cellKey} from './vworld_building_layer.js';
 import {releaseWidgetContext} from './webgl_release.js';
 import {retainShaderPrograms} from './shader_retention.js';
+import {configureTileLoadSlice} from './terrain_layer.js';
 const LABELS={front:'FWD',right:'RGT',rear:'AFT',left:'LFT',down:'DOWN',around:'TOP'};
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const unit=v=>{const n=Math.hypot(...v);return n>1e-9?v.map(x=>x/n):null;};
@@ -117,6 +118,8 @@ export class AirframeCamera {
   }
   set({enabled,mode='front'}){
     if(!enabled){this.stop();return;}
+    // A direction change must not inherit a slow frame's queued timer.
+    this.cancelFrame();
     if(mode!==this.mode)this.clear();
     this.mode=['front','rear','left','right','down','around'].includes(mode)?mode:'front';this.enabled=true;this.last=-Infinity;
     this.retryCount=0;this.retryAt=0;
@@ -152,6 +155,7 @@ export class AirframeCamera {
       // 100-500 ms spikes measured on this widget were tile processing, not
       // drawing. Fewer tiles per frame, no preloading, no post-processing.
       scene.globe.maximumScreenSpaceError=6;scene.globe.tileCacheSize=64;
+      configureTileLoadSlice(scene.globe);
       scene.globe.loadingDescendantLimit=4;scene.globe.preloadSiblings=false;scene.globe.preloadAncestors=false;
       scene.globe.showGroundAtmosphere=false;scene.highDynamicRange=false;
       if(scene.postProcessStages?.fxaa)scene.postProcessStages.fxaa.enabled=false;
@@ -245,9 +249,15 @@ export class AirframeCamera {
     const entities=this.graphicsEntities??w.entities;
     const ids=new Set(objects.map(e=>e.id));
     for(const [id,e] of this.graphics)if(!ids.has(id)){entities.remove(e);this.graphics.delete(id);}
+    // Spread first-use entity creation across frames instead of handing the
+    // data-source visualizers 180 new geometries in the very first render.
+    // The complete selected set is retained; this does not reduce detail.
+    const additionsAt=performance.now();let added=0;
     for(const e of objects)if(!this.graphics.has(e.id)){
+      if(this.options.cockpit&&added>0&&(added>=12||performance.now()-additionsAt>=4))break;
       this.graphics.set(e.id,entities.add(new C.Entity({id:e.id,position:e.position,orientation:e.orientation,
         model:e.model?.clone(),polygon:e.polygon?.clone(),box:e.box?.clone(),cylinder:e.cylinder?.clone()})));
+      added++;
     }
     const targets=this.options.hideOwn?[]:[{id:'own',assetId:frame.assetId,matrix:frame.matrix,uri:frame.uri,scale:frame.scale??1}];
     // What this camera's own detector placed in the world must not be drawn
@@ -303,6 +313,10 @@ export class AirframeCamera {
         continue;
       }
       if(!uri||!target.matrix||existing||loading>=2)continue;
+      // Give the own-aircraft rig the first decode/upload slot in the cockpit.
+      // Failed/missing own assets must not prevent other traffic appearing.
+      const own=this.models.get('own');
+      if(this.options.cockpit&&target.id!=='own'&&(own?.pending||own?.model?.ready===false))continue;
       loading++;const entry={pending:true,uri};this.models.set(target.id,entry);
       C.Model.fromGltfAsync({url:uri,forwardAxis:C.Axis.X,upAxis:C.Axis.Y,modelMatrix:C.Matrix4.clone(target.matrix),scale:target.scale,environmentMapOptions:{enabled:false},incrementallyLoadTextures:true,allowPicking:false}).then(model=>{
         if(w!==this.widget||this.models.get(target.id)!==entry){model.destroy();return;}
@@ -430,9 +444,8 @@ export class AirframeCamera {
     this.enabled=false;this.generation++;this.removeError?.();this.tileFailure?.();this.removeError=this.tileFailure=null;
     this.buildingsStarted=false;this.resolutionAt=undefined;this.footprints?.destroy();this.footprints=null;this.footprintsAt=undefined;this.objectScan=null;
     this.dataDisplay?.destroy();this.dataDisplay=null;this.dataSources?.destroy();this.dataSources=null;this.graphicsEntities=null;
-    // Destroyed AND released: this camera is restarted often (tab hidden,
-    // aircraft changed, direction changed) and each start is a new context;
-    // a dozen of them left un-released got the map's own context evicted.
+    // Normal OFF/ON and direction changes retain this context. Only failure
+    // recovery or destruction releases its GPU resources.
     releaseWidgetContext(this.widget);this.widget=null;this.host?.remove();this.host=null;this.credits=null;this.models.clear();this.graphics=null;this.tiles=null;this.imagery=null;this.buildingError=false;this.last=-Infinity;this.cost=NaN;this.frameTimes=[];this.stats={fps:0,ms:0,last:0,duty:0};this.hostFrameMs=NaN;this.updatedAt=undefined;this.footprintFocus=null;this.footprintFocusAt=undefined;this.clear();
   }
   destroy(){this.release();}
